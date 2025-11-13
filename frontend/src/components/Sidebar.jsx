@@ -46,7 +46,7 @@ export default function Sidebar() {
       className={`
         fixed left-4 top-4 bottom-4
         flex flex-col
-        ${darkMode ? "bg-gray-800 border-gray-700" : "bg-white border-gray-200"}
+        ${darkMode ? "bg-[#2e2119] border-[#3a2a20]" : "bg-white border-[#E6C8B1]"}
         shadow-xl rounded-2xl
         transition-all duration-300 ease-in-out
         ${isCollapsed ? "w-16" : "w-50"}
@@ -61,8 +61,8 @@ export default function Sidebar() {
       <div className="flex items-center px-3 py-4 min-h-[64px]">
           <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 overflow-hidden">
             <img
-              src="/Lemivon.ico"
-              alt="Lemivon logo"
+              src="/StudyTa.ico"
+              alt="StudyTa logo"
               className="w-full h-full object-contain"
               width={32}
               height={32}
@@ -72,10 +72,10 @@ export default function Sidebar() {
         </div>
         <span
           className={`ml-3 text-xl font-bold ${
-            darkMode ? "text-white" : "text-gray-900"
+            darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
           } ${isCollapsed ? "opacity-0" : "opacity-100"} transition-opacity duration-300 whitespace-nowrap`}
         >
-          Lemivon
+          StudyTa
         </span>
       </div>
 
@@ -92,13 +92,13 @@ export default function Sidebar() {
                 location.pathname === item.path
                   ? `${
                       darkMode
-                        ? `bg-${themeColors.primary}-900/30 text-${themeColors.primary}-300 border-${themeColors.primary}-700`
-                        : `bg-${themeColors.primary}-100 text-${themeColors.primary}-700 border-${themeColors.primary}-200`
+                        ? "bg-[#E59C5C]/20 text-[#E59C5C] border-[#E59C5C]"
+                        : "bg-[#E59C5C]/10 text-[#E59C5C] border-[#E59C5C]"
                     } border`
                   : `${
                       darkMode
-                        ? "text-gray-300 hover:bg-gray-700"
-                        : "text-gray-600 hover:bg-gray-100"
+                        ? "text-[#f5e9df] hover:bg-[#3a2a20]"
+                        : "text-[#4A2C1E] hover:bg-[#F2D9C7]"
                     }`
               }
             `}
@@ -124,7 +124,7 @@ export default function Sidebar() {
             onClick={handleLogout}
             className={`
               flex items-center p-3 rounded-xl w-full text-left
-              ${darkMode ? "text-gray-300 hover:bg-gray-700" : "text-gray-600 hover:bg-gray-100"}
+              ${darkMode ? "text-[#f5e9df] hover:bg-[#3a2a20]" : "text-[#4A2C1E] hover:bg-[#F2D9C7]"}
               transition-colors duration-200
             `}
           >

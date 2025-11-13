@@ -65,7 +65,7 @@ export default function WheelMode({ content, currentIndex, showAnswer, setShowAn
                 const correctAnswer = question?.value || question?.answer || 'Answer not available';
                 
                 return (
-                  <div key={questionIndex} className="p-4 rounded-lg border-2 border-gray-200 bg-gray-50">
+                  <div key={questionIndex} className="p-4 rounded-lg border-2 border-gray-200 bg-[#F2D9C7]">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="font-medium text-gray-800 mb-2">
@@ -98,7 +98,7 @@ export default function WheelMode({ content, currentIndex, showAnswer, setShowAn
           </div>
         </div>
         <button className="px-8 py-3 rounded-lg font-semibold bg-gray-400 text-white cursor-not-allowed mt-4">Spin the Wheel</button>
-        <p className="text-gray-500 mt-2">Upload a file to generate wheel questions</p>
+        <p className="text-[#5C4333] mt-2">Upload a file to generate wheel questions</p>
       </div>
     );
   }
@@ -281,7 +281,7 @@ export default function WheelMode({ content, currentIndex, showAnswer, setShowAn
                 disabled={!userAnswer.trim() && selectedAnswer === null}
                 className={`w-full px-6 py-3 rounded-lg font-semibold transition-all duration-200 ${
                   (!userAnswer.trim() && selectedAnswer === null)
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    ? 'bg-gray-300 text-[#5C4333] cursor-not-allowed'
                     : 'bg-teal-600 text-white hover:bg-teal-700 transform hover:scale-105'
                 }`}
               >
@@ -302,7 +302,7 @@ export default function WheelMode({ content, currentIndex, showAnswer, setShowAn
                           ? 'border-green-500 bg-green-50'
                           : index === selectedAnswer
                           ? 'border-red-500 bg-red-50'
-                          : 'border-gray-200 bg-gray-50'
+                          : 'border-gray-200 bg-[#F2D9C7]'
                       }`}
                     >
                       <span>
@@ -357,3 +357,4 @@ export default function WheelMode({ content, currentIndex, showAnswer, setShowAn
     </div>
   );
 }
+

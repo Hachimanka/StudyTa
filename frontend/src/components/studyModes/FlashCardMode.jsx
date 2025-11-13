@@ -47,3 +47,4 @@ export default function FlashCardMode({ content, currentIndex, showAnswer, setSh
     </div>
   );
 }
+

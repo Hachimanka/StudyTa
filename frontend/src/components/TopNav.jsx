@@ -1,154 +1,160 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from 'react-router-dom'
+import { useLocation, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router-dom";
 
 export default function TopNav() {
   const { isAuthenticated } = useAuth();
   const [forceUpdate, setForceUpdate] = useState(0);
 
-  // Force re-render when localStorage changes
+  // Listen for auth and localStorage changes
   useEffect(() => {
-    const handleStorageChange = () => {
-      setForceUpdate(prev => prev + 1);
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Also listen for custom auth events
-    const handleAuthChange = () => {
-      setForceUpdate(prev => prev + 1);
-    };
-    
-    window.addEventListener('authChanged', handleAuthChange);
-
+    const handleStorageChange = () => setForceUpdate((prev) => prev + 1);
+    const handleAuthChange = () => setForceUpdate((prev) => prev + 1);
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("authChanged", handleAuthChange);
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('authChanged', handleAuthChange);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("authChanged", handleAuthChange);
     };
   }, []);
 
-  // Debug log to check authentication state
-  console.log('TopNav isAuthenticated:', isAuthenticated);
-  console.log('TopNav localStorage stuyta_auth:', localStorage.getItem('stuyta_auth'));
-
-  // Theme (dark mode) state: persisted to localStorage and applied via a `dark` class
+  // Theme toggle (persisted)
   const [isDark, setIsDark] = useState(() => {
     try {
-      return localStorage.getItem('theme') === 'dark'
-    } catch (e) {
-      return false
+      return localStorage.getItem("theme") === "dark";
+    } catch {
+      return false;
     }
-  })
+  });
 
   useEffect(() => {
-    try {
-      if (isDark) document.documentElement.classList.add('dark')
-      else document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', isDark ? 'dark' : 'light')
-  // notify other parts of the app that theme changed
-  try { window.dispatchEvent(new Event('themeChanged')) } catch(e){}
-    } catch (e) {
-      // ignore
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+      document.body.style.backgroundColor = "#1f1b16"; // deep dark brown
+      document.body.style.color = "#f5e9df"; // light beige text
+    } else {
+      document.documentElement.classList.remove("dark");
+      document.body.style.backgroundColor = "#f5e9df"; // beige background
+      document.body.style.color = "#4a2d18"; // dark brown text
     }
-  }, [isDark])
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    try {
+      window.dispatchEvent(new Event("themeChanged"));
+    } catch {}
+  }, [isDark]);
 
-  const location = useLocation()
-  const isLanding = location && location.pathname === '/'
+  const location = useLocation();
+  const isLanding = location && location.pathname === "/";
+
   return (
-  <nav className={"glass-card mx-6 mt-6 px-8 py-4 animate-fadeInUp" + (isLanding ? ' topbar-landing' : '')}>
+    <nav
+      className={`mx-6 mt-6 px-8 py-4 rounded-2xl shadow-md transition-all duration-500 ${
+        isDark ? "bg-[#2e2119]" : "bg-[#8B5E3C]"
+      }`}
+    >
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo */}
-        <div className="flex items-center space-x-3 animate-scaleIn">
-          <div className="w-8 h-8 flex items-center justify-center overflow-hidden animate-pulse-glow">
-            {/* Using public asset so path is absolute from site root */}
-              <img
-                src="/Lemivon.ico"
-                alt="Lemivon logo"
-                className="w-full h-full object-contain"
-                width={40}
-                height={40}
-                style={{ imageRendering: 'auto' }}
-                loading="eager"
-              />
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 flex items-center justify-center overflow-hidden">
+            <img
+              src="/StudyTa.ico"
+              alt="Logo"
+              className="w-full h-full object-contain"
+              width={40}
+              height={40}
+              style={{ imageRendering: "auto" }}
+              loading="eager"
+            />
           </div>
-          <span className="text-heading text-primary font-bold">Lemivon</span>
+          <span
+            className={`text-xl font-bold ${
+              isDark ? "text-[#f5e9df]" : "text-[#FDF3EA]"
+            }`}
+          >
+            StudyTa
+          </span>
         </div>
 
-        {/* Navigation Links */}
+        {/* Nav Links */}
         <div className="hidden md:flex space-x-8">
-          <a
-            href="#features"
-            className="text-body text-muted hover:text-accent transition-all duration-300 interactive"
-          >
-            Features
-          </a>
-          <a
-            href="#how-it-works"
-            className="text-body text-muted hover:text-accent transition-all duration-300 interactive"
-          >
-            How It Works
-          </a>
-          <a
-            href="#about"
-            className="text-body text-muted hover:text-accent transition-all duration-300 interactive"
-          >
-            About Us
-          </a>
-          <a
-            href="#contact"
-            className="text-body text-muted hover:text-accent transition-all duration-300 interactive"
-          >
-            Contact
-          </a>
+          {["Home", "How it Works", "Features", "About"].map((item) => (
+            <a
+              key={item}
+              href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
+              className={`transition-all duration-300 font-medium ${
+                isDark
+                  ? "text-[#f5e9df] hover:text-[#e6b97d]"
+                  : "text-[#FDF3EA] hover:text-[#E59C5C]"
+              }`}
+            >
+              {item}
+            </a>
+          ))}
         </div>
 
-        {/* Auth Section */}
+        {/* Right Side */}
         <div className="flex items-center space-x-3">
           {/* Dark Mode Toggle */}
           <button
-            onClick={() => setIsDark(d => !d)}
+            onClick={() => setIsDark((d) => !d)}
+            className={`p-2 rounded-lg transition-all ${
+              isDark
+                ? "hover:bg-[#3a2a20]"
+                : "hover:bg-[#A4714D]/40"
+            }`}
             aria-label="Toggle dark mode"
             title="Toggle Dark Mode"
-            className="theme-toggle p-2 rounded-xl hover:bg-gray-100 transition-all duration-300 interactive flex-shrink-0"
-            style={{ lineHeight: 0 }}
           >
             {isDark ? (
-              /* neutral sun */
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5" />
-                <g stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
-                  <path d="M12 1v2" />
-                  <path d="M12 21v2" />
-                  <path d="M4.2 4.2l1.4 1.4" />
-                  <path d="M18.4 18.4l1.4 1.4" />
-                  <path d="M1 12h2" />
-                  <path d="M21 12h2" />
-                  <path d="M4.2 19.8l1.4-1.4" />
-                  <path d="M18.4 5.6l1.4-1.4" />
-                </g>
+              // Sun Icon
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#f5e9df"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              >
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
               </svg>
             ) : (
-              /* neutral crescent moon */
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="1.5" fill="none" />
+              // Moon Icon
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#FDF3EA"
+                strokeWidth="1.5"
+              >
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
               </svg>
             )}
           </button>
 
-          {/* Authentication Buttons */}
+          {/* Auth Buttons */}
           <div className="flex items-center space-x-2">
             <Link
-              to="/login"
-              className="btn-modern btn-secondary text-caption whitespace-nowrap"
+              to="/register"
+              className={`px-4 py-2 rounded-full font-medium transition-all duration-300 ${
+                isDark
+                  ? "bg-[#E59C5C] text-[#1f1b16] hover:bg-[#e6b97d]"
+                  : "bg-[#E59C5C] text-white hover:bg-[#d68a47]"
+              }`}
             >
-              Login
+              Sign up
             </Link>
             <Link
-              to="/register"
-              className="btn-modern btn-primary text-caption whitespace-nowrap"
+              to="/login"
+              className={`px-4 py-2 rounded-full font-medium border transition-all duration-300 ${
+                isDark
+                  ? "border-[#f5e9df] text-[#f5e9df] hover:bg-[#3a2a20]"
+                  : "border-[#FDF3EA] text-[#FDF3EA] hover:bg-[#A4714D]/40"
+              }`}
             >
-              Sign Up
+              Sign in
             </Link>
           </div>
         </div>
