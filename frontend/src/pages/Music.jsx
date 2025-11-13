@@ -162,7 +162,7 @@ export default function Music() {
           <h1 className={`text-5xl font-bold bg-gradient-to-r from-${themeColors.primary}-600 to-${themeColors.primary}-700 bg-clip-text text-transparent`}>
             Focus Music
           </h1>
-          <p className={`mt-2 text-lg ${darkMode ? 'text-gray-400' : themeColors.text}`}>
+          <p className={`mt-2 text-lg ${darkMode ? 'text-[#f5e9df]/70' : themeColors.text}`}>
             Enhance your concentration with ambient sounds
           </p>
         </div>
@@ -180,7 +180,7 @@ export default function Music() {
                     selectedCategory === category
                       ? `bg-gradient-to-r ${themeColors.gradient} text-white shadow-lg`
                       : darkMode
-                        ? 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-600'
+                        ? 'bg-[#2e2119] text-gray-300 hover:bg-[#3a2a20] border border-gray-600'
                         : `bg-white ${themeColors.text} hover:bg-${themeColors.primary}-50 border ${themeColors.border}`
                   }`}
                 >
@@ -198,7 +198,7 @@ export default function Music() {
                     currentTrack?.id === track.id
                       ? `bg-gradient-to-br ${themeColors.gradient} text-white border-${themeColors.primary}-500 shadow-xl`
                       : darkMode
-                        ? 'bg-gray-800 border-gray-600 hover:border-gray-500 hover:shadow-lg text-white'
+                        ? 'bg-[#2e2119] border-gray-600 hover:border-gray-500 hover:shadow-lg text-white'
                         : `bg-white ${themeColors.border} hover:border-${themeColors.primary}-300 hover:shadow-lg`
                   }`}
                   onClick={() => playTrack(track)}
@@ -210,7 +210,7 @@ export default function Music() {
                         currentTrack?.id === track.id 
                           ? `text-${themeColors.primary}-100` 
                           : darkMode
-                            ? 'text-gray-400'
+                            ? 'text-[#f5e9df]/70'
                             : themeColors.text
                       }`}>
                         Duration: {track.duration}
@@ -220,7 +220,7 @@ export default function Music() {
                       currentTrack?.id === track.id 
                         ? 'bg-white/20' 
                         : darkMode
-                          ? 'bg-gray-700'
+                          ? 'bg-[#3a2a20]'
                           : `bg-${themeColors.primary}-100`
                     }`}>
                       {currentTrack?.id === track.id && isPlaying ? (
@@ -242,7 +242,7 @@ export default function Music() {
             {currentTrack && (
               <div className={`rounded-2xl p-6 shadow-xl border ${
                 darkMode 
-                  ? 'bg-gray-800 border-gray-600' 
+                  ? 'bg-[#2e2119] border-gray-600' 
                   : `bg-white ${themeColors.border}`
               }`}>
                 <div className="flex items-center justify-between mb-4">
@@ -256,7 +256,7 @@ export default function Music() {
                     onClick={() => setShowVisualizer(!showVisualizer)}
                     className={`px-4 py-2 rounded-lg transition-colors ${
                       darkMode
-                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        ? 'bg-[#3a2a20] text-gray-300 hover:bg-gray-600'
                         : `bg-${themeColors.primary}-100 ${themeColors.text} hover:bg-${themeColors.primary}-200`
                     }`}
                   >
@@ -284,7 +284,7 @@ export default function Music() {
             {/* Pomodoro Timer */}
             <div className={`rounded-2xl p-6 shadow-xl border ${
               darkMode 
-                ? 'bg-gray-800 border-gray-600' 
+                ? 'bg-[#2e2119] border-gray-600' 
                 : `bg-white ${themeColors.border}`
             }`}>
               <div className="flex items-center justify-between mb-4">
@@ -293,7 +293,7 @@ export default function Music() {
                 </h3>
                 <button
                   onClick={() => setShowTimer(!showTimer)}
-                  className={darkMode ? 'text-gray-400 hover:text-gray-300' : `${themeColors.text} hover:text-${themeColors.primary}-700`}
+                  className={darkMode ? 'text-[#f5e9df]/70 hover:text-gray-300' : `${themeColors.text} hover:text-${themeColors.primary}-700`}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -347,7 +347,7 @@ export default function Music() {
                     onClick={resetTimer}
                     className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                       darkMode
-                        ? 'bg-gray-700 hover:bg-gray-600 text-white'
+                        ? 'bg-[#3a2a20] hover:bg-gray-600 text-white'
                         : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                     }`}
                   >
@@ -360,7 +360,7 @@ export default function Music() {
             {/* Quick Stats */}
             <div className={`rounded-2xl p-6 shadow-xl border ${
               darkMode 
-                ? 'bg-gray-800 border-gray-600' 
+                ? 'bg-[#2e2119] border-gray-600' 
                 : `bg-white ${themeColors.border}`
             }`}>
               <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
@@ -428,3 +428,4 @@ export default function Music() {
     </div>
   )
 }
+

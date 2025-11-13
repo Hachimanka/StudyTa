@@ -81,15 +81,15 @@ function FileModal({ file, isOpen, onClose, onDownload }) {
           <div className="flex items-center gap-3">
             {getFileIcon(file.name)}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{file.name}</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-xl font-semibold text-[#4A2C1E]">{file.name}</h2>
+              <p className="text-sm text-[#5C4333]">
                 {formatFileSize(file.size)} • {formatDate(file.uploadDate)}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+            className="p-2 hover:bg-[#F2D9C7] rounded-lg transition-colors flex-shrink-0"
           >
             <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
               <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
@@ -101,23 +101,23 @@ function FileModal({ file, isOpen, onClose, onDownload }) {
         <div className="flex-1 overflow-y-auto p-6">
           {/* File Details */}
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">File Details</h3>
+            <h3 className="text-lg font-medium text-[#4A2C1E] mb-3">File Details</h3>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-500">Type:</span>
-                <span className="ml-2 text-gray-900">{file.type || 'Unknown'}</span>
+                <span className="text-[#5C4333]">Type:</span>
+                <span className="ml-2 text-[#4A2C1E]">{file.type || 'Unknown'}</span>
               </div>
               <div>
-                <span className="text-gray-500">Size:</span>
-                <span className="ml-2 text-gray-900">{formatFileSize(file.size)}</span>
+                <span className="text-[#5C4333]">Size:</span>
+                <span className="ml-2 text-[#4A2C1E]">{formatFileSize(file.size)}</span>
               </div>
               <div>
-                <span className="text-gray-500">Extension:</span>
-                <span className="ml-2 text-gray-900">{file.name.split('.').pop()?.toUpperCase() || 'None'}</span>
+                <span className="text-[#5C4333]">Extension:</span>
+                <span className="ml-2 text-[#4A2C1E]">{file.name.split('.').pop()?.toUpperCase() || 'None'}</span>
               </div>
               <div>
-                <span className="text-gray-500">Uploaded:</span>
-                <span className="ml-2 text-gray-900">{formatDate(file.uploadDate)}</span>
+                <span className="text-[#5C4333]">Uploaded:</span>
+                <span className="ml-2 text-[#4A2C1E]">{formatDate(file.uploadDate)}</span>
               </div>
             </div>
           </div>
@@ -125,8 +125,8 @@ function FileModal({ file, isOpen, onClose, onDownload }) {
           {/* Preview Section */}
           {canPreview(file.name) && (
             <div className="mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">Preview</h3>
-              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+              <h3 className="text-lg font-medium text-[#4A2C1E] mb-3">Preview</h3>
+              <div className="border border-gray-200 rounded-lg p-4 bg-[#F2D9C7]">
                 {file.name.match(/\.(jpg|jpeg|png|gif)$/i) && file.dataUrl && (
                   <div className="text-center">
                     <img 
@@ -174,7 +174,7 @@ function FileModal({ file, isOpen, onClose, onDownload }) {
                   </div>
                 )}
                 {file.name.match(/\.(txt|md|json|js|css|html|xml|csv)$/i) && (file.content || file.textContent) && (
-                  <div className="bg-gray-100 rounded p-4">
+                  <div className="bg-[#F2D9C7] rounded p-4">
                     <pre className="text-sm text-gray-700 whitespace-pre-wrap max-h-64 overflow-y-auto font-mono">
                       {(file.content || file.textContent).substring(0, 2000)}
                       {(file.content || file.textContent).length > 2000 && '\n\n... (content truncated - download to view full file)'}
@@ -299,7 +299,7 @@ function Folder({ folder, onAddFile, onAddFolder, onDeleteFile, onDeleteFolder, 
       <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
         <div className="flex items-center justify-between">
           <button 
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+            className="flex items-center gap-2 text-gray-700 hover:text-[#4A2C1E]"
             onClick={() => setExpanded(e => !e)}
           >
             <div className="p-1 text-blue-600">
@@ -355,8 +355,8 @@ function Folder({ folder, onAddFile, onAddFolder, onDeleteFile, onDeleteFolder, 
         </div>
 
         {showFileInput && (
-          <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Upload File</h3>
+          <div className="mt-4 p-4 bg-[#F2D9C7] border border-gray-200 rounded-lg">
+            <h3 className="text-lg font-medium text-[#4A2C1E] mb-3">Upload File</h3>
             <form onSubmit={e => { 
               e.preventDefault(); 
               if (selectedFile) {
@@ -394,8 +394,8 @@ function Folder({ folder, onAddFile, onAddFolder, onDeleteFile, onDeleteFolder, 
         )}
 
         {showFolderInput && (
-          <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
-            <h3 className="text-lg font-medium text-gray-900 mb-3">Create New Folder</h3>
+          <div className="mt-4 p-4 bg-[#F2D9C7] border border-gray-200 rounded-lg">
+            <h3 className="text-lg font-medium text-[#4A2C1E] mb-3">Create New Folder</h3>
             <form onSubmit={e => { 
               e.preventDefault(); 
               if (newFolderName.trim()) {
@@ -441,7 +441,7 @@ function Folder({ folder, onAddFile, onAddFolder, onDeleteFile, onDeleteFolder, 
                 {folder.files.map((file, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors group cursor-pointer"
+                    className="flex items-center justify-between p-3 bg-[#F2D9C7] border border-gray-200 rounded-lg hover:bg-[#F2D9C7] transition-colors group cursor-pointer"
                     onClick={() => onViewFile(file)}
                   >
                     <div className="flex items-center gap-3">
@@ -451,14 +451,14 @@ function Folder({ folder, onAddFile, onAddFolder, onDeleteFile, onDeleteFolder, 
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <span className="font-medium text-gray-900 block">{file.name}</span>
+                        <span className="font-medium text-[#4A2C1E] block">{file.name}</span>
                         {file.size && (
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-[#5C4333]">
                             {(file.size / 1024).toFixed(1)} KB
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded border">
+                      <span className="text-xs text-[#5C4333] bg-white px-2 py-1 rounded border">
                         {file.name.split('.').pop()?.toUpperCase() || 'FILE'}
                       </span>
                     </div>
@@ -500,7 +500,7 @@ function Folder({ folder, onAddFile, onAddFolder, onDeleteFile, onDeleteFolder, 
                 ))}
               </div>
             ) : (
-              <div className="p-4 text-center text-gray-500 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg">
+              <div className="p-4 text-center text-[#5C4333] bg-[#F2D9C7] border-2 border-dashed border-gray-300 rounded-lg">
                 <p className="text-sm">This folder is empty</p>
                 <p className="text-xs mt-1">Upload files or create subfolders to get started</p>
               </div>
@@ -950,7 +950,7 @@ export default function Library() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Total Files</p>
-                <p className="text-2xl font-bold text-gray-900">{totalFiles}</p>
+                <p className="text-2xl font-bold text-[#4A2C1E]">{totalFiles}</p>
               </div>
             </div>
           </div>
@@ -964,7 +964,7 @@ export default function Library() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Folders</p>
-                <p className="text-2xl font-bold text-gray-900">{totalFolders}</p>
+                <p className="text-2xl font-bold text-[#4A2C1E]">{totalFolders}</p>
               </div>
             </div>
           </div>
@@ -979,7 +979,7 @@ export default function Library() {
               </div>
               <div>
                 <p className="text-sm text-gray-600">Status</p>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-lg font-semibold text-[#4A2C1E]">
                   {totalFiles === 0 ? 'Empty' : 'Active'}
                 </p>
               </div>
@@ -1002,14 +1002,14 @@ export default function Library() {
               height="20" 
               fill="currentColor" 
               viewBox="0 0 16 16" 
-              className="absolute left-3 top-2.5 text-gray-400"
+              className="absolute left-3 top-2.5 text-[#f5e9df]/70"
             >
               <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
             </svg>
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-2.5 text-[#f5e9df]/70 hover:text-gray-600"
               >
                 <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                   <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
@@ -1078,13 +1078,13 @@ export default function Library() {
             <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">Quick Upload</h2>
+                  <h2 className="text-xl font-semibold text-[#4A2C1E]">Quick Upload</h2>
                   <button
                     onClick={() => {
                       setShowQuickUpload(false);
                       setQuickUploadFile(null);
                     }}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    className="p-2 hover:bg-[#F2D9C7] rounded-lg transition-colors"
                   >
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
                       <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
@@ -1104,11 +1104,11 @@ export default function Library() {
                   />
                 </div>
                 {quickUploadFile && (
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="mb-4 p-3 bg-[#F2D9C7] rounded-lg">
                     <p className="text-sm text-gray-700">
                       <strong>Selected:</strong> {quickUploadFile.name}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[#5C4333]">
                       Size: {(quickUploadFile.size / 1024).toFixed(1)} KB
                     </p>
                   </div>

@@ -9,10 +9,10 @@ export default function TrueFalseMode({ content, currentIndex, selectedAnswer, h
             <h3 className="text-xl font-semibold mb-4">True/False Template</h3>
             <p className="text-gray-700">Statement: [Fact or claim]</p>
             <div className="flex gap-4 mt-4">
-              <button className="flex-1 p-4 rounded-lg border-2 border-gray-300 bg-gray-100 text-gray-600">True</button>
-              <button className="flex-1 p-4 rounded-lg border-2 border-gray-300 bg-gray-100 text-gray-600">False</button>
+              <button className="flex-1 p-4 rounded-lg border-2 border-gray-300 bg-[#F2D9C7] text-gray-600">True</button>
+              <button className="flex-1 p-4 rounded-lg border-2 border-gray-300 bg-[#F2D9C7] text-gray-600">False</button>
             </div>
-            <p className="text-gray-500 mt-2">Upload a file to generate true/false questions</p>
+            <p className="text-[#5C4333] mt-2">Upload a file to generate true/false questions</p>
           </>
         </div>
       </div>
@@ -63,3 +63,4 @@ export default function TrueFalseMode({ content, currentIndex, selectedAnswer, h
     </div>
   );
 }
+

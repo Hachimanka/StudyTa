@@ -556,12 +556,12 @@ export default function FileBasedStudyApp() {
             <h3 className="text-xl font-semibold mb-4">Quiz Template</h3>
             <p className="text-gray-700">Question: [Multiple choice question]</p>
             <div className="mt-2 w-full">
-              <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">A. [Option 1]</div>
-              <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">B. [Option 2]</div>
-              <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">C. [Option 3]</div>
-              <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">D. [Option 4]</div>
+              <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">A. [Option 1]</div>
+              <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">B. [Option 2]</div>
+              <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">C. [Option 3]</div>
+              <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">D. [Option 4]</div>
             </div>
-            <p className="text-gray-500 mt-2">Upload a file to generate quiz questions</p>
+            <p className="text-[#5C4333] mt-2">Upload a file to generate quiz questions</p>
           </div>
         </div>
       );
@@ -589,12 +589,12 @@ export default function FileBasedStudyApp() {
             <h3 className="text-xl font-semibold mb-4">Quiz Template</h3>
             <p className="text-gray-700">Question: [Multiple choice question]</p>
             <div className="mt-2 w-full">
-              <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">A. [Option 1]</div>
-              <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">B. [Option 2]</div>
-              <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">C. [Option 3]</div>
-              <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">D. [Option 4]</div>
+              <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">A. [Option 1]</div>
+              <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">B. [Option 2]</div>
+              <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">C. [Option 3]</div>
+              <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">D. [Option 4]</div>
             </div>
-            <p className="text-gray-500 mt-2">Upload a file to generate quiz questions</p>
+            <p className="text-[#5C4333] mt-2">Upload a file to generate quiz questions</p>
           </div>
         </div>
       );
@@ -621,7 +621,7 @@ export default function FileBasedStudyApp() {
                 // Other unselected options
                 else if (selectedAnswer !== index && index !== correctIndex) {
                   // Other options remain neutral
-                  buttonClass = 'border-gray-200 bg-gray-50 text-gray-500';
+                  buttonClass = 'border-gray-200 bg-[#F2D9C7] text-[#5C4333]';
                 }
               }
 
@@ -650,10 +650,10 @@ export default function FileBasedStudyApp() {
             <h3 className="text-xl font-semibold mb-4">True/False Template</h3>
             <p className="text-gray-700">Statement: [Fact or claim]</p>
             <div className="flex gap-4 mt-4">
-              <button className="flex-1 p-4 rounded-lg border-2 border-gray-300 bg-gray-100 text-gray-600">True</button>
-              <button className="flex-1 p-4 rounded-lg border-2 border-gray-300 bg-gray-100 text-gray-600">False</button>
+              <button className="flex-1 p-4 rounded-lg border-2 border-gray-300 bg-[#F2D9C7] text-gray-600">True</button>
+              <button className="flex-1 p-4 rounded-lg border-2 border-gray-300 bg-[#F2D9C7] text-gray-600">False</button>
             </div>
-            <p className="text-gray-500 mt-2">Upload a file to generate true/false questions</p>
+            <p className="text-[#5C4333] mt-2">Upload a file to generate true/false questions</p>
           </div>
         </div>
       );
@@ -729,7 +729,7 @@ export default function FileBasedStudyApp() {
             </div>
           </div>
           <button className="px-8 py-3 rounded-lg font-semibold bg-gray-400 text-white cursor-not-allowed mt-4">Spin the Wheel</button>
-          <p className="text-gray-500 mt-2">Upload a file to generate wheel questions</p>
+          <p className="text-[#5C4333] mt-2">Upload a file to generate wheel questions</p>
         </div>
       );
     }
@@ -794,11 +794,11 @@ export default function FileBasedStudyApp() {
             <h3 className="text-xl font-semibold mb-4">Matching Template</h3>
             <div className="grid grid-cols-2 gap-4 w-full mt-2">
               <div className="p-3 bg-teal-50 rounded-lg border-2 border-teal-200 text-gray-600">Term 1</div>
-              <div className="p-3 bg-gray-50 rounded-lg border-2 border-gray-200 text-gray-600">Definition 1</div>
+              <div className="p-3 bg-[#F2D9C7] rounded-lg border-2 border-gray-200 text-gray-600">Definition 1</div>
               <div className="p-3 bg-teal-50 rounded-lg border-2 border-teal-200 text-gray-600">Term 2</div>
-              <div className="p-3 bg-gray-50 rounded-lg border-2 border-gray-200 text-gray-600">Definition 2</div>
+              <div className="p-3 bg-[#F2D9C7] rounded-lg border-2 border-gray-200 text-gray-600">Definition 2</div>
             </div>
-            <p className="text-gray-500 mt-2">Upload a file to generate matching pairs</p>
+            <p className="text-[#5C4333] mt-2">Upload a file to generate matching pairs</p>
           </div>
         </div>
       );
@@ -843,7 +843,7 @@ export default function FileBasedStudyApp() {
               {unmatchedDefs.map((def) => (
                 <button
                   key={def.idx}
-                  className={`w-full p-3 rounded-lg border-2 ${selectedDef === def.idx ? 'border-gray-600 bg-gray-100' : 'border-gray-200 bg-gray-50'} transition-all`}
+                  className={`w-full p-3 rounded-lg border-2 ${selectedDef === def.idx ? 'border-gray-600 bg-[#F2D9C7]' : 'border-gray-200 bg-[#F2D9C7]'} transition-all`}
                   onClick={() => setSelectedDef(def.idx)}
                   disabled={selectedDef === def.idx}
                 >
@@ -874,18 +874,18 @@ export default function FileBasedStudyApp() {
             {fileContent ? (
               <>
                 <p className="text-gray-700">No fill-in-the-blank questions were generated from your file.</p>
-                <p className="text-gray-500 mt-2">Try uploading a different file or check the file content.</p>
+                <p className="text-[#5C4333] mt-2">Try uploading a different file or check the file content.</p>
               </>
             ) : (
               <>
                 <p className="text-gray-700">Sentence: The mitochondria is the _____ of the cell.</p>
                 <input
                   type="text"
-                  className="w-full p-3 border-2 border-gray-300 rounded-lg mt-4 bg-gray-100 text-gray-600"
+                  className="w-full p-3 border-2 border-gray-300 rounded-lg mt-4 bg-[#F2D9C7] text-gray-600"
                   placeholder="Type your answer here..."
                   disabled
                 />
-                <p className="text-gray-500 mt-2">Upload a file to generate fill-in-the-blank questions</p>
+                <p className="text-[#5C4333] mt-2">Upload a file to generate fill-in-the-blank questions</p>
               </>
             )}
           </div>
@@ -903,7 +903,7 @@ export default function FileBasedStudyApp() {
         <div className="bg-white rounded-xl p-6 shadow">
           <h3 className="text-xl font-semibold mb-4">Fill in the blank:</h3>
           <div className="text-lg mb-2">
-            <span className="font-semibold text-gray-700">Question:</span> {blankText ? blankText : <span className="text-gray-400">No question text found in AI response.</span>}
+            <span className="font-semibold text-gray-700">Question:</span> {blankText ? blankText : <span className="text-[#f5e9df]/70">No question text found in AI response.</span>}
           </div>
           <div className="space-y-4 mb-2">
             <input
@@ -927,7 +927,7 @@ export default function FileBasedStudyApp() {
             </button>
           </div>
           <div className="text-lg mb-2">
-            <span className="font-semibold text-gray-700">Answer:</span> {answerText ? answerText : <span className="text-gray-400">No answer found in AI response.</span>}
+            <span className="font-semibold text-gray-700">Answer:</span> {answerText ? answerText : <span className="text-[#f5e9df]/70">No answer found in AI response.</span>}
           </div>
           {showAnswer && (
             <div className={`mt-4 p-3 rounded-lg ${
@@ -1068,7 +1068,7 @@ export default function FileBasedStudyApp() {
                 // Reset fill-in-the-blanks state
                 setAnsweredQuestions([]);
               }}
-              className="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:bg-gray-600 hover:shadow-lg"
+              className="px-6 py-3 bg-[#F2D9C7]0 text-white rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 hover:bg-gray-600 hover:shadow-lg"
             >
               📚 Choose New Mode
             </button>
@@ -1100,7 +1100,7 @@ export default function FileBasedStudyApp() {
     if (!activeMode) {
       return (
         <div className="flex items-center justify-center h-64">
-          <span className="text-lg text-gray-400">Select a study mode to begin.</span>
+          <span className="text-lg text-[#f5e9df]/70">Select a study mode to begin.</span>
         </div>
       );
     }
@@ -1278,7 +1278,7 @@ export default function FileBasedStudyApp() {
   };
 
   return (
-    <div className={`flex min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+    <div className={`flex min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-[#F2D9C7]'}`}>
       <Sidebar />
       <main className="flex-1 p-6 md:p-12 ml-20 md:ml-28">
         {/* Header */}
@@ -1290,7 +1290,7 @@ export default function FileBasedStudyApp() {
         </div>
 
         {/* File Upload */}
-        <div className={`mb-6 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1`}>
+        <div className={`mb-6 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'} rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1`}>
           <label className={`block text-sm font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-3`}>
             📄 Upload Study Material
           </label>
@@ -1299,7 +1299,7 @@ export default function FileBasedStudyApp() {
               type="file"
               accept=".txt,.md,.pdf,.doc,.docx"
               onChange={handleFileUpload}
-              className={`block w-full text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}
+              className={`block w-full text-sm ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'}
                 file:mr-4 file:py-3 file:px-6
                 file:rounded-full file:border-0
                 file:text-sm file:font-semibold
@@ -1327,7 +1327,7 @@ export default function FileBasedStudyApp() {
         <div className="grid grid-cols-1 xl:grid-cols-4 lg:grid-cols-3 gap-6">
           {/* Mode Selection */}
           <div className="xl:col-span-1 lg:col-span-1">
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1`}>
+            <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-white'} shadow rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1`}>
               <h2 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>🎯 Study Methods</h2>
               <div className="space-y-3">
                 {studyModes.map((mode) => (
@@ -1347,10 +1347,10 @@ export default function FileBasedStudyApp() {
                     disabled={!fileContent}
                     className={`w-full flex items-center p-3 rounded-lg border-2 transition-all duration-300 text-left transform ${
                       !fileContent
-                        ? `${darkMode ? 'border-gray-700 bg-gray-700 text-gray-500' : 'border-gray-100 bg-gray-50 text-gray-400'} cursor-not-allowed`
+                        ? `${darkMode ? 'border-gray-700 bg-[#3a2a20] text-[#5C4333]' : 'border-gray-100 bg-[#F2D9C7] text-[#f5e9df]/70'} cursor-not-allowed`
                         : activeMode === mode.id
                         ? `border-${themeColors.primary}-400 ${themeColors.light} ${themeColors.text} scale-105 shadow-lg`
-                        : `${darkMode ? 'border-gray-600 hover:border-' + themeColors.primary + '-400 hover:bg-gray-700 text-gray-300' : 'border-gray-200 hover:border-' + themeColors.primary + '-300 hover:' + themeColors.light + ' text-gray-600'} hover:scale-105 hover:shadow-md hover:translate-x-1`
+                        : `${darkMode ? 'border-gray-600 hover:border-' + themeColors.primary + '-400 hover:bg-[#3a2a20] text-gray-300' : 'border-gray-200 hover:border-' + themeColors.primary + '-300 hover:' + themeColors.light + ' text-gray-600'} hover:scale-105 hover:shadow-md hover:translate-x-1`
                     }`}
                   >
                     <div className={`transition-transform duration-300 ${
@@ -1369,14 +1369,14 @@ export default function FileBasedStudyApp() {
           <div className="xl:col-span-2 lg:col-span-2">
             {/* Progress Bar */}
             {content.length > 0 && activeMode !== 'wheel' && activeMode !== 'matching' && (
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow rounded-xl p-6 mb-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1`}>
+              <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-white'} shadow rounded-xl p-6 mb-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1`}>
                 <div className="flex justify-between items-center mb-2">
                   <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'} font-medium`}>Progress</span>
                   <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'} font-semibold`}>
                     {currentIndex + 1} / {content.length}
                   </span>
                 </div>
-                <div className={`w-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'} rounded-full h-3 overflow-hidden`}>
+                <div className={`w-full ${darkMode ? 'bg-[#3a2a20]' : 'bg-gray-200'} rounded-full h-3 overflow-hidden`}>
                   <div 
                     className={`bg-gradient-to-r ${themeColors.gradient} h-3 rounded-full transition-all duration-500 ease-out shadow-sm`} 
                     style={{ width: `${progress}%` }}
@@ -1390,7 +1390,7 @@ export default function FileBasedStudyApp() {
               <div className={`bg-gradient-to-r ${themeColors.light} ${themeColors.light} shadow rounded-xl p-6 mb-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 border border-${themeColors.primary}-100`}>
                 <div className="flex items-center justify-between">
                   <span className={`${themeColors.textDark} font-semibold`}>Current Score</span>
-                  <span className={`${themeColors.textDark} text-2xl font-bold ${darkMode ? 'bg-gray-700' : 'bg-white'} px-3 py-1 rounded-lg shadow-sm`}>
+                  <span className={`${themeColors.textDark} text-2xl font-bold ${darkMode ? 'bg-[#3a2a20]' : 'bg-white'} px-3 py-1 rounded-lg shadow-sm`}>
                     {score} / {Math.max(currentIndex + (showAnswer && activeMode !== 'fillBlanks' ? 1 : 0), 1)}
                   </span>
                 </div>
@@ -1404,21 +1404,21 @@ export default function FileBasedStudyApp() {
 
             {/* Navigation Buttons */}
             {content.length > 0 && activeMode !== 'wheel' && activeMode !== 'matching' && (
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow rounded-xl p-6 hover:shadow-lg transition-all duration-300`}>
+              <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-white'} shadow rounded-xl p-6 hover:shadow-lg transition-all duration-300`}>
                 <div className="flex justify-between items-center">
                   <button
                     onClick={handlePrevious}
                     disabled={currentIndex === 0}
                     className={`px-8 py-3 rounded-lg transition-all duration-300 transform font-semibold ${
                       currentIndex === 0
-                        ? `${darkMode ? 'bg-gray-700 text-gray-600' : 'bg-gray-200 text-gray-400'} cursor-not-allowed`
-                        : `${darkMode ? 'bg-gray-600 text-white hover:bg-gray-500' : 'bg-gray-500 text-white hover:bg-gray-600'} hover:scale-105 hover:shadow-lg hover:-translate-x-1 active:scale-95`
+                        ? `${darkMode ? 'bg-[#3a2a20] text-gray-600' : 'bg-gray-200 text-[#f5e9df]/70'} cursor-not-allowed`
+                        : `${darkMode ? 'bg-gray-600 text-white hover:bg-[#F2D9C7]0' : 'bg-[#F2D9C7]0 text-white hover:bg-gray-600'} hover:scale-105 hover:shadow-lg hover:-translate-x-1 active:scale-95`
                     }`}
                   >
                     ← Previous
                   </button>
 
-                  <span className={`text-sm ${darkMode ? 'text-gray-400 bg-gray-700' : 'text-gray-500 bg-gray-100'} font-medium px-3 py-1 rounded-full`}>
+                  <span className={`text-sm ${darkMode ? 'text-[#f5e9df]/70 bg-[#3a2a20]' : 'text-[#5C4333] bg-[#F2D9C7]'} font-medium px-3 py-1 rounded-full`}>
                     {currentIndex + 1} of {content.length}
                   </span>
 
@@ -1430,7 +1430,7 @@ export default function FileBasedStudyApp() {
                     }
                     className={`px-8 py-3 rounded-lg transition-all duration-300 transform font-semibold ${
                       currentIndex === content.length - 1
-                        ? `${darkMode ? 'bg-gray-700 text-gray-600' : 'bg-gray-200 text-gray-400'} cursor-not-allowed`
+                        ? `${darkMode ? 'bg-[#3a2a20] text-gray-600' : 'bg-gray-200 text-[#f5e9df]/70'} cursor-not-allowed`
                         : (activeMode === 'fillBlanks' && !showAnswer)
                         ? 'bg-orange-400 text-white cursor-not-allowed'
                         : `bg-${themeColors.primary}-600 text-white hover:bg-${themeColors.primary}-700 hover:scale-105 hover:shadow-lg hover:translate-x-1 active:scale-95`
@@ -1450,7 +1450,7 @@ export default function FileBasedStudyApp() {
 
           {/* Saved Study Sets History */}
           <div className="xl:col-span-1 lg:col-span-3 xl:col-start-4">
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1`}>
+            <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-white'} shadow rounded-xl p-6 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1`}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>💾 Saved Study Sets</h2>
                 <button
@@ -1464,7 +1464,7 @@ export default function FileBasedStudyApp() {
               {showHistory && (
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {savedStudySets.length === 0 ? (
-                    <p className="text-gray-500 text-sm text-center py-4">No saved study sets yet</p>
+                    <p className="text-[#5C4333] text-sm text-center py-4">No saved study sets yet</p>
                   ) : (
                     savedStudySets.map((savedSet) => {
                       // Get appropriate icon for study mode
@@ -1482,14 +1482,14 @@ export default function FileBasedStudyApp() {
                         <div key={savedSet.id} className={`border ${darkMode ? 'border-gray-600 hover:border-' + themeColors.primary + '-400' : 'border-gray-200 hover:border-' + themeColors.primary + '-300'} rounded-lg p-3 transition-colors`}>
                           <div className="flex items-start justify-between">
                             <div className="flex-1 min-w-0">
-                              <h3 className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'} truncate flex items-center`}>
+                              <h3 className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-[#4A2C1E]'} truncate flex items-center`}>
                                 <span className="mr-2">{icon}</span>
                                 {savedSet.title}
                               </h3>
-                              <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
+                              <p className={`text-xs ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'} mt-1`}>
                                 {savedSet.itemCount || savedSet.content?.length || savedSet.cards?.length || 0} items • {savedSet.createdAt}
                               </p>
-                              <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'} truncate`}>
+                              <p className={`text-xs ${darkMode ? 'text-[#5C4333]' : 'text-[#f5e9df]/70'} truncate`}>
                                 📄 {savedSet.fileName}
                               </p>
                             </div>
@@ -1519,7 +1519,7 @@ export default function FileBasedStudyApp() {
               
               {!showHistory && savedStudySets.length > 0 && (
                 <div className="text-center">
-                  <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>You have {savedStudySets.length} saved study sets</p>
+                  <p className={`text-sm ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'} mb-2`}>You have {savedStudySets.length} saved study sets</p>
                   <button
                     onClick={() => setShowHistory(true)}
                     className={`text-xs px-3 py-1 ${themeColors.light} ${themeColors.text} rounded-full hover:${themeColors.hover} transition-colors`}

@@ -164,7 +164,7 @@ export default function Summarize() {
   };
 
   return (
-    <div className={`flex min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-100'}`}>
+    <div className={`flex min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-[#F2D9C7]'}`}>
       <Sidebar />
 
       <main className="flex-1 p-6 md:p-12 ml-20 md:ml-28">
@@ -181,7 +181,7 @@ export default function Summarize() {
         {/* Content Wrapper */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-8">
           {/* Input Section */}
-          <div className={`xl:col-span-2 ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
+          <div className={`xl:col-span-2 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'} shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
             <div className="flex items-center justify-between mb-4">
               <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} flex items-center`}>
                 <span className="mr-2">📝</span>
@@ -200,7 +200,7 @@ export default function Summarize() {
             </div>
 
             {/* Enhanced Tab Buttons */}
-            <div className={`flex gap-1 mb-6 p-1 ${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg`}>
+            <div className={`flex gap-1 mb-6 p-1 ${darkMode ? 'bg-[#3a2a20]' : 'bg-[#F2D9C7]'} rounded-lg`}>
               <button
                 className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
                   activeTab === "text"
@@ -230,7 +230,7 @@ export default function Summarize() {
               <>
                 <div className="relative">
                   <textarea
-                    className={`w-full h-48 p-4 border-2 ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-white'} rounded-xl text-sm focus:ring-2 focus:ring-${themeColors.primary}-400 focus:border-${themeColors.primary}-400 outline-none transition-all duration-200 resize-none`}
+                    className={`w-full h-48 p-4 border-2 ${darkMode ? 'border-gray-600 bg-[#3a2a20] text-white' : 'border-gray-200 bg-gradient-to-br from-gray-50 to-white'} rounded-xl text-sm focus:ring-2 focus:ring-${themeColors.primary}-400 focus:border-${themeColors.primary}-400 outline-none transition-all duration-200 resize-none`}
                     placeholder="✨ Paste your text, article, document, or any content here to get an intelligent AI summary..."
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
@@ -247,7 +247,7 @@ export default function Summarize() {
                   )}
                 </div>
 
-                <div className={`flex justify-between items-center text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-3`}>
+                <div className={`flex justify-between items-center text-xs ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'} mt-3`}>
                   <div className="flex items-center space-x-4">
                     <span className="flex items-center">
                       <span className={`w-2 h-2 bg-${themeColors.primary}-400 rounded-full mr-1`}></span>
@@ -272,7 +272,7 @@ export default function Summarize() {
             {activeTab === "file" && (
               <div className="space-y-4">
                 {!selectedFile ? (
-                  <div className={`border-2 border-dashed border-${themeColors.primary}-300 rounded-xl p-8 text-center hover:border-${themeColors.primary}-400 hover:${themeColors.light} transition-all duration-300 ${darkMode ? 'bg-gray-700' : `bg-gradient-to-br from-${themeColors.primary}-25 to-${themeColors.primary}-25`}`}>
+                  <div className={`border-2 border-dashed border-${themeColors.primary}-300 rounded-xl p-8 text-center hover:border-${themeColors.primary}-400 hover:${themeColors.light} transition-all duration-300 ${darkMode ? 'bg-[#3a2a20]' : `bg-gradient-to-br from-${themeColors.primary}-25 to-${themeColors.primary}-25`}`}>
                     <div className="space-y-4">
                       <div className={`mx-auto w-16 h-16 bg-gradient-to-r ${themeColors.gradient} rounded-2xl flex items-center justify-center transform hover:scale-110 transition-transform duration-200`}>
                         <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -282,16 +282,16 @@ export default function Summarize() {
                       <div>
                         <p className={`text-lg font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-1`}>Upload Any Document</p>
                         <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'} mb-2`}>Drag & drop or click to browse</p>
-                        <div className="flex flex-wrap justify-center gap-1 text-xs text-gray-500 mb-3">
-                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-gray-100'} px-2 py-1 rounded`}>PDF</span>
-                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-gray-100'} px-2 py-1 rounded`}>DOC</span>
-                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-gray-100'} px-2 py-1 rounded`}>TXT</span>
-                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-gray-100'} px-2 py-1 rounded`}>CSV</span>
-                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-gray-100'} px-2 py-1 rounded`}>JSON</span>
-                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-gray-100'} px-2 py-1 rounded`}>MD</span>
-                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-gray-100'} px-2 py-1 rounded`}>HTML</span>
+                        <div className="flex flex-wrap justify-center gap-1 text-xs text-[#5C4333] mb-3">
+                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-[#F2D9C7]'} px-2 py-1 rounded`}>PDF</span>
+                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-[#F2D9C7]'} px-2 py-1 rounded`}>DOC</span>
+                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-[#F2D9C7]'} px-2 py-1 rounded`}>TXT</span>
+                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-[#F2D9C7]'} px-2 py-1 rounded`}>CSV</span>
+                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-[#F2D9C7]'} px-2 py-1 rounded`}>JSON</span>
+                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-[#F2D9C7]'} px-2 py-1 rounded`}>MD</span>
+                          <span className={`${darkMode ? 'bg-gray-600' : 'bg-[#F2D9C7]'} px-2 py-1 rounded`}>HTML</span>
                         </div>
-                        <p className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Maximum file size: 20MB</p>
+                        <p className={`text-xs ${darkMode ? 'text-[#5C4333]' : 'text-[#f5e9df]/70'}`}>Maximum file size: 20MB</p>
                       </div>
                       <label className="inline-block">
                         <input
@@ -370,7 +370,7 @@ export default function Summarize() {
               </button>
               <button
                 onClick={clearAll}
-                className={`px-6 py-3 border-2 ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-gray-700 hover:border-gray-500' : 'border-gray-300 text-gray-600 hover:bg-gray-50 hover:border-gray-400'} rounded-xl font-medium transition-all duration-200 transform hover:scale-105`}
+                className={`px-6 py-3 border-2 ${darkMode ? 'border-gray-600 text-gray-300 hover:bg-[#3a2a20] hover:border-gray-500' : 'border-gray-300 text-gray-600 hover:bg-[#F2D9C7] hover:border-gray-400'} rounded-xl font-medium transition-all duration-200 transform hover:scale-105`}
               >
                 <svg className="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -382,14 +382,14 @@ export default function Summarize() {
 
           {/* Enhanced Summary Results Section */}
           <div className="xl:col-span-1 space-y-6">
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
+            <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-white'} shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1`}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} flex items-center`}>
                   <span className="mr-2">🎯</span>
                   AI Summary
                 </h2>
                 {summary && (
-                  <div className={`flex items-center space-x-1 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <div className={`flex items-center space-x-1 text-xs ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'}`}>
                     <span className={`w-2 h-2 bg-${themeColors.primary}-400 rounded-full`}></span>
                     <span>{summary.split(' ').length} words</span>
                   </div>
@@ -405,11 +405,11 @@ export default function Summarize() {
                       placeholder="💾 Enter title to save summary..."
                       value={summaryTitle}
                       onChange={(e) => setSummaryTitle(e.target.value)}
-                      className={`w-full p-2 text-sm border ${darkMode ? 'border-gray-600 bg-gray-700 text-white' : 'border-gray-200 bg-white'} rounded-lg focus:ring-2 focus:ring-${themeColors.primary}-400 focus:border-${themeColors.primary}-400 outline-none`}
+                      className={`w-full p-2 text-sm border ${darkMode ? 'border-gray-600 bg-[#3a2a20] text-white' : 'border-gray-200 bg-white'} rounded-lg focus:ring-2 focus:ring-${themeColors.primary}-400 focus:border-${themeColors.primary}-400 outline-none`}
                     />
                   </div>
 
-                  <div className={`p-5 ${darkMode ? 'bg-gray-700' : 'bg-gradient-to-br from-gray-50 to-gray-100'} rounded-xl text-sm leading-relaxed whitespace-pre-line border-l-4 border-${themeColors.primary}-400 shadow-inner ${darkMode ? 'text-gray-200' : ''}`}>
+                  <div className={`p-5 ${darkMode ? 'bg-[#3a2a20]' : 'bg-gradient-to-br from-gray-50 to-gray-100'} rounded-xl text-sm leading-relaxed whitespace-pre-line border-l-4 border-${themeColors.primary}-400 shadow-inner ${darkMode ? 'text-gray-200' : ''}`}>
                     {summary}
                   </div>
 
@@ -477,7 +477,7 @@ export default function Summarize() {
                   </div>
                 </div>
               ) : (
-                <div className={`flex flex-col items-center justify-center h-48 text-center ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                <div className={`flex flex-col items-center justify-center h-48 text-center ${darkMode ? 'text-[#5C4333]' : 'text-[#f5e9df]/70'}`}>
                   <div className={`w-16 h-16 bg-gradient-to-r ${themeColors.gradient} rounded-2xl mb-4 flex items-center justify-center transform hover:scale-110 transition-transform duration-200`}>
                     <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -486,7 +486,7 @@ export default function Summarize() {
                   <p className="text-sm">
                     ✨ Your intelligent AI summary will appear here
                     <br />
-                    <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>Add content and generate summary to get started</span>
+                    <span className={`text-xs ${darkMode ? 'text-[#5C4333]' : 'text-[#f5e9df]/70'}`}>Add content and generate summary to get started</span>
                   </p>
                 </div>
               )}
@@ -494,18 +494,18 @@ export default function Summarize() {
 
             {/* History Section */}
             {showHistory && summaryHistory.length > 0 && (
-              <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300`}>
+              <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-white'} shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300`}>
                 <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4 flex items-center`}>
                   <span className="mr-2">📚</span>
                   Summary History
                 </h3>
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                   {summaryHistory.map((item) => (
-                    <div key={item.id} className={`p-4 border ${darkMode ? 'border-gray-600 hover:border-' + themeColors.primary + '-400 hover:bg-gray-700' : 'border-gray-200 hover:border-' + themeColors.primary + '-300 hover:' + themeColors.light} rounded-lg transition-all duration-200`}>
+                    <div key={item.id} className={`p-4 border ${darkMode ? 'border-gray-600 hover:border-' + themeColors.primary + '-400 hover:bg-[#3a2a20]' : 'border-gray-200 hover:border-' + themeColors.primary + '-300 hover:' + themeColors.light} rounded-lg transition-all duration-200`}>
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h4 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'} text-sm mb-1`}>{item.title}</h4>
-                          <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>
+                          <p className={`text-xs ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'} mb-2`}>
                             {item.date} • {item.time} • {item.wordCount} words • {item.source === 'file' ? '📁' : '✍️'}
                           </p>
                           <p className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'} line-clamp-2`}>{item.content.substring(0, 100)}...</p>
@@ -538,13 +538,13 @@ export default function Summarize() {
             )}
 
             {/* Saved Summaries (always visible) */}
-            <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 mt-6`}> 
+            <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-white'} shadow-lg rounded-xl p-6 hover:shadow-xl transition-all duration-300 mt-6`}> 
               <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} mb-4 flex items-center`}>
                 <span className="mr-2">💾</span>
                 Saved Summaries
               </h3>
               {summaryHistory.length === 0 ? (
-                <div className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No saved summaries yet. Save a summary to see it here.</div>
+                <div className={`text-sm ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'}`}>No saved summaries yet. Save a summary to see it here.</div>
               ) : (
                 <div className="space-y-3">
                   {summaryHistory.map((item) => (
@@ -552,7 +552,7 @@ export default function Summarize() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <h4 className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'} text-sm truncate`}>{item.title}</h4>
-                          <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} ml-2`}>{item.date} {item.time}</span>
+                          <span className={`text-xs ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'} ml-2`}>{item.date} {item.time}</span>
                         </div>
                         <p className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'} mt-1 line-clamp-2`}>{item.content.substring(0, 120)}{item.content.length > 120 ? '...' : ''}</p>
                       </div>

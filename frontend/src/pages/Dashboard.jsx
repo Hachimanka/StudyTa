@@ -187,8 +187,8 @@ export default function Home() {
 
   return (
     <div
-      className={`flex min-h-screen ${
-        darkMode ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
+      className={`flex min-h-screen transition-colors duration-500 ${
+        darkMode ? "bg-[#1f1b16] text-[#f5e9df]" : "bg-[#F2D9C7] text-[#4A2C1E]"
       }`}
     >
       {/* Sidebar */}
@@ -200,12 +200,16 @@ export default function Home() {
         
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-5xl font-bold">
+          <h1
+            className={`text-5xl font-bold transition-colors duration-300 ${
+              darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+            }`}
+          >
             {fullName ? `Welcome back, ${fullName}!` : "Welcome back!"}
           </h1>
           <p
-            className={`mt-1 text-xl ${
-              darkMode ? "text-gray-400" : "text-gray-500"
+            className={`mt-1 text-xl transition-colors duration-300 ${
+              darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"
             }`}
           >
             {fullName ? `Here's your learning progress overview, ${fullName}` : "Here's your learning progress overview"}
@@ -213,8 +217,17 @@ export default function Home() {
           
           {loading && (
             <div className="flex items-center mt-4">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-              <span className={darkMode ? "text-gray-400" : "text-gray-500"}>Loading your data...</span>
+              <div
+                className="animate-spin rounded-full h-4 w-4 border-b-2 mr-2"
+                style={{ borderColor: "#E59C5C" }}
+              ></div>
+              <span
+                className={`transition-colors duration-300 ${
+                  darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"
+                }`}
+              >
+                Loading your data...
+              </span>
             </div>
           )}
         </div>
@@ -270,22 +283,30 @@ export default function Home() {
             <div
               key={i}
               className={`p-6 flex items-center justify-between rounded-2xl shadow transition-transform hover:scale-105 ${
-                darkMode ? "bg-gray-800" : "bg-white"
+                darkMode ? "bg-[#2e2119]" : "bg-white"
               }`}
             >
               <div>
                 <p
-                  className={`text-lg ${
-                    darkMode ? "text-gray-400" : "text-gray-500"
+                  className={`text-lg transition-colors duration-300 ${
+                    darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"
                   }`}
                 >
                   {stat.label}
                 </p>
-                <h2 className="text-4xl font-bold">{stat.value}</h2>
+                <h2
+                  className={`text-4xl font-bold transition-colors duration-300 ${
+                    darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+                  }`}
+                >
+                  {stat.value}
+                </h2>
               </div>
               <div
-                className={`w-12 h-12 rounded-lg flex items-center justify-center text-xl ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}
-                style={{ color: themeColors.primary }}
+                className={`w-12 h-12 rounded-lg flex items-center justify-center text-xl transition-colors duration-300 ${
+                  darkMode ? 'bg-[#3a2a20]' : 'bg-[#F2D9C7]'
+                }`}
+                style={{ color: "#E59C5C" }}
               >
                 {stat.icon}
               </div>
@@ -297,16 +318,22 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
           {/* Recent Activity */}
           <div
-            className={`p-6 rounded-2xl shadow ${
-              darkMode ? "bg-gray-800" : "bg-white"
+            className={`p-6 rounded-2xl shadow transition-colors duration-300 ${
+              darkMode ? "bg-[#2e2119]" : "bg-white"
             }`}
           >
-            <h3 className="text-2xl font-semibold mb-4">Recent Activity</h3>
+            <h3
+              className={`text-2xl font-semibold mb-4 transition-colors duration-300 ${
+                darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+              }`}
+            >
+              Recent Activity
+            </h3>
             {recentActivities.length > 0 ? (
               <ul className="space-y-4">
                 {recentActivities.map((item, i) => (
                   <li key={i} className="flex items-start">
-                    <div className={`w-10 h-10 rounded-lg mr-3 flex items-center justify-center ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`} style={{ color: themeColors.primary }}>
+                    <div className={`w-10 h-10 rounded-lg mr-3 flex items-center justify-center ${darkMode ? 'bg-[#3a2a20]' : 'bg-[#F2D9C7]'}`} style={{ color: themeColors.primary }}>
                       {/* Render a small SVG based on activity type */}
                       {item.type === 'upload' && (
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -333,7 +360,7 @@ export default function Home() {
                       <p className="font-medium">{item.text}</p>
                       <span
                         className={`text-sm ${
-                          darkMode ? "text-gray-400" : "text-gray-500"
+                          darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"
                         }`}
                       >
                         {item.time}
@@ -343,7 +370,7 @@ export default function Home() {
                 ))}
               </ul>
             ) : (
-              <div className={`text-center py-8 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+              <div className={`text-center py-8 ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`}>
                 <p className="text-lg">No recent activity</p>
                 <p className="text-sm mt-1">Start by uploading files or creating summaries!</p>
               </div>
@@ -353,7 +380,7 @@ export default function Home() {
           {/* Quick Actions */}
           <div
             className={`p-6 rounded-2xl shadow ${
-              darkMode ? "bg-gray-800" : "bg-white"
+              darkMode ? "bg-[#2e2119]" : "bg-white"
             }`}
           >
             <h3 className="text-2xl font-semibold mb-4">Quick Actions</h3>
@@ -388,7 +415,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="font-semibold">Create Summary</p>
-                    <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                    <p className={`text-sm ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`}>
                       Summarize a new content
                     </p>
                   </div>
@@ -419,7 +446,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="font-semibold">Make Flashcards</p>
-                    <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                    <p className={`text-sm ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`}>
                       Generate study cards
                     </p>
                   </div>
@@ -454,7 +481,7 @@ export default function Home() {
                   </div>
                   <div>
                     <p className="font-semibold">Browse Library</p>
-                    <p className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                    <p className={`text-sm ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`}>
                       Access your files
                     </p>
                   </div>
@@ -469,7 +496,7 @@ export default function Home() {
           {/* Weekly Progress */}
           <div
             className={`p-6 rounded-2xl shadow ${
-              darkMode ? "bg-gray-800" : "bg-white"
+              darkMode ? "bg-[#2e2119]" : "bg-white"
             }`}
           >
             <h3 className="text-2xl font-semibold mb-4">This Week's Progress</h3>
@@ -478,7 +505,7 @@ export default function Home() {
                 <div key={i} className="flex items-center justify-between">
                   <span className="font-medium w-12">{day.day}</span>
                   <div className="flex-1 mx-4">
-                      <div className={`h-2 rounded-full ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                      <div className={`h-2 rounded-full ${darkMode ? 'bg-[#3a2a20]' : 'bg-gray-200'}`}>
                       <div 
                         className="h-2 rounded-full"
                         style={{
@@ -488,7 +515,7 @@ export default function Home() {
                       ></div>
                     </div>
                   </div>
-                  <span className={`text-sm w-16 text-right ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <span className={`text-sm w-16 text-right ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'}`}>
                     {day.minutes}min
                   </span>
                 </div>
@@ -499,7 +526,7 @@ export default function Home() {
           {/* Recent Files */}
           <div
             className={`p-6 rounded-2xl shadow ${
-              darkMode ? "bg-gray-800" : "bg-white"
+              darkMode ? "bg-[#2e2119]" : "bg-white"
             }`}
           >
             <div className="flex items-center justify-between mb-4">
@@ -518,7 +545,7 @@ export default function Home() {
                 {libraryStats.recentFiles.slice(0, 4).map((file, i) => (
                   <li key={i} className="flex items-center justify-between">
                     <div className="flex items-center flex-1">
-                      <div className={`w-8 h-8 rounded-lg mr-3 flex items-center justify-center text-sm ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`} style={{ color: themeColors.primary }}>
+                      <div className={`w-8 h-8 rounded-lg mr-3 flex items-center justify-center text-sm ${darkMode ? 'bg-[#3a2a20]' : 'bg-[#F2D9C7]'}`} style={{ color: themeColors.primary }}>
                         {/* File type icons (SVG) */}
                         {file.type?.includes('pdf') && (
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -548,7 +575,7 @@ export default function Home() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{file.name}</p>
-                        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        <p className={`text-sm ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'}`}>
                           {file.size ? `${(file.size / 1024).toFixed(1)} KB` : 'Unknown size'}
                         </p>
                       </div>
@@ -557,12 +584,12 @@ export default function Home() {
                 ))}
               </ul>
             ) : (
-              <div className={`text-center py-8 ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+              <div className={`text-center py-8 ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`}>
                 <p className="text-lg">No files yet</p>
                 <p className="text-sm mt-1">Upload your first file to get started!</p>
                 <Link to="/library">
                   <button 
-                    className="mt-3 px-4 py-2 rounded-lg text-white hover:opacity-90 transition-opacity"
+                    className="mt-3 px-4 py-2 rounded-lg text-[#f5e9df] hover:opacity-90 transition-opacity"
                     style={{ backgroundColor: themeColors.primary }}
                   >
                     Go to Library
@@ -576,3 +603,4 @@ export default function Home() {
     </div>
   );
 }
+
