@@ -7,6 +7,7 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   // Track hovered item for hover highlight without opening
   const [hovered, setHovered] = useState(null);
+  const [logoutHovered, setLogoutHovered] = useState(false);
   const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -65,35 +66,45 @@ export default function Sidebar() {
       </div>
 
       {/* Menu Items */}
-      <nav className="flex flex-col flex-grow space-y-2">
+      <nav className="flex flex-col flex-grow space-y-3">
         {menuItems.map((item, i) => {
           const active = location.pathname === item.path;
           return (
             <Link
               key={i}
               to={item.path}
-              className={`group relative transition-all duration-200 select-none ${isOpen ? "px-3" : "px-2"}`}
+              className={`group relative transition-all duration-200 select-none ${isOpen ? "px-3" : "px-0"}`}
               onMouseEnter={() => setHovered(i)}
               onMouseLeave={() => setHovered(null)}
             >
-              <div
-                className={`flex items-center ${isOpen ? "justify-start" : "justify-center"} gap-3 py-2.5 rounded-2xl`}
-                style={{
-                  backgroundColor: active
-                    ? `${COLORS.accent}80`
-                    : hovered === i
-                    ? COLORS.bgAlt
-                    : "transparent",
-                  color: active ? "#3b2a20" : COLORS.dark,
-                }}
-              >
-                <span className="w-7 h-7 flex items-center justify-center flex-shrink-0" style={{ lineHeight: 0, marginLeft: "6px" }}>
-                  <img src={item.icon} alt={item.name} className="w-7 h-7 object-contain" />
-                </span>
-                {isOpen && (
+              {isOpen ? (
+                <div
+                  className={`flex items-center justify-start gap-3 py-2.5 rounded-xl`}
+                  style={{
+                    backgroundColor: active ? `${COLORS.accent}80` : hovered === i ? `${COLORS.accent}80` : "transparent",
+                    color: active ? "#3b2a20" : COLORS.dark,
+                  }}
+                >
+                  <span className="w-7 h-7 flex items-center justify-center flex-shrink-0" style={{ lineHeight: 0, marginLeft: "6px" }}>
+                    <img src={item.icon} alt={item.name} className="w-7 h-7 object-contain" />
+                  </span>
                   <span className="text-base select-none">{item.name}</span>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <span
+                    className="flex items-center justify-center mx-auto"
+                    style={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: 14,
+                      backgroundColor: active ? `${COLORS.accent}80` : hovered === i ? `${COLORS.accent}80` : "transparent",
+                    }}
+                  >
+                    <img src={item.icon} alt={item.name} className="w-7 h-7 object-contain" />
+                  </span>
+                </div>
+              )}
             </Link>
           );
         })}
@@ -104,17 +115,38 @@ export default function Sidebar() {
         <div className="px-2 pb-3 mt-auto">
           <button
             onClick={handleLogout}
-            className={`w-full ${isOpen ? "px-2" : "px-1"} transition-all duration-200`}
+            onMouseEnter={() => setLogoutHovered(true)}
+            onMouseLeave={() => setLogoutHovered(false)}
+            className={`w-full ${isOpen ? "px-2" : "px-0"} transition-all duration-200`}
           >
-            <div
-              className={`flex items-center ${isOpen ? "justify-start" : "justify-center"} gap-3 py-2.5 rounded-2xl`}
-              style={{ backgroundColor: "transparent", color: COLORS.dark }}
-            >
-              <span className="w-7 h-7 flex items-center justify-center flex-shrink-0" style={{ lineHeight: 0 }}>
-                <img src="/SideBarIcons/LgOut.png" alt="Logout" className="w-7 h-7 object-contain" />
-              </span>
-              {isOpen && <span className="text-base select-none">Log out</span>}
-            </div>
+            {isOpen ? (
+              <div
+                className={`flex items-center justify-start gap-3 py-2.5 rounded-xl`}
+                style={{
+                  backgroundColor: logoutHovered ? `${COLORS.accent}80` : "transparent",
+                  color: COLORS.dark,
+                }}
+              >
+                <span className="w-7 h-7 flex items-center justify-center flex-shrink-0" style={{ lineHeight: 0, marginLeft: "6px" }}>
+                  <img src="/SideBarIcons/LgOut.png" alt="Logout" className="w-7 h-7 object-contain" />
+                </span>
+                <span className="text-base select-none">Log out</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-1.5">
+                <span
+                  className="flex items-center justify-center mx-auto"
+                  style={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: 14,
+                    backgroundColor: logoutHovered ? `${COLORS.accent}80` : "transparent",
+                  }}
+                >
+                  <img src="/SideBarIcons/LgOut.png" alt="Logout" className="w-7 h-7 object-contain" />
+                </span>
+              </div>
+            )}
           </button>
         </div>
       )}
