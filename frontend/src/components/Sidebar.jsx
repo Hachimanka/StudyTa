@@ -1,148 +1,152 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useSettings } from "../context/SettingsContext";
 
 export default function Sidebar() {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  // UI state: sidebar open/closed (hamburger toggles)
+  const [isOpen, setIsOpen] = useState(false);
+  // Track hovered item for hover highlight without opening
+  const [hovered, setHovered] = useState(null);
+  const [logoutHovered, setLogoutHovered] = useState(false);
   const { isAuthenticated, logout } = useAuth();
-  const { darkMode, getThemeColors } = useSettings();
   const navigate = useNavigate();
-
-  const themeColors = getThemeColors();
-
   const location = useLocation();
+
+  // Chocolate Brownie palette
+  const COLORS = {
+    accent: "#D69055", // pill highlight
+    bg: "#F2D9C5", // sidebar background
+    bgAlt: "#E9D8CE", // subtle alt/hover
+    brown: "#8C5A41", // mid brown
+    dark: "#6F422B", // text/icons
+  };
 
   const handleLogout = () => {
     logout(() => navigate("/"));
   };
 
   const menuItems = [
-    { name: "Dashboard", path: "/dashboard", icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="7" height="8" stroke="currentColor" strokeWidth="1.2"/><rect x="14" y="3" width="7" height="5" stroke="currentColor" strokeWidth="1.2"/><rect x="14" y="12" width="7" height="9" stroke="currentColor" strokeWidth="1.2"/></svg>
-    ) },
-    { name: "Summarize", path: "/summarize", icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 4h14" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><path d="M5 8h14" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/><rect x="5" y="12" width="14" height="6" rx="1" stroke="currentColor" strokeWidth="1.2"/></svg>
-    ) },
-    { name: "Calendar", path: "/calendar", icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.2"/><path d="M16 3v4M8 3v4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-    ) },
-    { name: "Flashcard/Quiz", path: "/flashcards", icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" strokeWidth="1.2"/><path d="M7 8h10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/></svg>
-    ) },
-    { name: "Library", path: "/library", icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 19.5V6a1 1 0 011-1h3v15M13 4h6a1 1 0 011 1v15" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-    ) },
-    { name: "Music", path: "/music", icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 18V5l10-2v13" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="7" cy="18" r="2" stroke="currentColor" strokeWidth="1.2"/></svg>
-    ) },
-    { name: "Settings", path: "/settings", icon: (
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" stroke="currentColor" strokeWidth="1.2"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06A2 2 0 013.28 17.9l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06A2 2 0 017.1 3.28l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001 1.51V7a2 2 0 014 0v.09c.3.13.57.32.8.55l.06.06a1.65 1.65 0 001.82.33l.06-.06A2 2 0 0120.72 6.1l-.06.06a1.65 1.65 0 00-.33 1.82 1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" strokeWidth="0.9"/></svg>
-    ) },
+    { name: "Dashboard", path: "/dashboard", icon: "/SideBarIcons/DshBrd.png" },
+    { name: "Summarize", path: "/summarize", icon: "/SideBarIcons/Sum.png" },
+    { name: "Calendar", path: "/calendar", icon: "/SideBarIcons/Clndr.png" },
+    { name: "Study Mode", path: "/flashcards", icon: "/SideBarIcons/StdMd.png" },
+    { name: "Library", path: "/library", icon: "/SideBarIcons/Lib.png" },
+    { name: "Analytics", path: "/progress", icon: "/SideBarIcons/Anl.png" },
+    { name: "Music", path: "/music", icon: "/SideBarIcons/Msc.png" },
   ];
-
   return (
     <aside
-      className={`
-        fixed left-4 top-4 bottom-4
-        flex flex-col
-        ${darkMode ? "bg-[#2e2119] border-[#3a2a20]" : "bg-white border-[#E6C8B1]"}
-        shadow-xl rounded-2xl
-        transition-all duration-300 ease-in-out
-        ${isCollapsed ? "w-16" : "w-50"}
-        border
-        overflow-hidden
-        z-50
-      `}
-      onMouseEnter={() => setIsCollapsed(false)}
-      onMouseLeave={() => setIsCollapsed(true)}
+      className={`fixed top-15 bottom-0 z-50 flex flex-col transition-all duration-300 ease-in-out`}
+      style={{
+        backgroundColor: COLORS.bg,
+        color: COLORS.dark,
+        borderRight: `1px solid ${COLORS.dark}20`,
+        borderLeft: `1px solid ${COLORS.dark}10`,
+        boxShadow: `0 8px 24px ${COLORS.dark}22` ,
+        borderTopRightRadius: 24,
+        borderBottomRightRadius: 24,
+        width: isOpen ? 260 : 64,
+      }}
     >
-      {/* Logo */}
+      {/* Header with hamburger + label */}
       <div className="flex items-center px-3 py-4 min-h-[64px]">
-          <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 overflow-hidden">
-            <img
-              src="/StudyTa.ico"
-              alt="StudyTa logo"
-              className="w-full h-full object-contain"
-              width={32}
-              height={32}
-              loading="eager"
-              style={{ imageRendering: 'auto' }}
-            />
-        </div>
-        <span
-          className={`ml-3 text-xl font-bold ${
-            darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
-          } ${isCollapsed ? "opacity-0" : "opacity-100"} transition-opacity duration-300 whitespace-nowrap`}
+        <button
+          aria-label="Toggle menu"
+          onClick={() => setIsOpen((v) => !v)}
+          className="h-9 w-9 flex items-center justify-center rounded-xl overflow-hidden"
+          style={{ backgroundColor: isOpen ? `${COLORS.bgAlt}80` : "transparent" }}
         >
-          StudyTa
-        </span>
+          <img src="/SideBarIcons/Men.png" alt="Menu" className="w-7 h-7 object-contain" />
+        </button>
+        {isOpen && (
+          <span className="ml-3 text-2xl font-semibold tracking-wide" style={{ color: COLORS.dark }}>
+            Menu
+          </span>
+        )}
       </div>
 
       {/* Menu Items */}
-      <nav className="flex flex-col flex-grow px-1.5 space-y-1">
-        {menuItems.map((item, i) => (
-          <Link
-            key={i}
-            to={item.path}
-            className={`
-              flex items-center p-3 rounded-xl
-              transition-colors duration-200
-              ${
-                location.pathname === item.path
-                  ? `${
-                      darkMode
-                        ? "bg-[#E59C5C]/20 text-[#E59C5C] border-[#E59C5C]"
-                        : "bg-[#E59C5C]/10 text-[#E59C5C] border-[#E59C5C]"
-                    } border`
-                  : `${
-                      darkMode
-                        ? "text-[#f5e9df] hover:bg-[#3a2a20]"
-                        : "text-[#4A2C1E] hover:bg-[#F2D9C7]"
-                    }`
-              }
-            `}
-          >
-            <span className="text-xl w-7 text-center flex-shrink-0">
-              {item.icon}
-            </span>
-            <span
-              className={`ml-3 ${
-                isCollapsed ? "opacity-0" : "opacity-100"
-              } transition-opacity duration-300 whitespace-nowrap`}
+      <nav className="flex flex-col flex-grow space-y-3">
+        {menuItems.map((item, i) => {
+          const active = location.pathname === item.path;
+          return (
+            <Link
+              key={i}
+              to={item.path}
+              className={`group relative transition-all duration-200 select-none ${isOpen ? "px-3" : "px-0"}`}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
             >
-              {item.name}
-            </span>
-          </Link>
-        ))}
+              {isOpen ? (
+                <div
+                  className={`flex items-center justify-start gap-3 py-2.5 rounded-xl`}
+                  style={{
+                    backgroundColor: active ? `${COLORS.accent}80` : hovered === i ? `${COLORS.accent}80` : "transparent",
+                    color: active ? "#3b2a20" : COLORS.dark,
+                  }}
+                >
+                  <span className="w-7 h-7 flex items-center justify-center flex-shrink-0" style={{ lineHeight: 0, marginLeft: "6px" }}>
+                    <img src={item.icon} alt={item.name} className="w-7 h-7 object-contain" />
+                  </span>
+                  <span className="text-base select-none">{item.name}</span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <span
+                    className="flex items-center justify-center mx-auto"
+                    style={{
+                      width: 50,
+                      height: 50,
+                      borderRadius: 14,
+                      backgroundColor: active ? `${COLORS.accent}80` : hovered === i ? `${COLORS.accent}80` : "transparent",
+                    }}
+                  >
+                    <img src={item.icon} alt={item.name} className="w-7 h-7 object-contain" />
+                  </span>
+                </div>
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
-      {/* Logout - Only show when authenticated */}
+      {/* Logout - bottom */}
       {isAuthenticated && (
-        <div className="px-1.5 pb-2 mt-auto">
+        <div className="px-2 pb-3 mt-auto">
           <button
             onClick={handleLogout}
-            className={`
-              flex items-center p-3 rounded-xl w-full text-left
-              ${darkMode ? "text-[#f5e9df] hover:bg-[#3a2a20]" : "text-[#4A2C1E] hover:bg-[#F2D9C7]"}
-              transition-colors duration-200
-            `}
+            onMouseEnter={() => setLogoutHovered(true)}
+            onMouseLeave={() => setLogoutHovered(false)}
+            className={`w-full ${isOpen ? "px-2" : "px-0"} transition-all duration-200`}
           >
-          <span className="text-xl w-7 text-center flex-shrink-0" style={{lineHeight:0}}>
-            {/* Standard logout icon (arrow leaving a door) */}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M16 17l5-5-5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M21 12H9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              <path d="M13 19H6a2 2 0 01-2-2V7a2 2 0 012-2h7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-            <span
-              className={`ml-3 ${
-                isCollapsed ? "opacity-0" : "opacity-100"
-              } transition-opacity duration-300 whitespace-nowrap`}
-            >
-              Logout
-            </span>
+            {isOpen ? (
+              <div
+                className={`flex items-center justify-start gap-3 py-2.5 rounded-xl`}
+                style={{
+                  backgroundColor: logoutHovered ? `${COLORS.accent}80` : "transparent",
+                  color: COLORS.dark,
+                }}
+              >
+                <span className="w-7 h-7 flex items-center justify-center flex-shrink-0" style={{ lineHeight: 0, marginLeft: "6px" }}>
+                  <img src="/SideBarIcons/LgOut.png" alt="Logout" className="w-7 h-7 object-contain" />
+                </span>
+                <span className="text-base select-none">Log out</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-1.5">
+                <span
+                  className="flex items-center justify-center mx-auto"
+                  style={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: 14,
+                    backgroundColor: logoutHovered ? `${COLORS.accent}80` : "transparent",
+                  }}
+                >
+                  <img src="/SideBarIcons/LgOut.png" alt="Logout" className="w-7 h-7 object-contain" />
+                </span>
+              </div>
+            )}
           </button>
         </div>
       )}
