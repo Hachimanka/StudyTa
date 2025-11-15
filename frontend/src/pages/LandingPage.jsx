@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import TopNav from "../components/TopNav";
 
 export default function Landing() {
   const [isDark, setIsDark] = useState(() => {
@@ -39,7 +38,7 @@ export default function Landing() {
         isDark ? "bg-[#1f1b16] text-[#f5e9df]" : "bg-[#F2D9C7] text-[#4A2C1E]"
       }`}
     >
-      <TopNav />
+      {/* TopNav is globally mounted in App.jsx */}
 
   {/* Hero Section */}
   <section className="flex flex-col items-center text-center py-28 px-6">
