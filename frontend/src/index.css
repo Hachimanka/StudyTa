@@ -11,12 +11,23 @@ body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", 
 	 @apply rules when PostCSS + Tailwind are working. */
 
 :root {
-	--color-primary: #0C969C; /* cyan-500 */
-	--color-accent:  #7c3aed; /* violet-500 */
-	--color-muted:   #6b7280; /* gray-500 */
-	--bg: #D9E8EC;
+	/* Landing page warm palette - Light mode */
+	--color-primary: #4A2C1E; /* dark brown */
+	--color-accent:  #E59C5C; /* warm orange */
+	--color-muted:   #5C4333; /* medium brown */
+	--bg-light: #F2D9C7; /* beige */
+	--bg-secondary: #E6C8B1; /* tan */
+	--text-light: #4A2C1E; /* dark brown text */
+	--text-muted: #5C4333; /* muted brown */
+	--bg: #F2D9C7;
 	--surface: rgba(255,255,255,0.6);
-	--text: #111827;
+	--text: #4A2C1E;
+	
+	/* Dark mode colors */
+	--bg-dark: #1f1b16; /* very dark brown */
+	--bg-dark-secondary: #2e2119; /* dark brown */
+	--text-dark: #f5e9df; /* light beige */
+	--text-dark-muted: #f5e9df; /* light beige muted */
 }
 
 /* Component fallbacks (plain CSS so styles show even when Tailwind isn't processing)
@@ -41,22 +52,24 @@ body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", 
 }
 
 .btn-primary {
-	background-color: #0C969C;
-	color: white;
-	border: 2px solid #0C969C;
+	background-color: #E59C5C;
+	color: #1f1b16;
+	border: 2px solid #E59C5C;
 }
 
 .btn-primary:hover {
 	opacity: 0.92;
 	transform: translateY(-1px);
+	background-color: #e6b97d;
+	border-color: #e6b97d;
 }
 
 /* Dark theme overrides when .dark is on documentElement */
 .dark {
-	--bg: #0b1120;
-	--surface: rgba(10,12,16,0.6);
-	--text: #f8fafc;
-	--color-muted: #9ca3af;
+	--bg: #1f1b16;
+	--surface: rgba(47,40,35,0.6);
+	--text: #f5e9df;
+	--color-muted: #d4af93;
 }
 
 body { background: var(--bg); color: var(--text); }

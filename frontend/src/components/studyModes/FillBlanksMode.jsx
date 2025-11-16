@@ -9,11 +9,11 @@ export default function FillBlanksMode({ content, currentIndex, userAnswer, setU
           <p className="text-gray-700">Sentence: The mitochondria is the _____ of the cell.</p>
           <input
             type="text"
-            className="w-full p-3 border-2 border-gray-300 rounded-lg mt-4 bg-gray-100 text-gray-600"
+            className="w-full p-3 border-2 border-gray-300 rounded-lg mt-4 bg-[#F2D9C7] text-gray-600"
             placeholder="Type your answer here..."
             disabled
           />
-          <p className="text-gray-500 mt-2">Upload a file to generate fill-in-the-blank questions</p>
+          <p className="text-[#5C4333] mt-2">Upload a file to generate fill-in-the-blank questions</p>
         </div>
       </div>
     );
@@ -119,7 +119,7 @@ export default function FillBlanksMode({ content, currentIndex, userAnswer, setU
       <div className="bg-white rounded-xl p-6 shadow">
         <h3 className="text-xl font-semibold mb-4">Fill in the blank:</h3>
         <div className="text-lg mb-2">
-          <span className="font-semibold text-gray-700">Question:</span> {blankText ? blankText : <span className="text-gray-400">No question text found in AI response.</span>}
+          <span className="font-semibold text-gray-700">Question:</span> {blankText ? blankText : <span className="text-[#f5e9df]/70">No question text found in AI response.</span>}
         </div>
         <div className="space-y-4 mb-2">
           <input
@@ -154,7 +154,7 @@ export default function FillBlanksMode({ content, currentIndex, userAnswer, setU
         {showAnswer && (
           <>
             <div className="text-lg mb-2">
-              <span className="font-semibold text-gray-700">Answer:</span> {answerText ? answerText : <span className="text-gray-400">No answer found in AI response.</span>}
+              <span className="font-semibold text-gray-700">Answer:</span> {answerText ? answerText : <span className="text-[#f5e9df]/70">No answer found in AI response.</span>}
             </div>
             <div className={`mt-4 p-3 rounded-lg ${
               userAnswer.toLowerCase().trim() === answerText.toLowerCase().trim()
@@ -178,3 +178,4 @@ export default function FillBlanksMode({ content, currentIndex, userAnswer, setU
     </div>
   );
 }
+

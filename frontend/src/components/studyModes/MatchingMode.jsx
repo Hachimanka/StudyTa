@@ -8,11 +8,11 @@ export default function MatchingMode({ content, matchedPairs, selectedTerm, setS
           <h3 className="text-xl font-semibold mb-4">Matching Template</h3>
           <div className="grid grid-cols-2 gap-4 w-full mt-2">
             <div className="p-3 bg-teal-50 rounded-lg border-2 border-teal-200 text-gray-600">Term 1</div>
-            <div className="p-3 bg-gray-50 rounded-lg border-2 border-gray-200 text-gray-600">Definition 1</div>
+            <div className="p-3 bg-[#F2D9C7] rounded-lg border-2 border-gray-200 text-gray-600">Definition 1</div>
             <div className="p-3 bg-teal-50 rounded-lg border-2 border-teal-200 text-gray-600">Term 2</div>
-            <div className="p-3 bg-gray-50 rounded-lg border-2 border-gray-200 text-gray-600">Definition 2</div>
+            <div className="p-3 bg-[#F2D9C7] rounded-lg border-2 border-gray-200 text-gray-600">Definition 2</div>
           </div>
-          <p className="text-gray-500 mt-2">Upload a file to generate matching pairs</p>
+          <p className="text-[#5C4333] mt-2">Upload a file to generate matching pairs</p>
         </div>
       </div>
     );
@@ -143,7 +143,7 @@ export default function MatchingMode({ content, matchedPairs, selectedTerm, setS
             {unmatchedDefs.map((def) => (
               <button
                 key={def.idx}
-                className={`w-full p-3 rounded-lg border-2 ${selectedDef === def.idx ? 'border-gray-600 bg-gray-100' : 'border-gray-200 bg-gray-50'} transition-all`}
+                className={`w-full p-3 rounded-lg border-2 ${selectedDef === def.idx ? 'border-gray-600 bg-[#F2D9C7]' : 'border-gray-200 bg-[#F2D9C7]'} transition-all`}
                 onClick={() => setSelectedDef(def.idx)}
                 disabled={selectedDef === def.idx}
               >
@@ -164,3 +164,4 @@ export default function MatchingMode({ content, matchedPairs, selectedTerm, setS
     </div>
   );
 }
+

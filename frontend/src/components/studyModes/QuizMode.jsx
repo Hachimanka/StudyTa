@@ -8,12 +8,12 @@ export default function QuizMode({ content, currentIndex, selectedAnswer, handle
           <h3 className="text-xl font-semibold mb-4">Quiz Template</h3>
           <p className="text-gray-700">Question: [Multiple choice question]</p>
           <div className="mt-2 w-full">
-            <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">A. [Option 1]</div>
-            <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">B. [Option 2]</div>
-            <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">C. [Option 3]</div>
-            <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">D. [Option 4]</div>
+            <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">A. [Option 1]</div>
+            <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">B. [Option 2]</div>
+            <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">C. [Option 3]</div>
+            <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">D. [Option 4]</div>
           </div>
-          <p className="text-gray-500 mt-2">Upload a file to generate quiz questions</p>
+          <p className="text-[#5C4333] mt-2">Upload a file to generate quiz questions</p>
         </div>
       </div>
     );
@@ -95,7 +95,7 @@ export default function QuizMode({ content, currentIndex, selectedAnswer, handle
                   // Other unselected options
                   else if (selected !== index && index !== correctIndex) {
                     // Other options remain neutral
-                    buttonClass = 'border-gray-200 bg-gray-50 text-gray-500';
+                    buttonClass = 'border-gray-200 bg-[#F2D9C7] text-[#5C4333]';
                   }
                 }
 
@@ -124,12 +124,12 @@ export default function QuizMode({ content, currentIndex, selectedAnswer, handle
           <h3 className="text-xl font-semibold mb-4">Quiz Template</h3>
           <p className="text-gray-700">Question: [Multiple choice question]</p>
           <div className="mt-2 w-full">
-            <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">A. [Option 1]</div>
-            <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">B. [Option 2]</div>
-            <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">C. [Option 3]</div>
-            <div className="p-2 rounded border mb-1 bg-gray-100 text-gray-600">D. [Option 4]</div>
+            <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">A. [Option 1]</div>
+            <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">B. [Option 2]</div>
+            <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">C. [Option 3]</div>
+            <div className="p-2 rounded border mb-1 bg-[#F2D9C7] text-gray-600">D. [Option 4]</div>
           </div>
-          <p className="text-gray-500 mt-2">Upload a file to generate quiz questions</p>
+          <p className="text-[#5C4333] mt-2">Upload a file to generate quiz questions</p>
         </div>
       </div>
     );
@@ -163,3 +163,4 @@ export default function QuizMode({ content, currentIndex, selectedAnswer, handle
     </div>
   );
 }
+

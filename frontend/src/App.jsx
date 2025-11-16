@@ -2,20 +2,19 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, RequireAuth } from './context/AuthContext'
 import { SettingsProvider } from './context/SettingsContext'
-import Landing from './pages/Landing'
-import Login from './pages/Login'
-import Register from './pages/Register'
+import Landing from './pages/LandingPage'
+import Login from './pages/LoginPage'
+import Register from './pages/RegisterPage'
 import ForgotPassword from './pages/ForgotPassword'
 import ChangePassword from './pages/ChangePassword'
 import Dashboard from './pages/Dashboard'
 import Summarize from './pages/Summarize'
 import Calendar from './pages/Calendar'
-import Flashcards from './pages/Flashcards'
 import Library from './pages/Library'
-import Progress from './pages/Progress'
-import Quote from './pages/Quote'
 import Music from './pages/Music'
-import Settings from './pages/Settings'
+import StudyMode from './pages/StudyMode'
+import Analytics from './pages/Analytics'
+import Profile from './pages/Profile'
 import ChatWidget from './components/ChatWidget'
 import AuthenticatedWidget from './components/AuthenticatedWidget'
 import GlobalMusicPlayer from './components/GlobalMusicPlayer'
@@ -32,12 +31,11 @@ export default function App() {
         <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
         <Route path="/summarize" element={<RequireAuth><Summarize /></RequireAuth>} />
         <Route path="/calendar" element={<RequireAuth><Calendar /></RequireAuth>} />
-        <Route path="/flashcards" element={<RequireAuth><Flashcards /></RequireAuth>} />
         <Route path="/library" element={<RequireAuth><Library /></RequireAuth>} />
-        <Route path="/progress" element={<RequireAuth><Progress /></RequireAuth>} />
-        <Route path="/quote" element={<RequireAuth><Quote /></RequireAuth>} />
         <Route path="/music" element={<RequireAuth><Music /></RequireAuth>} />
-        <Route path="/settings" element={<RequireAuth><Settings /></RequireAuth>} />
+        <Route path="/study" element={<RequireAuth><StudyMode /></RequireAuth>} />
+        <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
+        <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/change-password" element={<RequireAuth><ChangePassword /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/" replace />} />
