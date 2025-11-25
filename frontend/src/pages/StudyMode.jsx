@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import FlashCardMode from '../components/studyModes/FlashCardMode';
 import QuizMode from '../components/studyModes/QuizMode';
 import TrueFalseMode from '../components/studyModes/TrueFalseMode';
@@ -242,6 +243,21 @@ export default function FileBasedStudyApp() {
       )
     }
   ];
+
+  const location = useLocation();
+
+  // Apply mode from URL query param if present (e.g. /study?mode=flashcards)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(location.search);
+      const modeFromUrl = params.get('mode');
+      if (modeFromUrl) {
+        setActiveMode(modeFromUrl);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [location.search]);
 
   // Handle file upload
   const handleFileUpload = async (event) => {
