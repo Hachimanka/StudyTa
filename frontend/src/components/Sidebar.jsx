@@ -31,7 +31,7 @@ export default function Sidebar() {
     { name: "Calendar", path: "/calendar", icon: "/SideBarIcons/Clndr.png" },
     { name: "Study Mode", path: "/flashcards", icon: "/SideBarIcons/StdMd.png" },
     { name: "Library", path: "/library", icon: "/SideBarIcons/Lib.png" },
-    { name: "Analytics", path: "/progress", icon: "/SideBarIcons/Anl.png" },
+    { name: "Analytics", path: "/analytics", icon: "/SideBarIcons/Anl.png" },
     { name: "Music", path: "/music", icon: "/SideBarIcons/Msc.png" },
   ];
   return (
