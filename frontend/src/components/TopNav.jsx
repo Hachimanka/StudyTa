@@ -236,13 +236,13 @@ export default function TopNav() {
 
   return (
     <nav
-      className={`mx-6 mt-6 px-8 py-4 rounded-2xl shadow-md transition-all duration-500 ${
-        isDark ? "bg-[#2e2119]" : "bg-[#8B5E3C]"
+      className={`shadow-md transition-all duration-500 ${
+        isDark ? "bg-[#2e2119]" : "bg-[#845C47]"
       }`}
     >
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
+      <div className="relative w-full flex items-center" style={{ minHeight: '56px' }}>
         {/* Logo */}
-        <div className="flex items-center space-x-3">
+        <div className="absolute left-0 flex items-center space-x-3 pl-3 md:pl-4 lg:pl-5 h-full">
           <div className="w-8 h-8 flex items-center justify-center overflow-hidden">
             <img
               src="/StudyTa.ico"
@@ -264,87 +264,56 @@ export default function TopNav() {
         </div>
 
         {/* Nav Links */}
-        <div className="hidden md:flex space-x-8">
-          {["Home", "How it Works", "Features", "About"].map((item) => (
+        <div className="hidden md:flex space-x-8 mx-auto justify-center w-full">
+          {[
+            { label: "Home", hash: "home" },
+            { label: "How it Works", hash: "how-it-works" },
+            { label: "Features", hash: "features" },
+            { label: "About", hash: "about" }
+          ].map((item) => (
             <a
-              key={item}
-              href={`#${item.toLowerCase().replace(/\s+/g, "-")}`}
-              className={`transition-all duration-300 font-medium ${
+              key={item.label}
+              href={`#${item.hash}`}
+              className={`transition-all duration-300 font-regular ${
                 isDark
                   ? "text-[#f5e9df] hover:text-[#e6b97d]"
                   : "text-[#FDF3EA] hover:text-[#E59C5C]"
               }`}
+              onClick={e => {
+                e.preventDefault();
+                const el = document.getElementById(item.hash);
+                if (el) {
+                  el.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
             >
-              {item}
+              {item.label}
             </a>
           ))}
         </div>
 
         {/* Right Side */}
-        <div className="flex items-center space-x-3">
-          {/* Dark Mode Toggle */}
-          <button
-            onClick={() => setIsDark((d) => !d)}
-            className={`p-2 rounded-lg transition-all ${
+        <div className="absolute right-0 flex items-center space-x-2 pr-3 md:pr-4 lg:pr-5 h-full">
+          <Link
+            to="/register"
+            className={`px-8 py-2 rounded-full font-medium border transition-all duration-300 ${
               isDark
-                ? "hover:bg-[#3a2a20]"
-                : "hover:bg-[#A4714D]/40"
+                ? "border-[#f5e9df] text-[#f5e9df] hover:bg-[#3a2a20]"
+                : "border-[#FDF3EA] text-[#FDF3EA] hover:bg-[#A4714D]/40"
             }`}
-            aria-label="Toggle dark mode"
-            title="Toggle Dark Mode"
           >
-            {isDark ? (
-              // Sun Icon
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#f5e9df"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              >
-                <circle cx="12" cy="12" r="4" />
-                <path d="M12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" />
-              </svg>
-            ) : (
-              // Moon Icon
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#FDF3EA"
-                strokeWidth="1.5"
-              >
-                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-              </svg>
-            )}
-          </button>
-
-          {/* Auth Buttons */}
-          <div className="flex items-center space-x-2">
-            <Link
-              to="/register"
-              className={`px-4 py-2 rounded-full font-medium transition-all duration-300 ${
-                isDark
-                  ? "bg-[#E59C5C] text-[#1f1b16] hover:bg-[#e6b97d]"
-                  : "bg-[#E59C5C] text-white hover:bg-[#d68a47]"
-              }`}
-            >
-              Sign up
-            </Link>
-            <Link
-              to="/login"
-              className={`px-4 py-2 rounded-full font-medium border transition-all duration-300 ${
-                isDark
-                  ? "border-[#f5e9df] text-[#f5e9df] hover:bg-[#3a2a20]"
-                  : "border-[#FDF3EA] text-[#FDF3EA] hover:bg-[#A4714D]/40"
-              }`}
-            >
-              Sign in
-            </Link>
-          </div>
+            Sign up
+          </Link>
+          <Link
+            to="/login"
+            className={`px-8 py-2 rounded-full font-medium transition-all duration-300 ${
+              isDark
+                ? "bg-[#E59C5C] text-[#1f1b16] hover:bg-[#e6b97d]"
+                : "bg-[#E59C5C] text-white hover:bg-[#d68a47]"
+            }`}
+          >
+            Sign in
+          </Link>
         </div>
       </div>
     </nav>

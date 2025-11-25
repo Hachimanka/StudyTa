@@ -41,7 +41,7 @@ export default function Landing() {
       {/* TopNav is globally mounted in App.jsx */}
 
   {/* Hero Section */}
-  <section className="flex flex-col items-center text-center py-28 px-6">
+  <section id="home" className="flex flex-col items-center text-center py-28 px-6">
         <motion.h1
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -89,7 +89,7 @@ export default function Landing() {
       </section>
 
       {/* Interactive Learning Section */}
-      <section className={`py-24 px-6 text-center transition-colors duration-500 ${isDark ? "bg-[#2e2119]" : "bg-[#E6C8B1]"}`}>
+      <section id="features" className={`py-24 px-6 text-center transition-colors duration-500 ${isDark ? "bg-[#2e2119]" : "bg-[#E6C8B1]"}`}>
         <motion.h2
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -140,8 +140,8 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* How It Works Section */}
-  <section className={`py-24 px-6 text-center transition-colors duration-500 ${isDark ? "bg-[#1f1b16]" : "bg-[#F2D9C7]"}`}>
+        {/* How It Works Section */}
+      <section id="how-it-works" className={`py-24 px-6 text-center transition-colors duration-500 ${isDark ? "bg-[#1f1b16]" : "bg-[#F2D9C7]"}`}>
         <motion.h2
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -187,7 +187,7 @@ export default function Landing() {
       </section>
 
       {/* About Section */}
-      <section className={`py-24 px-6 text-center transition-colors duration-500 ${isDark ? "bg-[#1f1b16]" : "bg-[#F2D9C7]"}`}>
+      <section id="about" className={`py-24 px-6 text-center transition-colors duration-500 ${isDark ? "bg-[#1f1b16]" : "bg-[#F2D9C7]"}`}>
         <motion.h2
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
