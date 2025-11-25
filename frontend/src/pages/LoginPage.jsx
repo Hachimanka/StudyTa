@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import EyeIcon from "../components/EyeIcon.jsx";
+import EyeIcon from "../components/EyeIcon";
+import TopNav from "../components/TopNav";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const [isDark, setIsDark] = useState(() => {
     try {
       return localStorage.getItem("theme") === "dark";
@@ -15,21 +17,16 @@ export default function Login() {
       return false;
     }
   });
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     const onThemeChanged = () => {
-      try {
-        setIsDark(localStorage.getItem("theme") === "dark");
-      } catch {
-        setIsDark(false);
-      }
+      setIsDark(localStorage.getItem("theme") === "dark");
     };
-
     window.addEventListener("themeChanged", onThemeChanged);
     window.addEventListener("storage", onThemeChanged);
-
     return () => {
       window.removeEventListener("themeChanged", onThemeChanged);
       window.removeEventListener("storage", onThemeChanged);
@@ -51,140 +48,237 @@ export default function Login() {
   };
 
   return (
+  <>
+    <TopNav />
+
     <div
-      className={`min-h-screen flex items-center justify-center transition-colors duration-500 ${
-        isDark ? "bg-[#1f1b16]" : "bg-[#F2D9C7]"
+      className={`min-h-screen w-full flex items-center justify-center px-4 transition-colors duration-500 ${
+        isDark ? "bg-[#1f1b16]" : "bg-[#F5E9DF]"
       }`}
     >
+      {/* MAIN BOX */}
       <div
-        className={`w-full max-w-md p-8 rounded-2xl shadow-lg transition-colors duration-500 ${
-          isDark
-            ? "bg-[#2e2119] border border-[#3a2a20]"
-            : "bg-white border border-[#E6C8B1]"
+        className={`rounded-3xl shadow-xl grid grid-cols-2 gap-2 transition-colors duration-500 ${
+          isDark ? "bg-[#2e2119]" : "bg-[#BE8E78]"
         }`}
+        style={{ width: "1190px", height: "818px", padding: "50px" }}
       >
-        <h2
-          className={`text-2xl font-bold mb-2 transition-colors duration-300 ${
-            isDark ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+        {/* LEFT IMAGE BOX */}
+        <div
+          className={`rounded-xl ${
+            isDark ? "bg-[#3a2a20]" : "bg-[#D9D9D9]"
           }`}
-        >
-          Welcome Back
-        </h2>
-        <p
-          className={`mb-6 transition-colors duration-300 ${
-            isDark ? "text-[#f5e9df]/70" : "text-[#5C4333]"
-          }`}
-        >
-          Sign in to your account
-        </p>
+          style={{ width: "505px", height: "718px" }}
+        ></div>
 
-        <form onSubmit={onSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 ${
-              isDark
-                ? "bg-[#3a2a20] border-[#4a3a30] text-[#f5e9df] placeholder-[#f5e9df]/50"
-                : "bg-[#F2D9C7] border-[#E6C8B1] text-[#4A2C1E] placeholder-[#5C4333]"
-            }`}
-          />
-          <div style={{ position: "relative" }}>
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={`w-full px-4 py-2 rounded-lg border transition-colors duration-300 ${
-                isDark
-                  ? "bg-[#3a2a20] border-[#4a3a30] text-[#f5e9df] placeholder-[#f5e9df]/50"
-                  : "bg-[#F2D9C7] border-[#E6C8B1] text-[#4A2C1E] placeholder-[#5C4333]"
-              }`}
-              style={{ paddingRight: 32 }}
-            />
-            <EyeIcon visible={showPassword} onClick={() => setShowPassword((v) => !v)} />
-          </div>
+        {/* RIGHT FORM SECTION */}
+        <div className="flex flex-col justify-center" style={{ marginTop: "-80px" }}>
+          {/* Title */}
+          <h2
+            className={`${isDark ? "text-[#f5e9df]" : "text-white"}`}
+            style={{
+              fontSize: "48px",
+              fontWeight: 500,
+              fontStyle: "italic",
+              marginBottom: "20px",
+            }}
+          >
+            Welcome Back!
+          </h2>
 
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          {/* Subtext */}
+          <p
+            className={`${isDark ? "text-[#f5e9df]/70" : "text-white/90"}`}
+            style={{ fontSize: "20px", fontWeight: 300 }}
+          >
+            Don't have an account?{" "}
             <Link
-              to="/forgot-password"
-              className={`text-sm transition-colors duration-300 ${
-                isDark ? "text-[#E59C5C] hover:text-[#e6b97d]" : "text-[#E59C5C] hover:text-[#d68a47]"
-              }`}
-            >
-              Forgot Password?
-            </Link>
-          </div>
-
-          <button
-            type="submit"
-            className={`w-full font-medium px-4 py-2 rounded-lg transition-all duration-300 ${
-              isDark
-                ? "bg-[#E59C5C] text-[#1f1b16] hover:bg-[#e6b97d]"
-                : "bg-[#E59C5C] text-white hover:bg-[#d68a47]"
-            }`}
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        {loading && (
-          <div style={{ textAlign: "center", marginTop: 16 }}>
-            <span
-              className="loader"
+              to="/register"
               style={{
-                display: "inline-block",
-                width: 32,
-                height: 32,
-                border: `4px solid ${isDark ? "#4a3a30" : "#E6C8B1"}`,
-                borderTop: `4px solid #E59C5C`,
-                borderRadius: "50%",
-                animation: "spin 1s linear infinite",
+                fontSize: "20px",
+                fontWeight: 300,
+                fontStyle: "italic",
+                color: "#3F2BC6",
               }}
-            ></span>
-            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+            >
+              Create account
+            </Link>
+          </p>
+
+          {/* FORM */}
+          <form className="space-y-4 mt-6" onSubmit={onSubmit}>
+            {/* Email Input */}
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="rounded-md border"
+              style={{
+                width: "554px",
+                height: "55px",
+                paddingLeft: "15px",
+                fontSize: "20px",
+                fontWeight: 200,
+                fontStyle: "italic",
+                color: "#796060",
+                backgroundColor: isDark ? "#3a2a20" : "white",
+                borderColor: "#d3b49b",
+                outline: "none",
+              }}
+              onFocus={(e) => e.target.style.borderColor = "#6F422B"}
+              onBlur={(e) => e.target.style.borderColor = "#d3b49b"}
+            />
+
+            {/* Password Input */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="rounded-md border"
+                style={{
+                  width: "554px",
+                  height: "55px",
+                  paddingLeft: "15px",
+                  fontSize: "20px",
+                  fontWeight: 200,
+                  fontStyle: "italic",
+                  color: "#796060",
+                  backgroundColor: isDark ? "#3a2a20" : "white",
+                  borderColor: "#d3b49b",
+                  outline: "none",
+                }}
+                onFocus={(e) => e.target.style.borderColor = "#6F422B"}
+              onBlur={(e) => e.target.style.borderColor = "#d3b49b"}
+              />
+{/* SHOW PASSWORD BOX - Below input, aligned with Forgot Password */}
+              <div 
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: "8px",
+                  width: "554px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div
+                    onClick={() => setShowPassword((v) => !v)}
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      border: isDark ? "1px solid #f5e9df" : "1px solid white",
+                      backgroundColor: showPassword ? "white" : "transparent",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {showPassword && (
+                      <span style={{ color: "#6F422B", fontSize: "14px", fontWeight: "bold" }}>
+                        ✓
+                      </span>
+                    )}
+                  </div>
+
+                  <span
+                    style={{
+                      color: "white",
+                      fontSize: "15px",
+                      fontWeight: 300,
+                      cursor: "pointer",
+                    }}
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    Show Password
+                  </span>
+                </div>
+                {/* Forgot Password moved here */}
+                <Link
+                  to="/forgot-password"
+                  style={{
+                    fontSize: "15px",
+                    color: "#3F2BC6",
+                    fontWeight: 300,
+                  }}
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+            </div>
+
+            {/* Sign In Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: "554px",
+                height: "55px",
+                backgroundColor: "#6F422B",
+                color: "white",
+                borderRadius: "13px",
+                fontSize: "20px",
+                fontWeight: 500,
+              }}
+            >
+              {loading ? "Logging in..." : "Sign In"}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 mt-6">
+            <div className="flex-1 h-[1px] bg-[#6F422B]"></div>
+
+            <span
+              style={{
+                fontSize: "11px",
+                fontWeight: 300,
+                color: "white",
+              }}
+            >
+              or register with
+            </span>
+
+            <div className="flex-1 h-[1px] bg-[#6F422B]"></div>
           </div>
-        )}
 
-        <div style={{ marginTop: 16, display: "grid", gap: 8 }}>
-          <button
-            className={`font-medium px-4 py-2 rounded-lg border transition-colors duration-300 ${
-              isDark
-                ? "bg-[#3a2a20] border-[#4a3a30] text-[#f5e9df] hover:bg-[#4a3a30]"
-                : "bg-white border-[#E6C8B1] text-[#4A2C1E] hover:bg-[#F2D9C7]"
-            }`}
-          >
-            Continue with Google
-          </button>
-          <button
-            className={`font-medium px-4 py-2 rounded-lg border transition-colors duration-300 ${
-              isDark
-                ? "bg-[#3a2a20] border-[#4a3a30] text-[#f5e9df] hover:bg-[#4a3a30]"
-                : "bg-white border-[#E6C8B1] text-[#4A2C1E] hover:bg-[#F2D9C7]"
-            }`}
-          >
-            Continue with other accounts
-          </button>
+          {/* Social Buttons */}
+          <div className="flex gap-4 mt-6">
+            <button
+              style={{
+                width: "261px",
+                height: "55px",
+                backgroundColor: "#6F422B",
+                color: "#F7F7F7",
+                fontSize: "20px",
+                fontWeight: 200,
+                borderRadius: "13px",
+              }}
+            >
+              Google
+            </button>
+
+            <button
+              style={{
+                width: "261px",
+                height: "55px",
+                backgroundColor: "#6F422B",
+                color: "#F7F7F7",
+                fontSize: "20px",
+                fontWeight: 200,
+                borderRadius: "13px",
+              }}
+            >
+              Facebook
+            </button>
+          </div>
         </div>
-
-        <p
-          className={`text-center mt-6 transition-colors duration-300 ${
-            isDark ? "text-[#f5e9df]/70" : "text-[#5C4333]"
-          }`}
-        >
-          Don't have an account?{" "}
-          <Link
-            to="/register"
-            className={`font-semibold transition-colors duration-300 ${
-              isDark ? "text-[#E59C5C] hover:text-[#e6b97d]" : "text-[#E59C5C] hover:text-[#d68a47]"
-            }`}
-          >
-            Sign Up
-          </Link>
-        </p>
       </div>
     </div>
-  );
+  </>
+);
 }
