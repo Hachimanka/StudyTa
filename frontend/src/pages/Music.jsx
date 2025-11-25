@@ -101,11 +101,19 @@ export default function Music() {
   }
 
   function toggleRepeat() {
-    setIsRepeat((s) => !s)
+    setIsRepeat((s) => {
+      const next = !s
+      if (next) setIsShuffle(false)
+      return next
+    })
   }
 
   function toggleShuffle() {
-    setIsShuffle((s) => !s)
+    setIsShuffle((s) => {
+      const next = !s
+      if (next) setIsRepeat(false)
+      return next
+    })
   }
 
   function handleSeek(e) {
