@@ -1,426 +1,228 @@
-import React, { useState, useEffect, useRef } from 'react'
+﻿import React, { useState, useEffect, useRef } from 'react'
 import Sidebar from '../components/Sidebar'
-import TopNav from '../components/TopNav'
 import ChatWidget from '../components/ChatWidget'
-import { useSettings } from '../context/SettingsContext'
 
 export default function Music() {
-  const { 
-    darkMode, 
-    soundEffects, 
-    sessionDuration, 
-    getThemeColors, 
-    playSound, 
-    sendNotification,
-    incrementStudySession 
-  } = useSettings()
-  const [currentTrack, setCurrentTrack] = useState(null)
+  const [query, setQuery] = useState('')
+  const [tracks, setTracks] = useState([
+    { id: 1, name: 'White noise.mp3', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', duration: '3:12' },
+    { id: 2, name: 'golden.mp3', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', duration: '3:45' }
+  ])
+
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [volume, setVolume] = useState(0.5)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [selectedCategory, setSelectedCategory] = useState('nature')
-  const [showTimer, setShowTimer] = useState(false)
-  const [timerMinutes, setTimerMinutes] = useState(sessionDuration)
-  const [timerSeconds, setTimerSeconds] = useState(0)
-  const [isTimerRunning, setIsTimerRunning] = useState(false)
-  const [showVisualizer, setShowVisualizer] = useState(false)
-  
-  const themeColors = getThemeColors()
-  
+  const [isRepeat, setIsRepeat] = useState(false)
+  const [isShuffle, setIsShuffle] = useState(false)
   const audioRef = useRef(null)
-  const timerRef = useRef(null)
 
-  // Focus sounds with YouTube embed or local audio support
-  const focusSounds = {
-    nature: [
-      { id: 1, name: 'Forest Rain', url: 'https://www.youtube.com/embed/nDq6TstdEi8?autoplay=1&loop=1&playlist=nDq6TstdEi8', type: 'youtube', duration: '8:00:00' },
-      { id: 2, name: 'Ocean Waves', url: 'https://www.youtube.com/embed/V1bFr2SWP1I?autoplay=1&loop=1&playlist=V1bFr2SWP1I', type: 'youtube', duration: '10:00:00' },
-      { id: 3, name: 'Thunderstorm', url: 'https://www.youtube.com/embed/nDGKK6y8OtQ?autoplay=1&loop=1&playlist=nDGKK6y8OtQ', type: 'youtube', duration: '8:00:00' },
-      { id: 4, name: 'Crackling Fire', url: 'https://www.youtube.com/embed/L_LUpnjgPso?autoplay=1&loop=1&playlist=L_LUpnjgPso', type: 'youtube', duration: '12:00:00' }
-    ],
-    lofi: [
-      { id: 5, name: 'Lofi Hip Hop', url: 'https://www.youtube.com/embed/jfKfPfyJRdk?autoplay=1&loop=1&playlist=jfKfPfyJRdk', type: 'youtube', duration: '24/7' },
-      { id: 6, name: 'Chill Beats', url: 'https://www.youtube.com/embed/DWcJFNfaw9c?autoplay=1&loop=1&playlist=DWcJFNfaw9c', type: 'youtube', duration: '24/7' },
-      { id: 7, name: 'Study Jazz', url: 'https://www.youtube.com/embed/Dx5qFachd3A?autoplay=1&loop=1&playlist=Dx5qFachd3A', type: 'youtube', duration: '24/7' }
-    ],
-    ambient: [
-      { id: 8, name: 'Space Ambient', url: 'https://www.youtube.com/embed/1SL5erKGqzk?autoplay=1&loop=1&playlist=1SL5erKGqzk', type: 'youtube', duration: '8:00:00' },
-      { id: 9, name: 'Deep Meditation', url: 'https://www.youtube.com/embed/sGkh1W5cbH4?autoplay=1&loop=1&playlist=sGkh1W5cbH4', type: 'youtube', duration: '8:00:00' },
-      { id: 10, name: 'Binaural Beats', url: 'https://www.youtube.com/embed/GqH9SDmxr8k?autoplay=1&loop=1&playlist=GqH9SDmxr8k', type: 'youtube', duration: '8:00:00' }
-    ],
-    classical: [
-      { id: 11, name: 'Bach Focus', url: 'https://www.youtube.com/embed/6JQm5aSjX6g?autoplay=1&loop=1&playlist=6JQm5aSjX6g', type: 'youtube', duration: '2:00:00' },
-      { id: 12, name: 'Mozart Study', url: 'https://www.youtube.com/embed/Rb0UmrCXxVA?autoplay=1&loop=1&playlist=Rb0UmrCXxVA', type: 'youtube', duration: '3:00:00' },
-      { id: 13, name: 'Chopin Peaceful', url: 'https://www.youtube.com/embed/9E6b3swbnWg?autoplay=1&loop=1&playlist=9E6b3swbnWg', type: 'youtube', duration: '2:30:00' }
-    ]
-  }
-
-  // Timer functionality
   useEffect(() => {
-    if (isTimerRunning && (timerMinutes > 0 || timerSeconds > 0)) {
-      timerRef.current = setInterval(() => {
-        if (timerSeconds > 0) {
-          setTimerSeconds(timerSeconds - 1)
-        } else if (timerMinutes > 0) {
-          setTimerMinutes(timerMinutes - 1)
-          setTimerSeconds(59)
-        } else {
-          setIsTimerRunning(false)
-          // Timer finished - show notification and play sound
-          const timeSpent = sessionDuration - timerMinutes
-          incrementStudySession(timeSpent)
-          playSound('success')
-          sendNotification('Study Session Complete!', '🎉 Great job! Time for a break.')
-        }
-      }, 1000)
-    } else {
-      clearInterval(timerRef.current)
-    }
-
-    return () => clearInterval(timerRef.current)
-  }, [isTimerRunning, timerMinutes, timerSeconds])
-
-  // Request notification permission
-  useEffect(() => {
-    if (Notification.permission === 'default') {
-      Notification.requestPermission()
-    }
-  }, [])
-
-  const playTrack = (track) => {
-    setCurrentTrack(track)
-    setIsPlaying(true)
-  }
-
-  // Listen for global playMusic events (dispatched by ChatWidget)
-  useEffect(() => {
-    const handler = (e) => {
-      try {
-        const { category, trackId } = e?.detail || {}
-        if (category && focusSounds[category] && focusSounds[category].length > 0) {
-          setSelectedCategory(category)
-          const track = focusSounds[category][0]
-          setCurrentTrack(track)
-          setIsPlaying(true)
-          setShowVisualizer(track.type === 'youtube')
-          return
-        }
-        if (trackId) {
-          // find track across categories
-          let found = null
-          for (const cat of Object.keys(focusSounds)) {
-            const t = focusSounds[cat].find(x => x.id === trackId)
-            if (t) { found = t; setSelectedCategory(cat); break }
-          }
-          if (found) {
-            setCurrentTrack(found)
-            setIsPlaying(true)
-            setShowVisualizer(found.type === 'youtube')
-            return
-          }
-        }
-        // Default: play first track of selected category
-        const track = focusSounds[selectedCategory][0]
-        setCurrentTrack(track)
-        setIsPlaying(true)
-        setShowVisualizer(track.type === 'youtube')
-      } catch (err) {
-        // ignore
+    const a = audioRef.current
+    if (!a) return
+    const onTime = () => setCurrentTime(a.currentTime || 0)
+    const onLoaded = () => setDuration(a.duration || 0)
+    const onEnded = () => {
+      if (isRepeat) {
+        // restart the same track
+        a.currentTime = 0
+        a.play().catch(() => {})
+      } else {
+        handleNext()
       }
     }
-    window.addEventListener('playMusic', handler)
-    return () => window.removeEventListener('playMusic', handler)
-  }, [selectedCategory])
+    a.addEventListener('timeupdate', onTime)
+    a.addEventListener('loadedmetadata', onLoaded)
+    a.addEventListener('ended', onEnded)
+    return () => {
+      a.removeEventListener('timeupdate', onTime)
+      a.removeEventListener('loadedmetadata', onLoaded)
+      a.removeEventListener('ended', onEnded)
+    }
+  }, [currentIndex, isRepeat])
 
-  const toggleTimer = () => {
-    setIsTimerRunning(!isTimerRunning)
+  // Keep the native loop flag in sync (optional but safe)
+  useEffect(() => {
+    const a = audioRef.current
+    if (!a) return
+    a.loop = !!isRepeat
+  }, [isRepeat])
+
+  useEffect(() => {
+    const a = audioRef.current
+    if (!a || !tracks[currentIndex]) return
+    a.src = tracks[currentIndex].url
+    if (isPlaying) a.play().catch(() => {})
+  }, [currentIndex, tracks])
+
+  const filtered = tracks.filter((t) => t.name.toLowerCase().includes(query.toLowerCase()))
+
+  function handlePlayPause() {
+    const a = audioRef.current
+    if (!a) return
+    if (isPlaying) {
+      a.pause()
+      setIsPlaying(false)
+    } else {
+      a.play().catch(() => {})
+      setIsPlaying(true)
+    }
   }
 
-  const resetTimer = () => {
-    setIsTimerRunning(false)
-    setTimerMinutes(sessionDuration)
-    setTimerSeconds(0)
+  function handleSelect(index) {
+    setCurrentIndex(index)
+    setIsPlaying(true)
+    const a = audioRef.current
+    if (a) {
+      a.src = tracks[index].url
+      a.play().catch(() => {})
+    }
   }
 
-  const formatTime = (minutes, seconds) => {
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  function handlePrev() {
+    const prev = (currentIndex - 1 + tracks.length) % tracks.length
+    handleSelect(prev)
+  }
+
+  function handleNext() {
+    let next
+    if (isShuffle) {
+      // pick a random different index
+      if (tracks.length <= 1) next = currentIndex
+      else {
+        do {
+          next = Math.floor(Math.random() * tracks.length)
+        } while (next === currentIndex)
+      }
+    } else {
+      next = (currentIndex + 1) % tracks.length
+    }
+    handleSelect(next)
+  }
+
+  function toggleRepeat() {
+    setIsRepeat((s) => !s)
+  }
+
+  function toggleShuffle() {
+    setIsShuffle((s) => !s)
+  }
+
+  function handleSeek(e) {
+    const bar = e.currentTarget
+    const rect = bar.getBoundingClientRect()
+    const clickX = (e.clientX || 0) - rect.left
+    const pct = Math.max(0, Math.min(1, clickX / rect.width))
+    const a = audioRef.current
+    if (a && duration) {
+      a.currentTime = pct * duration
+      setCurrentTime(a.currentTime)
+    }
+  }
+
+  function handleUpload(e) {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    const next = { id: Date.now(), name: file.name, url, duration: '0:00' }
+    setTracks((s) => [...s, next])
+    setQuery('')
+  }
+
+  function formatSeconds(s) {
+    if (!s || isNaN(s)) return '0:00'
+    const m = Math.floor(s / 60)
+    const sec = Math.floor(s % 60).toString().padStart(2, '0')
+    return `${m}:${sec}`
   }
 
   return (
-    <div className={`flex min-h-screen transition-colors duration-300 ${
-      darkMode 
-        ? 'bg-gradient-to-br from-gray-900 to-gray-800' 
-        : `bg-gradient-to-br from-${themeColors.primary}-50 to-${themeColors.primary}-100`
-    }`}>
+    <div className="flex min-h-screen bg-[#e9d8d0] p-8 pl-0">
       <Sidebar />
-      <main className="flex-1 p-8 ml-20 md:ml-30">
+      <main className="flex-1 ml-34">
         <ChatWidget />
-        
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className={`text-5xl font-bold bg-gradient-to-r from-${themeColors.primary}-600 to-${themeColors.primary}-700 bg-clip-text text-transparent`}>
-            Focus Music
-          </h1>
-          <p className={`mt-2 text-lg ${darkMode ? 'text-[#f5e9df]/70' : themeColors.text}`}>
-            Enhance your concentration with ambient sounds
-          </p>
-        </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Music Player Section */}
-          <div className="xl:col-span-2">
-            {/* Category Tabs */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              {Object.keys(focusSounds).map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`px-6 py-3 rounded-full text-sm font-medium transition-all duration-300 ${
-                    selectedCategory === category
-                      ? `bg-gradient-to-r ${themeColors.gradient} text-white shadow-lg`
-                      : darkMode
-                        ? 'bg-[#2e2119] text-gray-300 hover:bg-[#3a2a20] border border-gray-600'
-                        : `bg-white ${themeColors.text} hover:bg-${themeColors.primary}-50 border ${themeColors.border}`
-                  }`}
-                >
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </button>
-              ))}
-            </div>
+        <div className="max-w-6xl w-full px-4">
+          <h1 className="text-5xl font-bold text-[#5f341e] mb-4">Musics</h1>
+          <p className="text-sm text-[#6b4b3a] mb-6">Enhance focus with curated study playlists.</p>
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Left card (wider) */}
+            <div className="bg-white rounded-xl p-4 lg:w-2/3 h-[480px]">
+              <div className="flex items-center gap-3 mb-4">
+                <input
+                  className="flex-1 border rounded-full px-4 py-2 text-sm"
+                  placeholder="Search Music..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+                <label className="inline-block">
+                  <input type="file" accept="audio/*" onChange={handleUpload} className="hidden" />
+                  <span className="bg-[#7a4a36] text-white px-4 py-2 rounded-xl">Upload Music</span>
+                </label>
+              </div>
 
-            {/* Track Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-              {focusSounds[selectedCategory].map((track) => (
-                <div
-                  key={track.id}
-                  className={`p-6 rounded-2xl border-2 transition-all duration-300 cursor-pointer hover:scale-105 ${
-                    currentTrack?.id === track.id
-                      ? `bg-gradient-to-br ${themeColors.gradient} text-white border-${themeColors.primary}-500 shadow-xl`
-                      : darkMode
-                        ? 'bg-[#2e2119] border-gray-600 hover:border-gray-500 hover:shadow-lg text-white'
-                        : `bg-white ${themeColors.border} hover:border-${themeColors.primary}-300 hover:shadow-lg`
-                  }`}
-                  onClick={() => playTrack(track)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">{track.name}</h3>
-                      <p className={`text-sm ${
-                        currentTrack?.id === track.id 
-                          ? `text-${themeColors.primary}-100` 
-                          : darkMode
-                            ? 'text-[#f5e9df]/70'
-                            : themeColors.text
-                      }`}>
-                        Duration: {track.duration}
-                      </p>
+              <div className="space-y-3 overflow-auto h-[400px] pb-4">
+                {filtered.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => handleSelect(tracks.indexOf(t))}
+                    className={`w-full text-left p-4 rounded-lg flex items-center gap-4 border ${tracks.indexOf(t) === currentIndex ? 'shadow-md bg-[#fff5f2]' : 'bg-white'}`}>
+                    <div className="w-10 h-10 rounded-full bg-[#7a4a36] flex items-center justify-center text-white"></div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-[#5f341e]">{t.name}</div>
+                      <div className="text-xs text-gray-500">{t.duration}</div>
                     </div>
-                    <div className={`p-3 rounded-full ${
-                      currentTrack?.id === track.id 
-                        ? 'bg-white/20' 
-                        : darkMode
-                          ? 'bg-[#3a2a20]'
-                          : `bg-${themeColors.primary}-100`
-                    }`}>
-                      {currentTrack?.id === track.id && isPlaying ? (
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                        </svg>
-                      ) : (
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z"/>
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Current Player */}
-            {currentTrack && (
-              <div className={`rounded-2xl p-6 shadow-xl border ${
-                darkMode 
-                  ? 'bg-[#2e2119] border-gray-600' 
-                  : `bg-white ${themeColors.border}`
-              }`}>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                      Now Playing
-                    </h3>
-                    <p className={themeColors.text}>{currentTrack.name}</p>
-                  </div>
-                  <button
-                    onClick={() => setShowVisualizer(!showVisualizer)}
-                    className={`px-4 py-2 rounded-lg transition-colors ${
-                      darkMode
-                        ? 'bg-[#3a2a20] text-gray-300 hover:bg-gray-600'
-                        : `bg-${themeColors.primary}-100 ${themeColors.text} hover:bg-${themeColors.primary}-200`
-                    }`}
-                  >
-                    {showVisualizer ? 'Hide' : 'Show'} Player
-                  </button>
+            {/* Right card (narrower) */}
+            <div className="bg-white rounded-xl p-6 lg:w-1/3 h-[480px] flex flex-col items-center justify-between">
+              <div className="w-40 h-40 bg-[#7a4a36] rounded-md mb-4" />
+              <div className="text-center text-sm text-[#5f341e] mb-6">Instrumental beats for concentration</div>
+
+              <div className="w-full">
+                <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                  <div></div>
+                  <div>{tracks[currentIndex] && typeof tracks[currentIndex].duration === 'string' ? tracks[currentIndex].duration : formatSeconds(duration)}</div>
                 </div>
-                
-                {showVisualizer && currentTrack.type === 'youtube' && (
-                  <div className="aspect-video rounded-lg overflow-hidden">
-                    <iframe
-                      src={currentTrack.url}
-                      className="w-full h-full"
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar Controls */}
-          <div className="space-y-6">
-            {/* Pomodoro Timer */}
-            <div className={`rounded-2xl p-6 shadow-xl border ${
-              darkMode 
-                ? 'bg-[#2e2119] border-gray-600' 
-                : `bg-white ${themeColors.border}`
-            }`}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                  Focus Timer
-                </h3>
-                <button
-                  onClick={() => setShowTimer(!showTimer)}
-                  className={darkMode ? 'text-[#f5e9df]/70 hover:text-gray-300' : `${themeColors.text} hover:text-${themeColors.primary}-700`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="text-center">
-                <div className="relative w-32 h-32 mx-auto mb-4">
-                  <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="45"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      className={darkMode ? 'text-gray-700' : `text-${themeColors.primary}-100`}
-                    />
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="45"
-                      stroke="currentColor"
-                      strokeWidth="8"
-                      fill="none"
-                      strokeDasharray={283}
-                      strokeDashoffset={283 - (283 * ((sessionDuration * 60 - (timerMinutes * 60 + timerSeconds)) / (sessionDuration * 60)))}
-                      className={`text-${themeColors.primary}-500 transition-all duration-300`}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                      {formatTime(timerMinutes, timerSeconds)}
-                    </span>
-                  </div>
+                <div className="w-full h-2 bg-[#efe6e3] rounded-full mb-6 cursor-pointer" onClick={handleSeek}>
+                  <div className="h-2 bg-[#7a4a36] rounded-full" style={{ width: duration ? `${Math.min(100, (currentTime / duration) * 100)}%` : '0%' }} />
                 </div>
 
-                <div className="flex gap-2 justify-center">
+                <div className="flex items-center justify-center gap-6">
                   <button
-                    onClick={toggleTimer}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      isTimerRunning
-                        ? 'bg-red-500 hover:bg-red-600 text-white'
-                        : `${themeColors.bg} ${themeColors.hoverBg} text-white`
-                    }`}
+                    onClick={toggleRepeat}
+                    className={`w-8 h-8 flex items-center justify-center rounded-md border ${isRepeat ? 'bg-[#7a4a36] text-white border-[#7a4a36]' : 'bg-white text-[#5f341e] border-[#e6e0dc]'}`}
+                    aria-label="Repeat"
                   >
-                    {isTimerRunning ? 'Pause' : 'Start'}
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M17 1v4l4-4-4-4v4h-8a4 4 0 00-4 4v2h2V5a2 2 0 012-2h8zM7 23v-4L3 23l4 4v-4h8a4 4 0 004-4v-2h-2v2a2 2 0 01-2 2H7z" fill="currentColor" /></svg>
                   </button>
+
+                  <button onClick={handlePrev} className="p-3 rounded bg-white border" aria-label="Previous"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none"><path d="M11 19V5l-7 7 7 7zM20 19V5h-2v14h2z" fill="#5f341e"/></svg></button>
+
+                  <button onClick={handlePlayPause} className="w-16 h-16 rounded-full bg-[#7a4a36] flex items-center justify-center text-white text-xl shadow" aria-label="Play/Pause">
+                    {isPlaying ? (
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="#fff"/></svg>
+                    ) : (
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none"><path d="M8 5v14l11-7L8 5z" fill="#fff"/></svg>
+                    )}
+                  </button>
+
+                  <button onClick={handleNext} className="p-3 rounded bg-white border" aria-label="Next"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none"><path d="M13 5v14l7-7-7-7zM4 5v14h2V5H4z" fill="#5f341e"/></svg></button>
+
                   <button
-                    onClick={resetTimer}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                      darkMode
-                        ? 'bg-[#3a2a20] hover:bg-gray-600 text-white'
-                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                    }`}
+                    onClick={toggleShuffle}
+                    className={`w-8 h-8 flex items-center justify-center rounded-md border ${isShuffle ? 'bg-[#7a4a36] text-white border-[#7a4a36]' : 'bg-white text-[#5f341e] border-[#e6e0dc]'}`}
+                    aria-label="Shuffle"
                   >
-                    Reset
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M16 3h5v5l-2.5-2.5L16 8V3zM3 6h2.2l6.4 8.5 1.4-1.1L6.6 6H9l6 8v4H15v-2.2L9.6 11.3 8.2 12.4 14 19H3V6z" fill="currentColor" /></svg>
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* Quick Stats */}
-            <div className={`rounded-2xl p-6 shadow-xl border ${
-              darkMode 
-                ? 'bg-[#2e2119] border-gray-600' 
-                : `bg-white ${themeColors.border}`
-            }`}>
-              <h3 className={`text-xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                Today's Focus
-              </h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Sessions</span>
-                  <span className="font-semibold text-teal-600">0</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Total Time</span>
-                  <span className="font-semibold text-teal-600">0h 0m</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Streak</span>
-                  <span className="font-semibold text-teal-600">0 days</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Sound Mix */}
-            <div className="bg-white rounded-2xl p-6 shadow-xl border border-teal-200">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">Sound Settings</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-2">Master Volume</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={volume * 100}
-                    onChange={(e) => setVolume(e.target.value / 100)}
-                    className="w-full h-2 bg-teal-200 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Auto-loop</span>
-                  <div className="relative inline-block w-12 mr-2 align-middle select-none">
-                    <input
-                      type="checkbox"
-                      className="checked:bg-teal-500 outline-none focus:outline-none right-4 checked:right-0 duration-200 ease-in absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-                      defaultChecked
-                    />
-                    <label className="block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Music Tips */}
-            <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl p-6 text-white">
-              <h3 className="text-xl font-semibold mb-3">💡 Focus Tips</h3>
-              <ul className="space-y-2 text-sm">
-                <li>• Use nature sounds for deep concentration</li>
-                <li>• Try 25-minute focus sessions (Pomodoro)</li>
-                <li>• Keep volume at 30-50% for best results</li>
-                <li>• Take 5-minute breaks between sessions</li>
-              </ul>
+              <audio ref={audioRef} />
             </div>
           </div>
         </div>
@@ -428,4 +230,3 @@ export default function Music() {
     </div>
   )
 }
-
