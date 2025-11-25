@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate, Link } from "react-router-dom";
 import EyeIcon from "../components/EyeIcon.jsx";
 

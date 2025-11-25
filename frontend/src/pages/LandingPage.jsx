@@ -110,16 +110,19 @@ export default function Landing() {
               title: "Auto-Generate Flashcards",
               desc: "Study with digital flashcards that flip and reveal answers. Perfect for memorizing key concepts and terms.",
               btn: "Study now --›",
+              mode: 'flashcards'
             },
             {
               title: "Spin the Wheel Quiz",
               desc: "Spin the colorful wheel to get random questions with multiple choice answers. Fun and unpredictable learning!",
               btn: "Spin now --›",
+              mode: 'wheel'
             },
             {
               title: "Track Progress",
               desc: "Click mystery boxes to reveal questions and test your knowledge with surprise multiple choice challenges.",
               btn: "Guess now --›",
+              mode: 'quiz'
             },
           ].map((item, i) => (
             <motion.div
@@ -133,9 +136,12 @@ export default function Landing() {
               <div className="w-12 h-12 rounded-full bg-[#4A2C1E] mx-auto mb-6"></div>
                 <h3 className={`font-semibold mb-3 ${isDark ? "text-[#E59C5C]" : "text-[#4A2C1E]"}`}>{item.title}</h3>
                 <p className={`${isDark ? "text-[#f5e9df]/90" : "text-[#5C4333]"} text-sm mb-6`}>{item.desc}</p>
-                <button className={`border px-6 py-2 rounded-full transition text-sm ${isDark ? "border-[#f5e9df] text-[#f5e9df] hover:bg-[#4A2C1E] hover:text-white" : "border-[#4A2C1E] text-[#4A2C1E] hover:bg-[#4A2C1E] hover:text-white"}`}>
-                {item.btn}
-              </button>
+                <Link
+                  to={`/study?mode=${item.mode}`}
+                  className={`border px-6 py-2 rounded-full transition text-sm ${isDark ? "border-[#f5e9df] text-[#f5e9df] hover:bg-[#4A2C1E] hover:text-white" : "border-[#4A2C1E] text-[#4A2C1E] hover:bg-[#4A2C1E] hover:text-white"}`}
+                >
+                  {item.btn}
+                </Link>
             </motion.div>
           ))}
         </div>

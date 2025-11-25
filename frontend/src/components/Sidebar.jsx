@@ -25,11 +25,11 @@ export default function Sidebar() {
     logout(() => navigate("/"));
   };
 
-  const menuItems = [
+    const menuItems = [
     { name: "Dashboard", path: "/dashboard", icon: "/SideBarIcons/DshBrd.png" },
     { name: "Summarize", path: "/summarize", icon: "/SideBarIcons/Sum.png" },
     { name: "Calendar", path: "/calendar", icon: "/SideBarIcons/Clndr.png" },
-    { name: "Study Mode", path: "/flashcards", icon: "/SideBarIcons/StdMd.png" },
+    { name: "Study", path: "/study", icon: "/SideBarIcons/StdMd.png" },
     { name: "Library", path: "/library", icon: "/SideBarIcons/Lib.png" },
     { name: "Analytics", path: "/progress", icon: "/SideBarIcons/Anl.png" },
     { name: "Music", path: "/music", icon: "/SideBarIcons/Msc.png" },
