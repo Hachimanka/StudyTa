@@ -46,29 +46,40 @@ export default function ForgotPassword(){
       >
         {/* MAIN BOX */}
         <div
-          className={`rounded-3xl shadow-xl grid grid-cols-2 gap-2 transition-colors duration-500 ${
+          className={`rounded-3xl shadow-xl transition-colors duration-500 ${
             isDark ? "bg-[#2e2119]" : "bg-[#BE8E78]"
           }`}
-          style={{ width: "1190px", height: "818px", padding: "50px" }}
+          style={{ 
+            maxWidth: "1190px", 
+            width: "90%",
+            aspectRatio: "1190/818",
+            padding: "clamp(20px, 4.2vw, 50px)",
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: "clamp(10px, 1.7vw, 20px)"
+          }}
         >
           {/* LEFT IMAGE BOX */}
           <div
             className={`rounded-xl ${
               isDark ? "bg-[#3a2a20]" : "bg-[#D9D9D9]"
             }`}
-            style={{ width: "505px", height: "718px" }}
+            style={{ 
+              width: "100%",
+              height: "100%"
+            }}
           ></div>
 
           {/* RIGHT FORM SECTION */}
-          <div className="flex flex-col justify-center" style={{ marginTop: "-80px" }}>
+          <div className="flex flex-col justify-center" style={{ padding: "0 clamp(5px, 1vw, 20px)" }}>
             {/* Title */}
             <h2
               className={`${isDark ? "text-[#f5e9df]" : "text-white"}`}
               style={{
-                fontSize: "48px",
+                fontSize: "clamp(28px, 4vw, 48px)",
                 fontWeight: 500,
                 fontStyle: "italic",
-                marginBottom: "20px",
+                marginBottom: "clamp(8px, 1.7vh, 20px)",
               }}
             >
               Forgot password
@@ -77,13 +88,13 @@ export default function ForgotPassword(){
             {/* Subtext */}
             <p
               className={`${isDark ? "text-[#f5e9df]/70" : "text-white/90"}`}
-              style={{ fontSize: "20px", fontWeight: 300 }}
+              style={{ fontSize: "clamp(14px, 1.7vw, 20px)", fontWeight: 300 }}
             >
               Remembered?{" "}
               <Link
                 to="/login"
                 style={{
-                  fontSize: "20px",
+                  fontSize: "clamp(14px, 1.7vw, 20px)",
                   fontWeight: 300,
                   fontStyle: "italic",
                   color: "#3F2BC6",
@@ -94,7 +105,7 @@ export default function ForgotPassword(){
             </p>
 
             {/* FORM */}
-            <form className="space-y-4 mt-6" onSubmit={onSubmit}>
+            <form className="space-y-4" style={{ marginTop: "clamp(15px, 2vh, 24px)" }} onSubmit={onSubmit}>
               {/* Email Input */}
               <input
                 type="email"
@@ -103,10 +114,10 @@ export default function ForgotPassword(){
                 onChange={(e) => setEmail(e.target.value)}
                 className="rounded-md border"
                 style={{
-                  width: "554px",
-                  height: "55px",
+                  width: "100%",
+                  height: "clamp(45px, 4.6vh, 55px)",
                   paddingLeft: "15px",
-                  fontSize: "20px",
+                  fontSize: "clamp(16px, 1.7vw, 20px)",
                   fontWeight: 200,
                   fontStyle: "italic",
                   color: "#796060",
@@ -122,12 +133,12 @@ export default function ForgotPassword(){
               <button
                 type="submit"
                 style={{
-                  width: "554px",
-                  height: "55px",
+                  width: "100%",
+                  height: "clamp(45px, 4.6vh, 55px)",
                   backgroundColor: "#6F422B",
                   color: "white",
                   borderRadius: "13px",
-                  fontSize: "20px",
+                  fontSize: "clamp(16px, 1.7vw, 20px)",
                   fontWeight: 500,
                   marginTop: "16px",
                 }}

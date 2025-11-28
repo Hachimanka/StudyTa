@@ -64,29 +64,40 @@ export default function Signup() {
       >
         {/* MAIN BOX */}
         <div
-          className={`rounded-3xl shadow-xl grid grid-cols-2 gap-2 transition-colors duration-500 ${
+          className={`rounded-3xl shadow-xl transition-colors duration-500 ${
             isDark ? "bg-[#2e2119]" : "bg-[#BE8E78]"
           }`}
-          style={{ width: "1190px", height: "818px", padding: "50px" }}
+          style={{ 
+            maxWidth: "1190px", 
+            width: "90%",
+            aspectRatio: "1190/818",
+            padding: "clamp(20px, 4.2vw, 50px)",
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: "clamp(10px, 1.7vw, 20px)"
+          }}
         >
           {/* LEFT IMAGE BOX */}
           <div
             className={`rounded-xl ${
               isDark ? "bg-[#3a2a20]" : "bg-[#D9D9D9]"
             }`}
-            style={{ width: "505px", height: "718px" }}
+            style={{ 
+              width: "100%",
+              height: "100%"
+            }}
           ></div>
 
           {/* RIGHT FORM SECTION */}
-          <div className="flex flex-col justify-center" style={{ marginTop: "-80px" }}>
+          <div className="flex flex-col justify-center" style={{ padding: "0 clamp(5px, 1vw, 20px)" }}>
             {/* Title */}
             <h2
               className={`${isDark ? "text-[#f5e9df]" : "text-white"}`}
               style={{
-                fontSize: "48px",
+                fontSize: "clamp(28px, 4vw, 48px)",
                 fontWeight: 500,
                 fontStyle: "italic",
-                marginBottom: "20px",
+                marginBottom: "clamp(8px, 1.7vh, 20px)",
               }}
             >
               Create an account
@@ -95,13 +106,13 @@ export default function Signup() {
             {/* Subtext */}
             <p
               className={`${isDark ? "text-[#f5e9df]/70" : "text-white/90"}`}
-              style={{ fontSize: "20px", fontWeight: 300 }}
+              style={{ fontSize: "clamp(14px, 1.7vw, 20px)", fontWeight: 300 }}
             >
               Already have an account?{" "}
               <Link
                 to="/login"
                 style={{
-                  fontSize: "20px",
+                  fontSize: "clamp(14px, 1.7vw, 20px)",
                   fontWeight: 300,
                   fontStyle: "italic",
                   color: "#3F2BC6",
@@ -112,9 +123,9 @@ export default function Signup() {
             </p>
 
             {/* FORM */}
-            <form className="space-y-4 mt-6" onSubmit={onSubmit}>
+            <form className="space-y-4" style={{ marginTop: "clamp(15px, 2vh, 24px)" }} onSubmit={onSubmit}>
               {/* Name and Last Name - Side by Side */}
-              <div style={{ display: "flex", gap: "14px" }}>
+              <div style={{ display: "flex", gap: "clamp(10px, 1.2vw, 14px)" }}>
                 <input
                   type="text"
                   placeholder="Full name"
@@ -122,10 +133,10 @@ export default function Signup() {
                   onChange={(e) => setName(e.target.value)}
                   className="rounded-md border"
                   style={{
-                    width: "270px",
-                    height: "55px",
+                    flex: 1,
+                    height: "clamp(45px, 4.6vh, 55px)",
                     paddingLeft: "15px",
-                    fontSize: "20px",
+                    fontSize: "clamp(16px, 1.7vw, 20px)",
                     fontWeight: 200,
                     fontStyle: "italic",
                     color: "#796060",
@@ -142,10 +153,10 @@ export default function Signup() {
                   placeholder="Last name"
                   className="rounded-md border"
                   style={{
-                    width: "270px",
-                    height: "55px",
+                    flex: 1,
+                    height: "clamp(45px, 4.6vh, 55px)",
                     paddingLeft: "15px",
-                    fontSize: "20px",
+                    fontSize: "clamp(16px, 1.7vw, 20px)",
                     fontWeight: 200,
                     fontStyle: "italic",
                     color: "#796060",
@@ -166,10 +177,10 @@ export default function Signup() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="rounded-md border"
                 style={{
-                  width: "540px",
-                  height: "55px",
+                  width: "100%",
+                  height: "clamp(45px, 4.6vh, 55px)",
                   paddingLeft: "15px",
-                  fontSize: "20px",
+                  fontSize: "clamp(16px, 1.7vw, 20px)",
                   fontWeight: 200,
                   fontStyle: "italic",
                   color: "#796060",
@@ -180,7 +191,7 @@ export default function Signup() {
                 onFocus={(e) => e.target.style.borderColor = "#6F422B"}
                 onBlur={(e) => e.target.style.borderColor = "#d3b49b"}
               />
-
+              
               {/* Password Input */}
               <div>
                 <input
@@ -190,10 +201,10 @@ export default function Signup() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="rounded-md border"
                   style={{
-                    width: "540px",
-                    height: "55px",
+                    width: "100%",
+                    height: "clamp(45px, 4.6vh, 55px)",
                     paddingLeft: "15px",
-                    fontSize: "20px",
+                    fontSize: "clamp(16px, 1.7vw, 20px)",
                     fontWeight: 200,
                     fontStyle: "italic",
                     color: "#796060",
@@ -212,7 +223,7 @@ export default function Signup() {
                     alignItems: "center",
                     justifyContent: "space-between",
                     marginTop: "8px",
-                    width: "554px",
+                    width: "100%",
                   }}
                 >
                   {/* Show Password */}
@@ -241,7 +252,7 @@ export default function Signup() {
                     <span
                       style={{
                         color: "white",
-                        fontSize: "15px",
+                        fontSize: "clamp(12px, 1.3vw, 15px)",
                         fontWeight: 300,
                         cursor: "pointer",
                       }}
@@ -277,7 +288,7 @@ export default function Signup() {
                     <span
                       style={{
                         color: "white",
-                        fontSize: "15px",
+                        fontSize: "clamp(12px, 1.3vw, 15px)",
                         fontWeight: 300,
                       }}
                     >
@@ -301,12 +312,12 @@ export default function Signup() {
                 type="submit"
                 disabled={loading}
                 style={{
-                  width: "554px",
-                  height: "55px",
+                  width: "100%",
+                  height: "clamp(45px, 4.6vh, 55px)",
                   backgroundColor: "#6F422B",
                   color: "white",
                   borderRadius: "13px",
-                  fontSize: "20px",
+                  fontSize: "clamp(16px, 1.7vw, 20px)",
                   fontWeight: 500,
                   marginTop: "16px",
                 }}
@@ -316,12 +327,12 @@ export default function Signup() {
             </form>
 
             {/* Divider */}
-            <div className="flex items-center gap-3 mt-6">
+            <div className="flex items-center gap-3" style={{ marginTop: "clamp(15px, 2vh, 24px)" }}>
               <div className="flex-1 h-[1px] bg-[#6F422B]"></div>
 
               <span
                 style={{
-                  fontSize: "11px",
+                  fontSize: "clamp(9px, 0.9vw, 11px)",
                   fontWeight: 300,
                   color: "white",
                 }}
@@ -333,14 +344,14 @@ export default function Signup() {
             </div>
 
             {/* Social Buttons */}
-            <div className="flex gap-4 mt-6">
+            <div className="flex gap-4" style={{ marginTop: "clamp(15px, 2vh, 24px)" }}>
               <button
                 style={{
-                  width: "261px",
-                  height: "55px",
+                  flex: 1,
+                  height: "clamp(45px, 4.6vh, 55px)",
                   backgroundColor: "#6F422B",
                   color: "#F7F7F7",
-                  fontSize: "20px",
+                  fontSize: "clamp(16px, 1.7vw, 20px)",
                   fontWeight: 200,
                   borderRadius: "13px",
                 }}
@@ -350,11 +361,11 @@ export default function Signup() {
 
               <button
                 style={{
-                  width: "261px",
-                  height: "55px",
+                  flex: 1,
+                  height: "clamp(45px, 4.6vh, 55px)",
                   backgroundColor: "#6F422B",
                   color: "#F7F7F7",
-                  fontSize: "20px",
+                  fontSize: "clamp(16px, 1.7vw, 20px)",
                   fontWeight: 200,
                   borderRadius: "13px",
                 }}
