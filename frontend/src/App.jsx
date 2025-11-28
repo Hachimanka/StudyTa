@@ -7,6 +7,7 @@ import Landing from './pages/LandingPage'
 import Login from './pages/LoginPage'
 import Register from './pages/RegisterPage'
 import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import ChangePassword from './pages/ChangePassword'
 import Dashboard from './pages/Dashboard'
 import Summarize from './pages/Summarize'
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/analytics" element={<RequireAuth><Analytics /></RequireAuth>} />
         <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/change-password" element={<RequireAuth><ChangePassword /></RequireAuth>} />
         <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

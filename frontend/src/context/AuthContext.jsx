@@ -37,7 +37,18 @@ export function AuthProvider({ children }) {
       const data = await res.json();
       if (res.ok) {
         setIsAuthenticated(true);
+        // Set basic user returned by login
         setUser(data.user);
+        // Attempt to fetch extended user info (UserInfo model) and attach it
+        try {
+          const infoRes = await fetch(`${API_BASE}/api/userinfo/${data.user._id}`);
+          if (infoRes.ok) {
+            const info = await infoRes.json();
+            setUser((prev) => ({ ...prev, info }));
+          }
+        } catch (infoErr) {
+          console.warn('Failed to fetch userinfo:', infoErr);
+        }
         // Dispatch custom event to notify other components
         window.dispatchEvent(new Event('authChanged'));
         if (cb) cb();

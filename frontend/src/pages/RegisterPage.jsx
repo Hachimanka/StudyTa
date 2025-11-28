@@ -67,26 +67,26 @@ export default function Signup() {
           className={`rounded-3xl shadow-xl grid grid-cols-2 gap-2 transition-colors duration-500 ${
             isDark ? "bg-[#2e2119]" : "bg-[#BE8E78]"
           }`}
-          style={{ width: "1190px", height: "818px", padding: "50px" }}
+          style={{ width: "700px", height: "580px", padding: "12px" }}
         >
           {/* LEFT IMAGE BOX */}
           <div
             className={`rounded-xl ${
               isDark ? "bg-[#3a2a20]" : "bg-[#D9D9D9]"
             }`}
-            style={{ width: "505px", height: "718px" }}
+            style={{ width: "300px", height: "500px" }}
           ></div>
 
           {/* RIGHT FORM SECTION */}
-          <div className="flex flex-col justify-center" style={{ marginTop: "-80px" }}>
+          <div className="flex flex-col justify-center" style={{ marginTop: "-20px" }}>
             {/* Title */}
             <h2
               className={`${isDark ? "text-[#f5e9df]" : "text-white"}`}
               style={{
-                fontSize: "48px",
+                fontSize: "30px",
                 fontWeight: 500,
                 fontStyle: "italic",
-                marginBottom: "20px",
+                marginBottom: "12px",
               }}
             >
               Create an account
@@ -95,7 +95,7 @@ export default function Signup() {
             {/* Subtext */}
             <p
               className={`${isDark ? "text-[#f5e9df]/70" : "text-white/90"}`}
-              style={{ fontSize: "20px", fontWeight: 300 }}
+              style={{ fontSize: "14px", fontWeight: 300 }}
             >
               Already have an account?{" "}
               <Link
@@ -122,10 +122,10 @@ export default function Signup() {
                   onChange={(e) => setName(e.target.value)}
                   className="rounded-md border"
                   style={{
-                    width: "270px",
-                    height: "55px",
-                    paddingLeft: "15px",
-                    fontSize: "20px",
+                    width: "140px",
+                    height: "42px",
+                    paddingLeft: "10px",
+                    fontSize: "14px",
                     fontWeight: 200,
                     fontStyle: "italic",
                     color: "#796060",
@@ -142,10 +142,10 @@ export default function Signup() {
                   placeholder="Last name"
                   className="rounded-md border"
                   style={{
-                    width: "270px",
-                    height: "55px",
-                    paddingLeft: "15px",
-                    fontSize: "20px",
+                    width: "140px",
+                    height: "42px",
+                    paddingLeft: "10px",
+                    fontSize: "14px",
                     fontWeight: 200,
                     fontStyle: "italic",
                     color: "#796060",
@@ -166,10 +166,10 @@ export default function Signup() {
                 onChange={(e) => setEmail(e.target.value)}
                 className="rounded-md border"
                 style={{
-                  width: "540px",
-                  height: "55px",
-                  paddingLeft: "15px",
-                  fontSize: "20px",
+                  width: "300px",
+                  height: "42px",
+                  paddingLeft: "10px",
+                  fontSize: "14px",
                   fontWeight: 200,
                   fontStyle: "italic",
                   color: "#796060",
@@ -190,10 +190,10 @@ export default function Signup() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="rounded-md border"
                   style={{
-                    width: "540px",
-                    height: "55px",
-                    paddingLeft: "15px",
-                    fontSize: "20px",
+                    width: "300px",
+                    height: "42px",
+                    paddingLeft: "10px",
+                    fontSize: "14px",
                     fontWeight: 200,
                     fontStyle: "italic",
                     color: "#796060",
@@ -212,7 +212,7 @@ export default function Signup() {
                     alignItems: "center",
                     justifyContent: "space-between",
                     marginTop: "8px",
-                    width: "554px",
+                    width: "300px",
                   }}
                 >
                   {/* Show Password */}
@@ -240,11 +240,11 @@ export default function Signup() {
 
                     <span
                       style={{
-                        color: "white",
-                        fontSize: "15px",
-                        fontWeight: 300,
-                        cursor: "pointer",
-                      }}
+                          color: "white",
+                          fontSize: "13px",
+                          fontWeight: 300,
+                          cursor: "pointer",
+                        }}
                       onClick={() => setShowPassword((v) => !v)}
                     >
                       Show Password
@@ -276,10 +276,10 @@ export default function Signup() {
 
                     <span
                       style={{
-                        color: "white",
-                        fontSize: "15px",
-                        fontWeight: 300,
-                      }}
+                          color: "white",
+                          fontSize: "13px",
+                          fontWeight: 300,
+                        }}
                     >
                       I agree on the{" "}
                       <Link
@@ -301,14 +301,14 @@ export default function Signup() {
                 type="submit"
                 disabled={loading}
                 style={{
-                  width: "554px",
-                  height: "55px",
+                  width: "300px",
+                  height: "42px",
                   backgroundColor: "#6F422B",
                   color: "white",
                   borderRadius: "13px",
-                  fontSize: "20px",
+                  fontSize: "14px",
                   fontWeight: 500,
-                  marginTop: "16px",
+                  marginTop: "12px",
                 }}
               >
                 {loading ? "Creating Account..." : "Create account"}
@@ -336,11 +336,11 @@ export default function Signup() {
             <div className="flex gap-4 mt-6">
               <button
                 style={{
-                  width: "261px",
-                  height: "55px",
+                  width: "140px",
+                  height: "42px",
                   backgroundColor: "#6F422B",
                   color: "#F7F7F7",
-                  fontSize: "20px",
+                  fontSize: "13px",
                   fontWeight: 200,
                   borderRadius: "13px",
                 }}
@@ -350,11 +350,11 @@ export default function Signup() {
 
               <button
                 style={{
-                  width: "261px",
-                  height: "55px",
+                  width: "140px",
+                  height: "42px",
                   backgroundColor: "#6F422B",
                   color: "#F7F7F7",
-                  fontSize: "20px",
+                  fontSize: "13px",
                   fontWeight: 200,
                   borderRadius: "13px",
                 }}
