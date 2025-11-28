@@ -4,6 +4,12 @@ import { useSettings } from "../context/SettingsContext";
 import Sidebar from "../components/Sidebar";
 import ChatWidget from "../components/ChatWidget";
 import { Link } from 'react-router-dom'
+import QuickSummaryCard from "../components/dashboard/QuickSummaryCard";
+import StudyCard from "../components/dashboard/StudyCard";
+import MusicCard from "../components/dashboard/MusicCard";
+import RecentFilesList from "../components/dashboard/RecentFilesList";
+import CalendarWidget from "../components/dashboard/CalendarWidget";
+import AnalyticsWidget from "../components/dashboard/AnalyticsWidget";
 
 export default function Home() {
   const { user } = useAuth();
@@ -185,6 +191,11 @@ export default function Home() {
     return `${weeks} weeks ago`;
   };
 
+  const getInitial = () => {
+    if (!fullName) return "?";
+    return fullName.trim().charAt(0).toUpperCase();
+  };
+
   return (
     <div
       className={`flex min-h-screen transition-colors duration-500 ${
@@ -194,413 +205,163 @@ export default function Home() {
       {/* Sidebar */}
       <Sidebar />
 
+      {/* Scoped styles to apply dashboard text color */}
+      <style>{`#dashboard-main, #dashboard-main * { color: #6F422B !important; } #dashboard-main .dashboard-subtitle { color: #FFFFFF !important; }`}</style>
+
       {/* Main Dashboard */}
-      <main className="p-12 flex-1 ml-20 md:ml-30 mr-7.5 transition-all duration-300">
+      <main id="dashboard-main" className="p-12 flex-1 ml-20 md:ml-30 mr-7.5 transition-all duration-300">
         <ChatWidget />
         
-        {/* Header */}
+        {/* Header and Study Streak Section */}
         <div className="mb-8">
-          <h1
-            className={`text-5xl font-bold transition-colors duration-300 ${
-              darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+          <div
+            className={`p-4 rounded-2xl shadow transition-colors duration-300 ${
+              darkMode ? "bg-[#2e2119]" : "bg-[#D69055]/75"
             }`}
           >
-            {fullName ? `Welcome back, ${fullName}!` : "Welcome back!"}
-          </h1>
-          <p
-            className={`mt-1 text-xl transition-colors duration-300 ${
-              darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"
-            }`}
-          >
-            {fullName ? `Here's your learning progress overview, ${fullName}` : "Here's your learning progress overview"}
-          </p>
-          
-          {loading && (
-            <div className="flex items-center mt-4">
-              <div
-                className="animate-spin rounded-full h-4 w-4 border-b-2 mr-2"
-                style={{ borderColor: "#E59C5C" }}
-              ></div>
-              <span
-                className={`transition-colors duration-300 ${
-                  darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"
-                }`}
-              >
-                Loading your data...
-              </span>
-            </div>
-          )}
-        </div>
+            <div className="flex items-start justify-between">
+              {/* Left: Profile Image */}
+              <div className="flex items-center">
+                <div className="w-20 h-20 rounded-full bg-[#FFFFFF] border-2 border-[#6F422B] text-[#845C47] flex items-center justify-center font-semibold focus:outline-none focus:ring-2 focus:ring-[#FDF3EA]/60 focus:ring-offset-2 focus:ring-offset-[#845845] transition-shadow overflow-hidden">
+                  {getInitial()}
+                </div>
+              </div>
 
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-6">
-          {[
-            {
-              label: "Study Streak",
-              value: `${studyStats.streak} Days`,
-              color: "bg-orange-500",
-              icon: (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8.5 14.5C7 13 6 11 6 9.5c0-2.5 2-4.5 4.5-4.5 1.5 0 2.5 0.7 3 1.5.5.8 1.5 1.5 1.5 3 0 2-2 4-4 5-2 1-4 1-4 1" />
-                </svg>
-              )
-            },
-            {
-              label: "Library Files",
-              value: libraryStats.totalFiles.toString(),
-              color: "bg-blue-500",
-              icon: (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                </svg>
-              )
-            },
-            {
-              label: "Total Time",
-              value: `${Math.floor(studyStats.totalTime / 60)}h ${studyStats.totalTime % 60}m`,
-              color: "bg-green-500",
-              icon: (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 7v5l3 2" />
-                </svg>
-              )
-            },
-            {
-              label: "Storage Used",
-              value: libraryStats.totalSize > 0
-                ? `${(libraryStats.totalSize / (1024 * 1024)).toFixed(1)}MB`
-                : "0MB",
-              color: "bg-purple-500",
-              icon: (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="7" width="18" height="12" rx="2" />
-                  <path d="M9 9h6" />
-                </svg>
-              )
-            }
-          ].map((stat, i) => (
-            <div
-              key={i}
-              className={`p-6 flex items-center justify-between rounded-2xl shadow transition-transform hover:scale-105 ${
-                darkMode ? "bg-[#2e2119]" : "bg-white"
-              }`}
-            >
-              <div>
-                <p
-                  className={`text-lg transition-colors duration-300 ${
-                    darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"
-                  }`}
-                >
-                  {stat.label}
-                </p>
-                <h2
-                  className={`text-4xl font-bold transition-colors duration-300 ${
+              {/* Middle: Welcome Title and Subtitle */}
+              <div className="flex-1 mx-8">
+                <h1
+                  className={`text-5xl font-bold transition-colors duration-300 ${
                     darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                   }`}
                 >
-                  {stat.value}
-                </h2>
+                  {fullName ? `Welcome back, ${fullName}!` : "Welcome back!"}
+                </h1>
+                <p className="mt-1 text-xl transition-colors duration-300 dashboard-subtitle">
+                  Ready to continue your learning journey?
+                </p>
               </div>
-              <div
-                className={`w-12 h-12 rounded-lg flex items-center justify-center text-xl transition-colors duration-300 ${
-                  darkMode ? 'bg-[#3a2a20]' : 'bg-[#F2D9C7]'
-                }`}
-                style={{ color: "#E59C5C" }}
-              >
-                {stat.icon}
-              </div>
-            </div>
-          ))}
-        </div>
 
-        {/* Main Grid: Recent Activity + Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          {/* Recent Activity */}
-          <div
-            className={`p-6 rounded-2xl shadow transition-colors duration-300 ${
-              darkMode ? "bg-[#2e2119]" : "bg-white"
-            }`}
-          >
-            <h3
-              className={`text-2xl font-semibold mb-4 transition-colors duration-300 ${
-                darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
-              }`}
-            >
-              Recent Activity
-            </h3>
-            {recentActivities.length > 0 ? (
-              <ul className="space-y-4">
-                {recentActivities.map((item, i) => (
-                  <li key={i} className="flex items-start">
-                    <div className={`w-10 h-10 rounded-lg mr-3 flex items-center justify-center ${darkMode ? 'bg-[#3a2a20]' : 'bg-[#F2D9C7]'}`} style={{ color: themeColors.primary }}>
-                      {/* Render a small SVG based on activity type */}
-                      {item.type === 'upload' && (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                          <polyline points="7 10 12 5 17 10" />
-                          <line x1="12" y1="5" x2="12" y2="19" />
-                        </svg>
-                      )}
-                      {item.type === 'study' && (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21 10v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h8" />
-                          <circle cx="12" cy="13" r="3" />
-                        </svg>
-                      )}
-                      {item.type === 'summary' && (
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M7 21h10a2 2 0 0 0 2-2V7l-6-4H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2z" />
-                          <line x1="9" y1="9" x2="15" y2="9" />
-                          <line x1="9" y1="13" x2="15" y2="13" />
-                        </svg>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium">{item.text}</p>
-                      <span
-                        className={`text-sm ${
-                          darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"
-                        }`}
-                      >
-                        {item.time}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className={`text-center py-8 ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`}>
-                <p className="text-lg">No recent activity</p>
-                <p className="text-sm mt-1">Start by uploading files or creating summaries!</p>
-              </div>
-            )}
-          </div>
-
-          {/* Quick Actions */}
-          <div
-            className={`p-6 rounded-2xl shadow ${
-              darkMode ? "bg-[#2e2119]" : "bg-white"
-            }`}
-          >
-            <h3 className="text-2xl font-semibold mb-4">Quick Actions</h3>
-            <div className="space-y-4">
-              <Link to="/summarize">
-                <button
-                  className="flex items-center w-full rounded-xl p-4 transition-colors hover-bounce"
-                  style={{
-                    backgroundColor: darkMode 
-                      ? `${themeColors.primary}20`
-                      : `${themeColors.primary}15`,
-                    border: `1px solid ${themeColors.primary}33`
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = darkMode 
-                      ? `${themeColors.primary}30`
-                      : `${themeColors.primary}25`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = darkMode 
-                      ? `${themeColors.primary}20`
-                      : `${themeColors.primary}15`;
-                  }}
-                >
-                  <div className="quick-icon mr-1" style={{ color: themeColors.primary }}>
-                    {/* Document / summary icon (simple, aesthetic) */}
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                      <path d="M14 2v6h6"></path>
-                      <path d="M8 12h8M8 16h8" strokeOpacity="0.9"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Create Summary</p>
-                    <p className={`text-sm ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`}>
-                      Summarize a new content
+              {/* Right: Study Streak */}
+              <div className={`p-2 rounded-xl shadow transition-colors duration-300 ${
+                darkMode ? "bg-[#2e2119]" : "bg-white"
+              }`}>
+                <div className="flex items-center justify-between">
+                  {/* Study Streak Text and Number */}
+                  <div className="text-center">
+                    <h2
+                      className={`text-sm font-bold transition-colors duration-300 ${
+                        darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+                      }`}
+                    >
+                      Study Streak
+                    </h2>
+                    <p
+                      className={`text-4xl font-bold transition-colors duration-300 ${
+                        darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+                      }`}
+                    >
+                      {studyStats.streak}
                     </p>
                   </div>
-                </button>
-              </Link>
-
-              <Link to="/flashcards">
-                <button
-                  className="flex items-center w-full rounded-xl p-4 transition-colors hover-bounce"
-                  style={{
-                    backgroundColor: darkMode ? `${themeColors.primary}20` : `${themeColors.primary}15`,
-                    border: `1px solid ${themeColors.primary}33`
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = darkMode ? `${themeColors.primary}30` : `${themeColors.primary}25`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = darkMode ? `${themeColors.primary}20` : `${themeColors.primary}15`;
-                  }}
-                >
-                  <div className="quick-icon mr-1" style={{ color: themeColors.primary }}>
-                    {/* Stack of cards icon */}
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="3" y="7" width="14" height="12" rx="2"></rect>
-                      <path d="M7 7V5a2 2 0 0 1 2-2h8"></path>
-                      <rect x="7" y="3" width="14" height="12" rx="2" opacity="0.06"></rect>
+                  
+                  {/* Flame SVG on the right */}
+                  <div className="ml-2">
+                    <svg width="50" height="50" viewBox="0 0 62 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M56.1097 36.4455C55.0913 35.1121 53.8516 33.9565 52.7003 32.8009C49.7337 30.1342 46.3686 28.223 43.5349 25.4229C36.9375 18.9339 35.4764 8.22246 39.6827 0C35.4764 1.02225 31.8013 3.33343 28.6576 5.86683C17.1897 15.1115 12.6734 31.4231 18.0753 45.4235C18.2524 45.868 18.4295 46.3124 18.4295 46.8902C18.4295 47.868 17.7653 48.7569 16.8798 49.1125C15.8614 49.557 14.7987 49.2903 13.9574 48.5792C13.7061 48.3679 13.496 48.1117 13.3376 47.8236C8.33418 41.4678 7.53718 32.3565 10.9023 25.0674C3.50792 31.112 -0.521339 41.3345 0.0542699 50.9792C0.319936 53.2015 0.585601 55.4238 1.33832 57.6461C1.95821 60.3128 3.1537 62.9796 4.48203 65.3352C9.26401 73.0243 17.5439 78.5356 26.4437 79.6467C35.9191 80.8467 46.0587 79.1134 53.3202 72.5354C61.423 65.1574 64.2568 53.3349 60.0947 43.2012L59.5191 42.0456C58.5893 40.0011 56.1097 36.4455 56.1097 36.4455ZM42.118 64.4463C40.8782 65.513 38.8414 66.6686 37.2475 67.113C32.2884 68.8909 27.3293 66.4019 24.407 63.4685C29.676 62.224 32.8197 58.3128 33.7495 54.3571C34.5022 50.8014 33.0854 47.868 32.5098 44.4457C31.9784 41.1567 32.067 38.3566 33.2625 35.2899C34.1037 36.9788 34.9893 38.6678 36.052 40.0011C39.4613 44.4457 44.8189 46.4013 45.9701 52.4459C46.1473 53.0682 46.2358 53.6904 46.2358 54.3571C46.3686 58.0016 44.7747 62.0018 42.118 64.4463Z" 
+                        fill={darkMode ? "#E59C5C" : "#71412A"} 
+                      />
                     </svg>
                   </div>
-                  <div>
-                    <p className="font-semibold">Make Flashcards</p>
-                    <p className={`text-sm ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`}>
-                      Generate study cards
-                    </p>
-                  </div>
-                </button>
-              </Link>
-
-              <Link to="/library">
-                <button
-                  className="flex items-center w-full rounded-xl p-4 transition-colors hover-bounce"
-                  style={{
-                    backgroundColor: darkMode 
-                      ? `${themeColors.primary}20`
-                      : `${themeColors.primary}15`,
-                    border: `1px solid ${themeColors.primary}33`
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = darkMode 
-                      ? `${themeColors.primary}30`
-                      : `${themeColors.primary}25`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = darkMode 
-                      ? `${themeColors.primary}20`
-                      : `${themeColors.primary}15`;
-                  }}
-                >
-                  <div className="quick-icon mr-1" style={{ color: themeColors.primary }}>
-                    {/* Folder icon */}
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-semibold">Browse Library</p>
-                    <p className={`text-sm ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`}>
-                      Access your files
-                    </p>
-                  </div>
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Weekly Progress & Recent Files */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          {/* Weekly Progress */}
-          <div
-            className={`p-6 rounded-2xl shadow ${
-              darkMode ? "bg-[#2e2119]" : "bg-white"
-            }`}
-          >
-            <h3 className="text-2xl font-semibold mb-4">This Week's Progress</h3>
-            <div className="space-y-3">
-              {weeklyProgress.map((day, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <span className="font-medium w-12">{day.day}</span>
-                  <div className="flex-1 mx-4">
-                      <div className={`h-2 rounded-full ${darkMode ? 'bg-[#3a2a20]' : 'bg-gray-200'}`}>
-                      <div 
-                        className="h-2 rounded-full"
-                        style={{
-                          background: `linear-gradient(to right, ${themeColors.primary}, ${themeColors.primary}dd)`,
-                          width: `${Math.min(day.sessions * 20, 100)}%`
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                  <span className={`text-sm w-16 text-right ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'}`}>
-                    {day.minutes}min
-                  </span>
                 </div>
-              ))}
+              </div>
+            </div>
+
+            {loading && (
+              <div className="flex items-center mt-6 pt-6 border-t border-gray-300/30">
+                <div
+                  className="animate-spin rounded-full h-4 w-4 border-b-2 mr-2"
+                  style={{ borderColor: "#E59C5C" }}
+                ></div>
+                <span
+                  className={`transition-colors duration-300 ${
+                    darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"
+                  }`}
+                >
+                  Loading your data...
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Main Dashboard Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-8">
+          {/* Left Column - 2 rows, 2 columns width */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Quick Actions - Row 1 */}
+            <div>
+              <h3
+                className={`text-2xl font-semibold mb-4 transition-colors duration-300 ${
+                  darkMode ? "text-[#f5e9df]" : "text-[#6F422B]"
+                }`}
+              >
+                Quick Actions
+              </h3>
+              <div className="flex flex-row gap-4">
+                {/* Use the individual card components */}
+                <QuickSummaryCard darkMode={darkMode} themeColors={themeColors} />
+                <StudyCard darkMode={darkMode} themeColors={themeColors} />
+                <MusicCard darkMode={darkMode} themeColors={themeColors} />
+              </div>
+            </div>
+
+            {/* Recent Files - Row 2 */}
+            <div>
+              <h3
+                className={`text-2xl font-semibold mb-6 transition-colors duration-300 ${
+                  darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+                }`}
+              >
+                Recent Files
+              </h3>
+              <div className="flex flex-row gap-4">
+                <RecentFilesList darkMode={darkMode} themeColors={themeColors} recentFiles={libraryStats.recentFiles} />
+              </div>
             </div>
           </div>
 
-          {/* Recent Files */}
-          <div
-            className={`p-6 rounded-2xl shadow ${
-              darkMode ? "bg-[#2e2119]" : "bg-white"
-            }`}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-2xl font-semibold">Recent Files</h3>
-              <Link 
-                to="/library" 
-                className={`text-sm hover:underline ${
-                  darkMode ? 'text-blue-400' : 'text-blue-600'
+          {/* Right Column - 1 column width, 2 rows */}
+          <div className="space-y-6">
+            {/* Upcoming Events - Row 1 & 2 (taller) */}
+            <div>
+              <h3
+                className={`text-2xl font-semibold mb-4 transition-colors duration-300 ${
+                  darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                 }`}
               >
-                View all
-              </Link>
+                Upcoming Events
+              </h3>
+              
+              {/* Month Navigation */}
+              <CalendarWidget darkMode={darkMode} themeColors={themeColors} />
             </div>
-            {libraryStats.recentFiles.length > 0 ? (
-              <ul className="space-y-3">
-                {libraryStats.recentFiles.slice(0, 4).map((file, i) => (
-                  <li key={i} className="flex items-center justify-between">
-                    <div className="flex items-center flex-1">
-                      <div className={`w-8 h-8 rounded-lg mr-3 flex items-center justify-center text-sm ${darkMode ? 'bg-[#3a2a20]' : 'bg-[#F2D9C7]'}`} style={{ color: themeColors.primary }}>
-                        {/* File type icons (SVG) */}
-                        {file.type?.includes('pdf') && (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                            <path d="M14 2v6h6" />
-                            <path d="M10 14h4M10 17h4" />
-                          </svg>
-                        )}
-                        {file.type?.includes('image') && (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="3" width="18" height="14" rx="2" />
-                            <circle cx="8.5" cy="8.5" r="1.5" />
-                            <path d="M21 21l-6-5-4 4-3-3-4 4" />
-                          </svg>
-                        )}
-                        {file.type?.includes('text') && (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z" />
-                            <path d="M8 7h8M8 11h8" />
-                          </svg>
-                        )}
-                        {!file.type && (
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{file.name}</p>
-                        <p className={`text-sm ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'}`}>
-                          {file.size ? `${(file.size / 1024).toFixed(1)} KB` : 'Unknown size'}
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className={`text-center py-8 ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`}>
-                <p className="text-lg">No files yet</p>
-                <p className="text-sm mt-1">Upload your first file to get started!</p>
-                <Link to="/library">
-                  <button 
-                    className="mt-3 px-4 py-2 rounded-lg text-[#f5e9df] hover:opacity-90 transition-opacity"
-                    style={{ backgroundColor: themeColors.primary }}
-                  >
-                    Go to Library
-                  </button>
-                </Link>
-              </div>
-            )}
+
+            {/* This Week - Row 3 (shorter) */}
+            <div>
+              <h3
+                className={`text-2xl font-semibold mb-4 transition-colors duration-300 ${
+                  darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+                }`}
+              >
+                This Week
+              </h3>
+
+              {/* This Week Analytics */}
+              <AnalyticsWidget darkMode={darkMode} themeColors={themeColors} studyStats={studyStats} /> 
+            </div>
           </div>
         </div>
       </main>
     </div>
   );
 }
-
