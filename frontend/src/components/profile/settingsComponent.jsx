@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
 
 export const ToggleSwitch = ({ label, subLabel, checked, onChange }) => {
   return (
