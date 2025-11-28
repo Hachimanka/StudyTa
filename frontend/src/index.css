@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
 @import "./styles/theme.css";
@@ -257,5 +258,3 @@ html {
 	.chat-panel { width: 92vw; right: 12px; bottom: 80px }
 	.chat-toggle-button { width:48px; height:48px }
 }
-
-
