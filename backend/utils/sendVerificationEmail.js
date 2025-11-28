@@ -28,5 +28,10 @@ export async function sendVerificationEmail(email, token) {
     html: `<p>Click the link below to verify your account:</p><p><a href="${verificationUrl}">${verificationUrl}</a></p>`
   };
 
+  // Require SMTP credentials to actually send verification emails
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error('EMAIL_USER and EMAIL_PASS must be configured to send verification emails');
+  }
+
   await transporter.sendMail(mailOptions);
 }

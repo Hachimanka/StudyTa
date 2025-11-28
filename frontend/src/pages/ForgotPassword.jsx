@@ -30,9 +30,29 @@ export default function ForgotPassword(){
     };
   }, []);
 
-  const onSubmit = (e) => { 
-    e.preventDefault()
-    alert('If this email exists, a reset link was sent (mock)') 
+  const onSubmit = async (e) => { 
+    e.preventDefault();
+    if (!email) {
+      alert('Please enter your email');
+      return;
+    }
+    try {
+      const API_BASE = import.meta.env.VITE_API_BASE || '';
+      const res = await fetch(`${API_BASE}/api/forgot-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || 'Reset link sent to your email');
+      } else {
+        alert(data.message || 'Failed to send reset link');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error sending reset link');
+    }
   }
 
   return (
@@ -49,26 +69,26 @@ export default function ForgotPassword(){
           className={`rounded-3xl shadow-xl grid grid-cols-2 gap-2 transition-colors duration-500 ${
             isDark ? "bg-[#2e2119]" : "bg-[#BE8E78]"
           }`}
-          style={{ width: "1190px", height: "818px", padding: "50px" }}
+          style={{ width: "700px", height: "580px", padding: "12px" }}
         >
           {/* LEFT IMAGE BOX */}
           <div
             className={`rounded-xl ${
               isDark ? "bg-[#3a2a20]" : "bg-[#D9D9D9]"
             }`}
-            style={{ width: "505px", height: "718px" }}
+            style={{ width: "300px", height: "500px" }}
           ></div>
 
           {/* RIGHT FORM SECTION */}
-          <div className="flex flex-col justify-center" style={{ marginTop: "-80px" }}>
+          <div className="flex flex-col justify-center" style={{ marginTop: "-20px" }}>
             {/* Title */}
             <h2
               className={`${isDark ? "text-[#f5e9df]" : "text-white"}`}
               style={{
-                fontSize: "48px",
+                fontSize: "30px",
                 fontWeight: 500,
                 fontStyle: "italic",
-                marginBottom: "20px",
+                marginBottom: "12px",
               }}
             >
               Forgot password
@@ -77,7 +97,7 @@ export default function ForgotPassword(){
             {/* Subtext */}
             <p
               className={`${isDark ? "text-[#f5e9df]/70" : "text-white/90"}`}
-              style={{ fontSize: "20px", fontWeight: 300 }}
+              style={{ fontSize: "14px", fontWeight: 300 }}
             >
               Remembered?{" "}
               <Link
@@ -103,10 +123,10 @@ export default function ForgotPassword(){
                 onChange={(e) => setEmail(e.target.value)}
                 className="rounded-md border"
                 style={{
-                  width: "554px",
-                  height: "55px",
-                  paddingLeft: "15px",
-                  fontSize: "20px",
+                  width: "300px",
+                  height: "42px",
+                  paddingLeft: "10px",
+                  fontSize: "14px",
                   fontWeight: 200,
                   fontStyle: "italic",
                   color: "#796060",
@@ -122,14 +142,14 @@ export default function ForgotPassword(){
               <button
                 type="submit"
                 style={{
-                  width: "554px",
-                  height: "55px",
+                  width: "300px",
+                  height: "42px",
                   backgroundColor: "#6F422B",
                   color: "white",
                   borderRadius: "13px",
-                  fontSize: "20px",
+                  fontSize: "14px",
                   fontWeight: 500,
-                  marginTop: "16px",
+                  marginTop: "12px",
                 }}
               >
                 Send Code

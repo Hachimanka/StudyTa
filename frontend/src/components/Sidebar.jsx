@@ -29,13 +29,15 @@ export default function Sidebar() {
     { name: "Dashboard", path: "/dashboard", icon: "/SideBarIcons/DshBrd.png" },
     { name: "Summarize", path: "/summarize", icon: "/SideBarIcons/Sum.png" },
     { name: "Calendar", path: "/calendar", icon: "/SideBarIcons/Clndr.png" },
-    { name: "Study", path: "/study", icon: "/SideBarIcons/StdMd.png" },
+    { name: "Studymode", path: "/study", icon: "/SideBarIcons/StdMd.png" },
     { name: "Library", path: "/library", icon: "/SideBarIcons/Lib.png" },
     { name: "Analytics", path: "/analytics", icon: "/SideBarIcons/Anl.png" },
     { name: "Music", path: "/music", icon: "/SideBarIcons/Msc.png" },
   ];
   return (
     <aside
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
       className={`fixed top-15 bottom-0 z-50 flex flex-col transition-all duration-300 ease-in-out`}
       style={{
         backgroundColor: COLORS.bg,
