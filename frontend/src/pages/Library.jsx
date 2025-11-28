@@ -1,20 +1,61 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar'
 import FileSearchBox from '../components/library/FileSearchBox'
 import FileUploadButton from '../components/library/FileUploadButton'
 import FileListBox from '../components/library/FileListBox'
+import { listFiles, uploadFile } from '../services/LibraryService'
 
 export default function Library() {
   // Track uploaded files list (newest first)
   const [files, setFiles] = useState([])
   // Controlled search input
   const [searchTerm, setSearchTerm] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  // Fetch persisted files on mount
+  useEffect(() => {
+    const fetchFiles = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const data = await listFiles()
+        // data may already be array of file docs; normalize minimal fields used in UI
+        const normalized = data.map(f => ({
+          id: f._id || f.id,
+          name: f.originalName || f.name || f.fileName,
+          size: f.fileSize || f.size,
+          type: f.fileType || f.type,
+          uploadDate: f.createdAt || f.uploadDate,
+        }))
+        setFiles(normalized)
+      } catch (e) {
+        setError('Failed to load files')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchFiles()
+  }, [])
 
   // Handle file selection from upload button component: prepend to list
-  const handleFileSelected = (file) => {
-    if (file) {
-      setFiles(prev => [file, ...prev])
-      console.log(file)
+  const handleFileSelected = async (file) => {
+    if (!file) return
+    setError(null)
+    try {
+      // Upload to backend then refresh list
+      await uploadFile(file)
+      const data = await listFiles()
+      const normalized = data.map(f => ({
+        id: f._id || f.id,
+        name: f.originalName || f.name || f.fileName,
+        size: f.fileSize || f.size,
+        type: f.fileType || f.type,
+        uploadDate: f.createdAt || f.uploadDate,
+      }))
+      setFiles(normalized)
+    } catch (e) {
+      setError('Upload failed')
     }
   }
   const formatFileSize = (bytes) => {
@@ -38,10 +79,12 @@ export default function Library() {
             <FileSearchBox value={searchTerm} onChange={setSearchTerm} />
             <FileUploadButton onFileSelected={handleFileSelected} />
           </div>
+          {loading && <p className="text-sm text-gray-500">Loading files...</p>}
+          {error && <p className="text-sm text-red-600">{error}</p>}
           {/* 8. Display area for the uploaded file */}
           <div className="mt-6">
             {/* filter uploaded files by name (case-insensitive) */}
-            <FileListBox files={files.filter(f => f.name.toLowerCase().includes(searchTerm.trim().toLowerCase()))} onItemClick={() => {}} />
+            <FileListBox loading={loading} files={files.filter(f => f.name && f.name.toLowerCase().includes(searchTerm.trim().toLowerCase()))} onItemClick={() => {}} />
           </div>
         </div>
 

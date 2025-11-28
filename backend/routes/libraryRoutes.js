@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import UploadedFile from '../models/UploadedFile.js';
 import Folder from '../models/Folder.js';
+import { uploadFile as ctrlUploadFile, listFiles as ctrlListFiles, downloadFile as ctrlDownloadFile, deleteFile as ctrlDeleteFile, getLibraryTree as ctrlGetLibraryTree } from '../controllers/libraryController.js'
 
 const router = express.Router();
 
@@ -60,7 +61,10 @@ const readTextFile = (filePath) => {
 // Upload file
 router.post('/upload', upload.single('file'), async (req, res) => {
   try {
-    // TEMPORARY: Use dummy user ID for testing (replace with auth later)
+    // If auth middleware sets req.user, forward to controller; else fallback TEMP for now
+    if (req.user) {
+      return ctrlUploadFile(req, res)
+    }
     const userId = TEMP_USER_ID;
     const { folderId = 'root' } = req.body;
 
@@ -127,6 +131,9 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 // Get user's files and folders
 router.get('/library/:userId', async (req, res) => {
   try {
+    if (req.user) {
+      return ctrlGetLibraryTree(req, res)
+    }
     const { userId } = req.params;
     
     // Get all files for the user
@@ -247,6 +254,9 @@ router.post('/folder', async (req, res) => {
 // Delete file
 router.delete('/file/:fileId', async (req, res) => {
   try {
+    if (req.user) {
+      return ctrlDeleteFile(req, res)
+    }
     const { fileId } = req.params;
     const { userId } = req.body;
 
@@ -319,6 +329,9 @@ router.delete('/folder/:folderId', async (req, res) => {
 // Download file
 router.get('/download/:fileId', async (req, res) => {
   try {
+    if (req.user) {
+      return ctrlDownloadFile(req, res)
+    }
     const { fileId } = req.params;
     const { userId } = req.query;
 
@@ -387,7 +400,9 @@ router.get('/view/:fileId', async (req, res) => {
 // Get all files for authenticated user (frontend expects this)
 router.get('/files', async (req, res) => {
   try {
-    // TEMPORARY: Use dummy user ID for testing
+    if (req.user) {
+      return ctrlListFiles(req, res)
+    }
     const files = await UploadedFile.find({ userId: TEMP_USER_ID });
     res.json(files);
   } catch (error) {
