@@ -116,7 +116,7 @@ export default function TopNav() {
     };
   }, [open]);
 
-  const bioText = user?.bio || user?.about || "Bio";
+  const bioText = user?.bio || user?.about || "";
 
   // Authenticated Topbar UI (after login)
   if (isAuthenticated && !isLanding) {
