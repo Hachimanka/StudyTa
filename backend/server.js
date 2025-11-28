@@ -12,6 +12,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import userRoutes from './routes/userRoutes.js';
 import libraryRoutes from './routes/libraryRoutes.js';
+import summarizeRoutes from './routes/SummarizeRoute.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,6 +44,9 @@ app.use('/api', userRoutes);
 
 // Register library routes
 app.use('/api/library', libraryRoutes);
+
+// Register summarize routes
+app.use('/api/summarize', summarizeRoutes);
 
 const PORT = process.env.PORT || 5000;
 const BACKEND_BASE = process.env.BACKEND_BASE || `http://localhost:${PORT}`;

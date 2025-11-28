@@ -15,6 +15,7 @@ export default function Summarize() {
   const [activeTab, setActiveTab] = useState("text"); // "text" or "file"
   const [selectedFile, setSelectedFile] = useState(null);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [history, setHistory] = useState([]);
 
   const handleSummarize = async () => {
     if (!inputText.trim() && !selectedFile) return;
@@ -47,12 +48,49 @@ export default function Summarize() {
         text: textToSummarize,
       });
       setSummary(res.data.summary);
+
+      // Save summary record to backend (optional userId)
+      try {
+        await axios.post(`${API_BASE}/api/summarize`, {
+          sourceText: textToSummarize,
+          summaryText: res.data.summary,
+          fileName: selectedFile?.name || '',
+          // userId: user?.id || null  // add userId if available from auth
+        });
+        // reload history
+        fetchHistory();
+      } catch (saveErr) {
+        console.warn('Could not save summary:', saveErr?.message || saveErr);
+      }
     } catch (error) {
       console.error("Summarize error:", error);
       setSummary("Error: Failed to summarize the content. Please try again.");
     }
 
     setLoading(false);
+  };
+
+  const fetchHistory = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/api/summarize/history`);
+      setHistory(res.data.items || []);
+    } catch (err) {
+      console.warn('Failed to load summary history', err?.message || err);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleDeleteHistory = async (id) => {
+    try {
+      await axios.delete(`${API_BASE}/api/summarize/${id}`);
+      fetchHistory();
+    } catch (err) {
+      console.error('Failed to delete summary', err);
+    }
   };
 
   const handleFileUpload = async (event) => {
@@ -106,6 +144,23 @@ export default function Summarize() {
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
+  };
+
+  // Generate a short title from a summary text (first sentence or first ~10 words)
+  const generateTitle = (text) => {
+    if (!text) return '';
+    const cleaned = text.replace(/\s+/g, ' ').trim();
+    // Try to use the first sentence
+    const sentenceMatch = cleaned.match(/^(.*?[\.\!\?])\s/);
+    let title = '';
+    if (sentenceMatch && sentenceMatch[1]) {
+      title = sentenceMatch[1];
+    } else {
+      // fallback: first 10 words
+      title = cleaned.split(' ').slice(0, 10).join(' ');
+    }
+    if (title.length > 60) title = title.slice(0, 57) + '...';
+    return title;
   };
 
   return (
@@ -272,21 +327,19 @@ export default function Summarize() {
             </h2>
 
             {/* New Layout Container */}
-            <div className="flex flex-col h-[350px]">
-              {/* Summary Content */}
-              <div className="flex-1 overflow-y-auto">
+            <div className="flex flex-col">
+              {/* Summary Content - fixed rectangle; inner area scrolls when content is long */}
+              <div className="h-[350px]">
                 {summary ? (
-                  <div className="space-y-4">
-                    <div className={`p-4 rounded-xl text-sm font-semibold focus:outline-none resize-none
-                      ${darkMode
-                        ? 'border-gray-600 bg-[#3a2a20] text-white'
-                        : 'border border-[#D9D9D9] bg-white text-[#8D5A3F]'
-                      } h-80`}>
-                      <p className={`whitespace-pre-wrap ${darkMode ? 'text-gray-200' : 'text-[#8D5A3F]'}`}>{summary}</p>
-                    </div>
+                  <div className={`p-4 rounded-xl text-sm font-semibold focus:outline-none resize-none h-full overflow-auto box-border
+                    ${darkMode
+                      ? 'border-gray-600 bg-[#3a2a20] text-white'
+                      : 'border border-[#D9D9D9] bg-white text-[#8D5A3F]'
+                    } break-words break-all`}>
+                    <p className={`whitespace-pre-wrap break-words break-all ${darkMode ? 'text-gray-200' : 'text-[#8D5A3F]'}`}>{summary}</p>
                   </div>
                 ) : (
-                  <div className={`p-8 text-center rounded-xl border-1 h-80 flex flex-col items-center justify-center
+                  <div className={`p-8 text-center rounded-xl border-1 flex flex-col items-center justify-center h-full box-border
                     ${darkMode
                       ? 'border-gray-600 bg-[#3a2a20] text-gray-400'
                       : 'border-gray-300 bg-white text-[#8D5A3F]'
@@ -317,6 +370,29 @@ export default function Summarize() {
                 >
                   {copySuccess ? "Copied!" : "Copy Text"}
                 </button>
+              </div>
+
+              {/* History List */}
+              <div className="mt-4">
+                <h3 className={`text-sm font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-[#6F422B]'}`}>Recent Summaries</h3>
+                {history && history.length > 0 ? (
+                  <ul className="space-y-2 max-h-40 overflow-y-auto overflow-x-hidden">
+                    {history.map((h) => (
+                      <li key={h._id} className={`flex items-center justify-between p-2 rounded-md ${darkMode ? 'bg-[#3a2a20] text-gray-200' : 'bg-[#FFF7F3] text-[#6F422B]'}`}>
+                        <div className="mr-3 flex-1 min-w-0">
+                          <div className="text-xs text-gray-500">{new Date(h.createdAt).toLocaleString()}</div>
+                          <div className="text-sm truncate" title={h.summaryText}>{generateTitle(h.summaryText)}</div>
+                        </div>
+                        <div className="ml-2 flex-shrink-0">
+                          <button onClick={() => setSummary(h.summaryText)} className="text-xs text-[#8D5A3F] hover:underline mr-2">Load</button>
+                          <button onClick={() => handleDeleteHistory(h._id)} className="text-xs text-red-500">Delete</button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-[#8D5A3F]'}`}>No saved summaries yet.</div>
+                )}
               </div>
             </div>
           </div>

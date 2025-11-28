@@ -116,12 +116,12 @@ export default function TopNav() {
     };
   }, [open]);
 
-  const bioText = user?.bio || user?.about || "Bio";
+  const bioText = user?.bio || user?.about || "";
 
   // Authenticated Topbar UI (after login)
   if (isAuthenticated && !isLanding) {
     return (
-      <nav className="sticky top-0 w-full h-15 bg-[#845845] shadow-sm">
+      <nav className="sticky top-0 w-full h-15 bg-[#845845] shadow-sm z-50">
         <div className="mx-auto flex items-center justify-between px-6 py-3">
           {/* Left: Logo + Brand */}
           <button
