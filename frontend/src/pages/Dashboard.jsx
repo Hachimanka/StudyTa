@@ -3,7 +3,6 @@ import { useAuth } from "../context/AuthContext";
 import { useSettings } from "../context/SettingsContext";
 import Sidebar from "../components/Sidebar";
 import ChatWidget from "../components/ChatWidget";
-import { Link } from 'react-router-dom'
 import QuickSummaryCard from "../components/dashboard/QuickSummaryCard";
 import StudyCard from "../components/dashboard/StudyCard";
 import MusicCard from "../components/dashboard/MusicCard";
