@@ -5,11 +5,10 @@ import FileUploadButton from '../components/library/FileUploadButton'
 import FileListBox from '../components/library/FileListBox'
 
 export default function Library() {
-  // 2. State to store the uploaded file
-  const [selectedFile, setSelectedFile] = useState(null);
-
   // Track uploaded files list (newest first)
   const [files, setFiles] = useState([])
+  // Controlled search input
+  const [searchTerm, setSearchTerm] = useState('')
 
   // Handle file selection from upload button component: prepend to list
   const handleFileSelected = (file) => {
@@ -36,12 +35,13 @@ export default function Library() {
         {/*  card  */}
         <div className="max-w-7xl min-h-[600px] bg-white rounded-xl shadow-lg p-6">
           <div className="flex justify-end gap-2 mb-4 text-base font-semibold">
-            <FileSearchBox value={''} onChange={() => {}} />
+            <FileSearchBox value={searchTerm} onChange={setSearchTerm} />
             <FileUploadButton onFileSelected={handleFileSelected} />
           </div>
           {/* 8. Display area for the uploaded file */}
           <div className="mt-6">
-            <FileListBox files={files} onItemClick={() => {}} />
+            {/* filter uploaded files by name (case-insensitive) */}
+            <FileListBox files={files.filter(f => f.name.toLowerCase().includes(searchTerm.trim().toLowerCase()))} onItemClick={() => {}} />
           </div>
         </div>
 
