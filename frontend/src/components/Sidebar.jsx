@@ -36,6 +36,8 @@ export default function Sidebar() {
   ];
   return (
     <aside
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
       className={`fixed top-15 bottom-0 z-50 flex flex-col transition-all duration-300 ease-in-out`}
       style={{
         backgroundColor: COLORS.bg,

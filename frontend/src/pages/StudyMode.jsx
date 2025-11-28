@@ -1298,45 +1298,103 @@ export default function FileBasedStudyApp() {
       <Sidebar />
       <main className="flex-1 p-6 md:p-12 ml-20 md:ml-28">
         {/* Header */}
-        <div className="mb-8 transform transition-all duration-500 hover:scale-105">
-          <h1 className={`text-3xl md:text-4xl font-bold bg-gradient-to-r ${themeColors.gradient} bg-clip-text text-transparent`}>
-            AI Study Mode - File Based
+        <div className="mb-8">
+          <h1 className={`text-4xl font-bold ${darkMode ? 'text-[#f5e9df]' : 'text-[#4A2C1E]'}`}>
+            Study Mode
           </h1>
-          <p className={`mt-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'} text-lg`}>Upload your study material and practice with AI-generated content</p>
+          <p className={`mt-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'} text-lg`}>Create personalized study tools for active recall.</p>
         </div>
 
-        {/* File Upload */}
-        <div className={`mb-6 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'} rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-1`}>
-          <label className={`block text-sm font-semibold ${darkMode ? 'text-gray-200' : 'text-gray-700'} mb-3`}>
-            📄 Upload Study Material
-          </label>
-          <div className="flex items-center space-x-4">
-            <input
-              type="file"
-              accept=".txt,.md,.pdf,.doc,.docx"
-              onChange={handleFileUpload}
-              className={`block w-full text-sm ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'}
-                file:mr-4 file:py-3 file:px-6
-                file:rounded-full file:border-0
-                file:text-sm file:font-semibold
-                file:${themeColors.light} file:${themeColors.text}
-                hover:file:${themeColors.hover} file:transition-all file:duration-300
-                file:hover:scale-105 file:shadow-sm hover:file:shadow-md`}
-            />
-            {uploadedFile && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-green-600 font-medium bg-green-50 px-3 py-1 rounded-full border border-green-200 animate-pulse">
-                  ✓ {uploadedFile.name}
-                </span>
-                <button
-                  onClick={removeCurrentFile}
-                  className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium hover:bg-red-200 transition-all duration-300 transform hover:scale-105"
-                  title="Remove file"
+        {/* Input Content Card + History (matches screenshot) */}
+        <div className="mb-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className={`lg:col-span-2 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'} rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300`}>
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h2 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Input Content</h2>
+                <p className={`text-sm mt-1 ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'}`}>Paste text or upload a file to generate study material</p>
+              </div>
+              <div>
+                <select
+                  value={activeMode || defaultStudyMode}
+                  onChange={(e) => setActiveMode(e.target.value)}
+                  className="text-sm border rounded px-2 py-1 bg-white"
+                  title="Choose mode"
                 >
-                  ✕ Remove
+                  {studyModes.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="mb-4">
+              <div className="inline-flex bg-[#f3f2f1] rounded-full p-1">
+                <button
+                  onClick={() => setActiveMode((v) => v || defaultStudyMode)}
+                  className={`px-4 py-1 rounded-full text-sm font-medium ${!uploadedFile ? 'bg-white shadow' : 'bg-transparent'}`}
+                >
+                  Text Input
+                </button>
+                <button
+                  onClick={() => {}}
+                  className={`px-4 py-1 rounded-full text-sm font-medium ${uploadedFile ? 'bg-white shadow' : 'bg-transparent'}`}
+                >
+                  File Upload
                 </button>
               </div>
-            )}
+            </div>
+
+            <div>
+              <textarea
+                value={fileContent}
+                onChange={(e) => setFileContent(e.target.value)}
+                placeholder="Paste your text ..."
+                className="w-full h-40 p-4 border rounded-md bg-[#fff] text-gray-800"
+              />
+              <div className="flex items-center justify-between mt-2">
+                <div className="text-sm text-gray-500">{(fileContent || '').length} Characters</div>
+                <div>
+                  <button onClick={() => setFileContent('')} className="text-sm text-gray-500 underline">Clear Text</button>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <div className="flex items-center gap-3">
+                  <label className="block">
+                    <input type="file" accept=".txt,.md,.pdf,.doc,.docx" onChange={handleFileUpload} />
+                  </label>
+                  <button
+                    onClick={() => {
+                      if (!fileContent && !uploadedFile) return alert('Provide text or upload a file first');
+                      // If no mode selected, use default
+                      const modeToUse = activeMode || defaultStudyMode;
+                      loadContentFromFile(modeToUse, fileContent || undefined);
+                    }}
+                    className="px-6 py-2 rounded-md bg-[#8C5A41] text-white font-semibold hover:bg-[#6f422b] transition-colors"
+                  >
+                    Create
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* History column */}
+          <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-white'} rounded-xl p-6 shadow-sm`}> 
+            <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>History</h3>
+            <div className="h-64 overflow-y-auto">
+              {savedStudySets.length === 0 ? (
+                <p className={`text-sm ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'}`}>No history yet</p>
+              ) : (
+                savedStudySets.map(s => (
+                  <div key={s.id} className="mb-3 p-2 border rounded">
+                    <div className="text-sm font-medium">{s.title}</div>
+                    <div className="text-xs text-gray-500">{s.itemCount || s.content?.length || 0} items • {s.createdAt}</div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
