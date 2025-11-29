@@ -3,13 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useSettings } from '../../context/SettingsContext';
 import Sidebar from '../Sidebar';
 
-export default function FlashCardMode() {
+export default function MultipleChoiceMode() {
   const { darkMode } = useSettings();
   const navigate = useNavigate();
-  const [isFlipped, setIsFlipped] = useState(false);
 
   // Editable title state
-  const [title, setTitle] = useState('Title III');
+  const [title, setTitle] = useState('Title11111');
   const [editingTitle, setEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState(title);
   const inputRef = useRef(null);
@@ -29,15 +28,12 @@ export default function FlashCardMode() {
     setEditingTitle(false);
   };
 
-  const handleCardClick = () => {
-    setIsFlipped(!isFlipped);
-  };
-
   return (
-    <div className={`flex min-h-screen transition-colors duration-500 ${darkMode ? 'bg-[#1f1b16] text-[#f5e9df]' : 'bg-[var(--bg)] text-[#4A2C1E]'}`}>
+    <div className={`flex min-h-screen transition-colors duration-500 ${darkMode ? 'bg-[#1f1b16] text-[#f5e9df]' : 'bg-[#F2D9C7] text-[#4A2C1E]'}`}>
       <Sidebar />
 
       <main className="p-12 flex-1 ml-20 md:ml-30 mr-7.5 transition-all duration-300">
+        {/* Top Controls (smaller to match other pages) */}
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => navigate('/study')} className={`flex items-center justify-center space-x-3 px-4 py-2 rounded-full text-sm md:px-8 md:py-3 md:text-lg md:w-48 w-full ${darkMode ? 'bg-[#3a2a20] text-white' : 'bg-[#8D5A3F] text-white'}`}>
             <svg width="25" height="20" viewBox="0 0 35 30" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -100,13 +96,14 @@ export default function FlashCardMode() {
           </button>
         </div>
 
+        {/* Content Wrapper - use same sizing as other pages (500px height panels) */}
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-10">
           <aside className="lg:col-span-3">
             <div className={`border border-[#6F422B] ${darkMode ? 'bg-[#2e2119]' : 'bg-[#F3DAC6]'} rounded-xl p-6 shadow-lg h-[500px]`}>
               <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>Study methods</h3>
 
               <div className="space-y-4">
-                <button onClick={() => navigate('/FlashCardMode')} className={`w-full flex items-center space-x-4 p-3 rounded-lg border-2 ${darkMode ? 'bg-[#2e2119] border-[#8D5A3F]' : 'bg-[#F3DAC6] border-[#6F422B]'} shadow-lg`}>
+                <button onClick={() => navigate('/FlashCardMode')} className={`w-full flex items-center space-x-4 p-3 rounded-lg border ${darkMode ? 'bg-[#2e2119] border-gray-600' : 'bg-[#F3DAC6] border-[#6F422B]'} shadow-sm`}>
                   <svg className="w-8 h-8" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path fill="#845C47" fillRule="evenodd" d="M39 13a3 3 0 0 0-3 3v2h6v-2a3 3 0 0 0-3-3Zm3 7h-6v16.5l3 4.5l3-4.5V20ZM6 9v30a3 3 0 0 0 3 3h22a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3H9a3 3 0 0 0-3 3Zm14 6a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2h-8a1 1 0 0 1-1-1Zm1 3a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-8Zm-1 10a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2h-8a1 1 0 0 1-1-1Zm1 3a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-8Zm-9-3v3h3v-3h-3Zm-1-2h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Zm6.707-10.293a1 1 0 0 0-1.414-1.414L13 17.586l-1.293-1.293a1 1 0 0 0-1.414 1.414L13 20.414l4.707-4.707Z" clipRule="evenodd"/>
                   </svg>
@@ -120,7 +117,7 @@ export default function FlashCardMode() {
                   <span className={`font-medium ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>True or False</span>
                 </button>
 
-                <button onClick={() => navigate('/MultipleChoiceMode')} className={`w-full flex items-center space-x-4 p-3 rounded-lg border ${darkMode ? 'bg-[#2e2119] border-gray-600' : 'bg-[#F3DAC6] border-[#6F422B]'} shadow-sm`}>
+                <button className={`w-full flex items-center space-x-4 p-3 rounded-lg border-2 ${darkMode ? 'bg-[#2e2119] border-[#8D5A3F]' : 'bg-[#F3DAC6] border-[#6F422B]'} shadow-lg`}>
                   <svg className="w-8 h-8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <g fill="none">
                       <path fillRule="evenodd" clipRule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12zm10-5a2 2 0 0 0-2 2a1 1 0 0 1-2 0a4 4 0 1 1 5.31 3.78a.674.674 0 0 0-.273.169a.177.177 0 0 0-.037.054v.497a1 1 0 1 1-2 0V13c0-1.152.924-1.856 1.655-2.11A2.001 2.001 0 0 0 12 7zm1 6.007v-.004v.004zM13 17a1 1 0 1 1-2 0a1 1 0 0 1 2 0z" fill="#845C47"/>
@@ -133,61 +130,47 @@ export default function FlashCardMode() {
           </aside>
 
           <section className="lg:col-span-7">
-            {/* Flashcard Section with relative positioning */}
-            <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-white'} rounded-xl p-6 shadow-lg h-[400px] flex flex-col relative`}>
+            <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-[#F3DAC6]'} rounded-xl p-6 shadow-lg h-[500px] flex flex-col`}>
+              <div className="text-center">
+                <div className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'}`}>Question 2</div>
+              </div>
               
-              {/* Flashcard - No background, same size as container */}
-              <div className="flex-1 flex items-center justify-center">
-                <div 
-                  className={`w-full h-full rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all duration-300 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}
-                  onClick={handleCardClick}
-                >
-                  {/* Question/Answer Content */}
-                  <div className="text-center">
-                    <h2 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>
-                      {isFlipped ? 'Answer' : 'Question Holder Label'}
-                    </h2>
-                  </div>
+              <div className="flex-1 flex flex-col justify-center">
+                <div className="text-center max-w-4xl mx-auto">
+                  <h2 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>Question Holder Label</h2>
                 </div>
               </div>
 
-              {/* "Click the card to flip" in round box at bottom - Sticks to bottom */}
-              <div className="absolute bottom-0 left-0 right-0">
-                <div className={`bg-[#F3DAC6] w-full py-4 rounded-xl text-center text-lg font-semibold ${darkMode ? 'text-[#E7C6B0] border border-[#433029]' : ' text-[#6F422B] border border-[#E6CDBD]'}`}>
-                  Click the card to flip
+              <div className="mt-auto">
+                <div className="space-y-4">
+                  <button className={`w-full text-left p-3 rounded-lg ${darkMode ? 'bg-[#1f1712] border border-gray-600' : 'bg-white border border-[#EFE2DA]'} shadow-sm`}>
+                    <span className={`font-semibold ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>A.</span>
+                  </button>
+
+                  <button className={`w-full text-left p-3 rounded-lg ${darkMode ? 'bg-[#1f1712] border border-gray-600' : 'bg-white border border-[#EFE2DA]'} shadow-sm`}>
+                    <span className={`font-semibold ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>B.</span>
+                  </button>
+
+                  <button className={`w-full text-left p-3 rounded-lg ${darkMode ? 'bg-[#1f1712] border border-gray-600' : 'bg-white border border-[#EFE2DA]'} shadow-sm`}>
+                    <span className={`font-semibold ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>C.</span>
+                  </button>
+
+                  <button className={`w-full text-left p-3 rounded-lg ${darkMode ? 'bg-[#1f1712] border border-gray-600' : 'bg-white border border-[#EFE2DA]'} shadow-sm`}>
+                    <span className={`font-semibold ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>D.</span>
+                  </button>
                 </div>
               </div>
             </div>
-
-            {/* Navigation with Arrows and Counter - No background */}
-            <div className="mt-6">
-              <div className="flex items-center justify-between px-4 py-3">
-                {/* Previous Button - No background */}
-                <button className={`flex items-center justify-center w-32 h-10 rounded-full border-2 ${darkMode ? 'text-[#B77A57] border-[#6F422B] hover:bg-[#6F422B]' : 'text-[#6F422B] border-[#6F422B] hover:bg-[#6F422B] hover:text-white'}`}>
-                  <span className="ml-2 text-2xl">←</span>
-                </button>
-
-                {/* Progress Counter */}
-                <div className={`text-lg font-semibold ${darkMode ? 'text-gray-300' : 'text-[#6F422B]'}`}>
-                  1/15
-                </div>
-
-                {/* Next Button - No background */}
-                <button className={`flex items-center justify-center w-32 h-10 rounded-full border-2 ${darkMode ? 'text-[#B77A57] border-[#6F422B] hover:bg-[#6F422B]' : 'text-[#6F422B] border-[#6F422B] hover:bg-[#6F422B] hover:text-white'}`}>
-                  <span className="mr-2 text-2xl">→</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mt-6 flex flex-col items-center">
-              <div className="w-3/4">
-                <div className={`w-full rounded-full overflow-hidden transition-colors duration-200 ${darkMode ? 'border border-[#6F422B] bg-transparent' : 'border border-[#6F422B] bg-[#FDEDE4]'}`} style={{ height: 14 }}>
-                  <div className="h-full bg-[#6F422B] rounded-full transition-all duration-300" style={{ width: '30%' }} />
-                </div>
-              </div>
-              <div className={`mt-3 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-[#6F422B]'}`}>Progress bar</div>
-            </div>
+            
+                      {/* Progress Bar */}
+                      <div className="mt-6 flex flex-col items-center">
+                        <div className="w-3/4">
+                          <div className={`w-full rounded-full overflow-hidden transition-colors duration-200 ${darkMode ? 'border border-[#6F422B] bg-transparent' : 'border border-[#6F422B] bg-[#FDEDE4]'}`} style={{ height: 14 }}>
+                            <div className="h-full bg-[#6F422B] rounded-full transition-all duration-300" style={{ width: '30%' }} />
+                          </div>
+                        </div>
+                        <div className={`mt-3 text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-[#6F422B]'}`}>Progress bar</div>
+                      </div>
           </section>
         </div>
       </main>
