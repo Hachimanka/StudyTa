@@ -14,6 +14,7 @@ import userRoutes from './routes/userRoutes.js';
 import libraryRoutes from './routes/libraryRoutes.js';
 import summarizeRoutes from './routes/SummarizeRoute.js';
 import studymodeRoute from './routes/studymodeRoute.js';
+import musicRoutes from './routes/musicRoute.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,6 +51,12 @@ app.use('/api/library', libraryRoutes);
 app.use('/api/summarize', summarizeRoutes);
 // Study mode / quizzes
 app.use('/api/studymode', studymodeRoute);
+
+// Music routes (upload, list, update, delete)
+app.use('/api/music', musicRoutes);
+
+// Serve uploaded files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const PORT = process.env.PORT || 5000;
 const BACKEND_BASE = process.env.BACKEND_BASE || `http://localhost:${PORT}`;
@@ -381,3 +388,5 @@ app.post('/api/ai/generate-questions', async (req, res) => {
     res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
+
+// (Music upload/management moved to router at ./routes/musicRoute.js)

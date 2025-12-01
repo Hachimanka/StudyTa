@@ -131,10 +131,43 @@ export default function Music() {
   function handleUpload(e) {
     const file = e.target.files && e.target.files[0]
     if (!file) return
-    const url = URL.createObjectURL(file)
-    const next = { id: Date.now(), name: file.name, url, duration: '0:00' }
-    setTracks((s) => [...s, next])
-    setQuery('')
+
+    // Try uploading to the backend. Fall back to object URL on failure.
+    const form = new FormData()
+    form.append('track', file)
+
+    fetch('/api/music/upload', { method: 'POST', body: form })
+      .then(async (resp) => {
+        if (!resp.ok) throw new Error('Upload failed')
+        const j = await resp.json()
+        // Use backend _id when available
+        const id = j._id || Date.now()
+        const next = { id, name: j.name || file.name, url: j.url, duration: '0:00' }
+        setTracks((s) => [...s, next])
+        // Update duration using metadata and persist to backend when available
+        updateTrackDuration(id, j.url, false).then(({ seconds, formatted }) => {
+          if (j._id && seconds) {
+            try {
+              fetch(`/api/music/${j._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ durationSeconds: seconds, duration: formatted })
+              }).catch(() => {})
+            } catch (e) {}
+          }
+        }).catch(() => {})
+        setQuery('')
+      })
+      .catch(() => {
+        // Fallback to local object URL
+        const url = URL.createObjectURL(file)
+        const id = Date.now()
+        const next = { id, name: file.name, url, duration: '0:00' }
+        setTracks((s) => [...s, next])
+        // Update duration and revoke object URL after read (no backend persist)
+        updateTrackDuration(id, url, true).catch(() => {})
+        setQuery('')
+      })
   }
 
   function formatSeconds(s) {
@@ -142,6 +175,43 @@ export default function Music() {
     const m = Math.floor(s / 60)
     const sec = Math.floor(s % 60).toString().padStart(2, '0')
     return `${m}:${sec}`
+  }
+
+  // Load audio metadata for a URL and update the corresponding track's duration
+  function updateTrackDuration(id, url, revokeAfter = false) {
+    return new Promise((resolve, reject) => {
+      try {
+        const a = new Audio()
+        const cleanup = () => {
+          a.src = ''
+          a.removeEventListener('loadedmetadata', onLoaded)
+          a.removeEventListener('error', onError)
+          if (revokeAfter && url && url.startsWith('blob:')) {
+            try { URL.revokeObjectURL(url) } catch (e) {}
+          }
+        }
+
+        const onLoaded = () => {
+          const seconds = isFinite(a.duration) ? Math.floor(a.duration) : 0
+          const dur = seconds ? formatSeconds(seconds) : '0:00'
+          setTracks((prev) => prev.map((t) => (t.id === id ? { ...t, duration: dur } : t)))
+          cleanup()
+          resolve({ seconds, formatted: dur })
+        }
+
+        const onError = (e) => {
+          cleanup()
+          reject(e || new Error('Failed to load metadata'))
+        }
+
+        a.addEventListener('loadedmetadata', onLoaded)
+        a.addEventListener('error', onError)
+        a.preload = 'metadata'
+        a.src = url
+      } catch (err) {
+        reject(err)
+      }
+    })
   }
 
   return (
@@ -175,7 +245,11 @@ export default function Music() {
                     key={t.id}
                     onClick={() => handleSelect(tracks.indexOf(t))}
                     className={`w-full text-left p-4 rounded-lg flex items-center gap-4 border ${tracks.indexOf(t) === currentIndex ? 'shadow-md bg-[#fff5f2]' : 'bg-white'}`}>
-                    <div className="w-10 h-10 rounded-full bg-[#7a4a36] flex items-center justify-center text-white"></div>
+                    <div className="w-10 h-10 rounded-full bg-[#7a4a36] flex items-center justify-center text-white">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true">
+                        <path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
+                      </svg>
+                    </div>
                     <div className="flex-1">
                       <div className="text-sm font-medium text-[#5f341e]">{t.name}</div>
                       <div className="text-xs text-gray-500">{t.duration}</div>
@@ -187,7 +261,11 @@ export default function Music() {
 
             {/* Right card (narrower) */}
             <div className="bg-white rounded-xl p-6 lg:w-1/3 h-[480px] flex flex-col items-center justify-between">
-              <div className="w-40 h-40 bg-[#7a4a36] rounded-md mb-4" />
+              <div className="w-40 h-40 bg-[#7a4a36] rounded-md mb-4 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-16 h-16 text-white" fill="currentColor" aria-hidden="true">
+                  <path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
+                </svg>
+              </div>
               <div className="text-center text-sm text-[#5f341e] mb-6">Instrumental beats for concentration</div>
 
               <div className="w-full">
