@@ -49,7 +49,6 @@ export default function Login() {
 
   return (
   <>
-    <TopNav />
 
     <div
       className={`min-h-screen w-full flex items-center justify-center px-4 transition-colors duration-500 ${

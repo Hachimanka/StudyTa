@@ -13,6 +13,7 @@ import { fileURLToPath } from 'url';
 import userRoutes from './routes/userRoutes.js';
 import libraryRoutes from './routes/libraryRoutes.js';
 import summarizeRoutes from './routes/SummarizeRoute.js';
+import studymodeRoute from './routes/studymodeRoute.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,6 +48,8 @@ app.use('/api/library', libraryRoutes);
 
 // Register summarize routes
 app.use('/api/summarize', summarizeRoutes);
+// Study mode / quizzes
+app.use('/api/studymode', studymodeRoute);
 
 const PORT = process.env.PORT || 5000;
 const BACKEND_BASE = process.env.BACKEND_BASE || `http://localhost:${PORT}`;
@@ -56,8 +59,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // --- StudyTa AI context with plain text instructions ---
 const STUDYTA_CONTEXT = `
-You are the Lemivon AI assistant.
-Lemivon is a learning platform for students.
+You are the StudyTa AI assistant.
+StudyTa is a learning platform for students.
 
 Features:
 - Create and join study groups
@@ -323,4 +326,58 @@ app.use((error, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`PDF extraction endpoint: ${BACKEND_BASE.replace(/\/$/, '')}/api/pdf/extract-text`);
+});
+
+// --- AI generate questions endpoint ---
+app.post('/api/ai/generate-questions', async (req, res) => {
+  try {
+    const { text, mode } = req.body;
+    if (!text) return res.status(400).json({ error: 'No text provided' });
+    if (!mode) return res.status(400).json({ error: 'No mode provided' });
+
+    // Build a clear instruction that asks Gemini to return JSON only.
+    const instr = `You are a helpful assistant that converts source text into study questions.
+  Return a JSON array only (no explanation) where each item depends on the mode parameter.
+  - For mode 'flashcards': return objects with { front: "<concise meaning>", back: "<short answer>" } where back is 1-3 words.
+  - For mode 'trueFalse': return objects with { statement: "...", answer: true|false }.
+  - For mode 'multipleChoice': return objects with { question: "...", options: ["opt1","opt2","opt3","opt4"], correctIndex: 0 }.
+
+  Be concise and return clean JSON. Use the provided text as the source of facts. Generate up to 12 items. Do not include any additional text.
+
+  Mode: ${mode}
+  SourceText: ${text}
+  `;
+
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    let result;
+    try {
+      result = await model.generateContent(STUDYTA_CONTEXT + '\n' + instr);
+    } catch (gemErr) {
+      console.error('Gemini error in generate-questions:', gemErr);
+      return res.status(500).json({ error: 'Gemini error', details: gemErr.message });
+    }
+
+    let reply = result?.response?.text?.() || '';
+    reply = String(reply).trim();
+
+    // Try to extract JSON substring
+    const firstBracket = reply.indexOf('[');
+    const lastBracket = reply.lastIndexOf(']');
+    if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+      const jsonText = reply.slice(firstBracket, lastBracket + 1);
+      try {
+        const parsed = JSON.parse(jsonText);
+        return res.json({ questions: parsed });
+      } catch (parseErr) {
+        console.error('Failed to parse AI JSON:', parseErr, '\nreply:', reply);
+        return res.status(500).json({ error: 'Failed to parse AI response', details: parseErr.message, reply });
+      }
+    }
+
+    // Fallback: return an error with raw reply for debugging
+    res.status(500).json({ error: 'No JSON found in AI response', reply });
+  } catch (err) {
+    console.error('generate-questions error:', err);
+    res.status(500).json({ error: 'Server error', details: err.message });
+  }
 });

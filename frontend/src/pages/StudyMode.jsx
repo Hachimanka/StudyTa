@@ -21,30 +21,32 @@ export default function StudyMode() {
     { id: 'flashcards', name: 'Flashcards' }
   ];
 
-  const historyItems = [
-    {
-      title: 'Calculus Flashcard',
-      date: 'Sep 20, 2025'
-    },
-    {
-      title: 'Biology Quiz',
-      date: 'Sep 18, 2025'
-    },
-    {
-      title: 'History True/False',
-      date: 'Sep 15, 2025'
-    },
-    {
-      title: 'Physics Multiple Choice',
-      date: 'Sep 12, 2025'
-    },
-    {
-      title: 'Chemistry Flashcards',
-      date: 'Sep 10, 2025'
-    }
-  ];
+  const [savedSets, setSavedSets] = useState(() => {
+    try {
+      const raw = localStorage.getItem('studyta_saved_sets');
+      if (raw) return JSON.parse(raw);
 
-  const handleCreate = () => {
+      // Migration: if older key exists, migrate it to the new key
+      const legacy = localStorage.getItem('studyta_history');
+      if (legacy) {
+        try {
+          const parsed = JSON.parse(legacy);
+          localStorage.setItem('studyta_saved_sets', JSON.stringify(parsed));
+          localStorage.removeItem('studyta_history');
+          return parsed;
+        } catch (e) {
+          console.warn('Failed to migrate legacy history to saved sets', e);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to read saved sets from localStorage', e);
+    }
+    // default empty saved sets
+    return [];
+  });
+  const [savedFilter, setSavedFilter] = useState('all'); // 'all' | 'multipleChoice' | 'trueFalse' | 'flashcards'
+
+  const handleCreate = async () => {
     if (!studyMode) {
       alert('Please select a study mode first.');
       return;
@@ -56,38 +58,249 @@ export default function StudyMode() {
     }
     
     setLoading(true);
-    // Simulate API call and then navigate to the selected study mode
-    setTimeout(() => {
-      setLoading(false);
-      navigateToStudyMode(studyMode);
-    }, 1500);
-  };
 
-  const handleStudyModeChange = (modeId) => {
-    setStudyMode(modeId);
-    
-    // If a valid study mode is selected (not the placeholder), navigate directly
-    if (modeId && modeId !== '') {
-      navigateToStudyMode(modeId);
+    try {
+      let textToUse = fileContent;
+
+      // If a file was selected, try to extract text. PDFs use the backend endpoint.
+      if (selectedFile) {
+        const isPDF = selectedFile.type === 'application/pdf' || selectedFile.name.toLowerCase().endsWith('.pdf');
+
+        if (isPDF) {
+          const form = new FormData();
+          form.append('pdf', selectedFile);
+
+          const resp = await fetch('/api/pdf/extract-text', {
+            method: 'POST',
+            body: form
+          });
+
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err?.error || 'Failed to extract text from PDF');
+          }
+
+          const data = await resp.json();
+          textToUse = data.text || '';
+        } else {
+          // Try to read plain text files client-side
+          textToUse = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ''));
+            reader.onerror = () => reject(new Error('Failed to read file'));
+            reader.readAsText(selectedFile);
+          });
+        }
+      }
+
+      if (!textToUse || !textToUse.trim()) {
+        throw new Error('No usable text found to generate study materials.');
+      }
+
+      // First, try the AI endpoint for higher-quality questions. Fall back to
+      // the local generator if AI fails.
+      let questions = null;
+      try {
+        const resp = await fetch('/api/ai/generate-questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: textToUse, mode: studyMode })
+        });
+
+        if (resp.ok) {
+          const j = await resp.json();
+          if (Array.isArray(j.questions) && j.questions.length) {
+            questions = j.questions;
+          } else {
+            console.warn('AI returned no questions, falling back.');
+          }
+        } else {
+          const err = await resp.json().catch(() => ({}));
+          console.warn('AI generation failed:', err);
+        }
+      } catch (aiErr) {
+        console.warn('AI generation request failed:', aiErr);
+      }
+
+      if (!questions) {
+        questions = generateQuestionsFromText(textToUse, studyMode);
+      }
+
+      // Derive a title for this generated session (do NOT auto-save to saved sets)
+      const deriveTitleFromText = (txt) => {
+        try {
+          const s = String(txt || '').trim();
+          if (!s) return 'Study Session';
+          const firstSentence = s.split(/(?<=[.?!])\s+/)[0] || s;
+          const words = firstSentence.split(/\s+/).slice(0, 6).join(' ');
+          return words.length ? words : firstSentence.slice(0, 30);
+        } catch (e) { return 'Study Session'; }
+      };
+
+      const title = (questions && questions.title) || deriveTitleFromText(textToUse) || 'Study Session';
+
+      // Navigate to the selected study mode and pass generated questions in state
+      navigateToStudyMode(studyMode, { questions, sourceText: textToUse, title: (questions && questions.title) });
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Failed to create study materials.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const navigateToStudyMode = (modeId) => {
+  const handleStudyModeChange = (modeId) => {
+    // Only select the study mode here. Navigation should happen when user
+    // clicks the Create button to avoid accidental navigation.
+    setStudyMode(modeId);
+  };
+
+  const navigateToStudyMode = (modeId, state = {}) => {
+    // Persist the session so other study methods can read it if navigation
+    // doesn't pass state (user switching methods manually).
+    try {
+      const sess = {
+        questions: state.questions || null,
+        sourceText: state.sourceText || null,
+        title: state.title || null,
+        mode: modeId || null,
+        createdAt: Date.now(),
+      };
+      sessionStorage.setItem('studyta_session', JSON.stringify(sess));
+    } catch (e) {
+      console.warn('Failed to persist study session', e);
+    }
     // Map the logical mode ids to the actual routes used in `App.jsx`
     switch (modeId) {
       case 'multipleChoice':
-        navigate('/MultipleChoiceMode');
+        navigate('/MultipleChoiceMode', { state });
         break;
       case 'trueFalse':
-        navigate('/TrueFalseMode');
+        navigate('/TrueFalseMode', { state });
         break;
       case 'flashcards':
-        navigate('/FlashCardMode');
+        navigate('/FlashCardMode', { state });
         break;
       default:
         // Do nothing for placeholder
         break;
     }
+  };
+
+  // Simple, deterministic question generation from text. This is intentionally
+  // lightweight so it works offline; for better results you can replace this
+  // with an AI backend call later.
+  const generateQuestionsFromText = (text, mode) => {
+    // Improved generator heuristics
+    const stopwords = new Set(['the','and','a','an','in','on','at','to','of','for','with','is','are','was','were','by','from','that','this','these','those','it','as','be','or','which']);
+
+    const splitSentences = (txt) => txt.split(/(?<=[.?!])\s+/).map(s => s.trim()).filter(s => s.length > 20);
+    const rawSentences = splitSentences(text);
+    const max = 12;
+    const sentences = rawSentences.slice(0, max);
+
+    const pickKey = (sentence) => {
+      // choose a candidate word: prefer capitalized words, then long words not in stopwords
+      const words = sentence.replace(/[^\w\s]/g,'').split(/\s+/).filter(Boolean);
+      for (const w of words) {
+        if (/[A-Z][a-z]/.test(w) && w.length > 2) return w;
+      }
+      const candidates = words.filter(w => w.length > 4 && !stopwords.has(w.toLowerCase()));
+      if (candidates.length) return candidates[Math.floor(Math.random() * candidates.length)];
+      // fallback: longest word
+      return words.sort((a,b)=>b.length-a.length)[0] || '';
+    };
+
+    const shuffle = (arr) => {
+      const a = arr.slice();
+      for (let i = a.length -1; i>0; i--) {
+        const r = Math.floor(Math.random()*(i+1));
+        [a[i], a[r]] = [a[r], a[i]];
+      }
+      return a;
+    };
+
+    if (mode === 'trueFalse') {
+      // Produce a mix of true and false statements. False statements are created by
+      // simple negation or numeric perturbation when possible.
+      return sentences.map((s, i) => {
+        const makeFalse = () => {
+          // numeric change
+          const numMatch = s.match(/(\d+)/);
+          if (numMatch) {
+            const orig = numMatch[1];
+            const changed = String(Number(orig) + 1);
+            return s.replace(orig, changed);
+          }
+          // insert 'not' after common auxiliaries
+          if (/\b(is|are|was|were|has|have|had|can|could|will|would|should)\b/i.test(s)) {
+            return s.replace(/\b(is|are|was|were|has|have|had|can|could|will|would|should)\b/i, (m) => m + ' not');
+          }
+          // simple antonym attempt: prefix 'Not:'
+          return 'Not: ' + s;
+        };
+
+        // Randomly decide whether to make it false (~40% false)
+        const makeItFalse = Math.random() < 0.4;
+        return {
+          statement: makeItFalse ? makeFalse() : s,
+          answer: !makeItFalse
+        };
+      });
+    }
+
+    if (mode === 'flashcards') {
+      // Produce flashcards where the front shows a concise meaning and the back
+      // shows the short term. Format: "Meaning: ..." / "Answer: ...".
+      return sentences.map(s => {
+        const rawKey = pickKey(s) || '';
+        const term = String(rawKey).replace(/[^\w\s-]/g, '').trim();
+        // Keep the answer short (prefer 1-3 words)
+        const answer = term.split(/\s+/).slice(0,3).join(' ');
+
+        // Try to extract a concise definition clause from the sentence.
+        let meaning = '';
+        const defRegex = /\b(?:is|are|refers to|means|defined as|is called|describes)\b/i;
+        const m = s.match(defRegex);
+        if (m) {
+          const start = s.toLowerCase().indexOf(m[0].toLowerCase()) + m[0].length;
+          meaning = s.slice(start).trim();
+        }
+
+        // Fallback: remove the term from the sentence and truncate to 12-18 words
+        if (!meaning) {
+          const withoutTerm = term ? s.replace(new RegExp('\\b' + term.replace(/[.*+?^${}()|[\\]\\]/g,'\\\\$&') + '\\b','i'), ' ').replace(/\s+/g,' ').trim() : s;
+          meaning = withoutTerm.split(/\s+/).slice(0,14).join(' ');
+        }
+
+        // Clean up trailing punctuation and ensure it's short
+        meaning = meaning.replace(/^[,:\-\s]+|[\.,;:\-\s]+$/g, '').trim();
+        meaning = meaning.split(/\s+/).slice(0,18).join(' ');
+
+        const front = meaning;
+        const back = answer || term || '—';
+        return { front, back };
+      });
+    }
+
+    // multipleChoice: produce a cloze question with one correct key and 3 distractor keys
+    return sentences.map((s, i) => {
+      const key = pickKey(s) || '';
+      const regex = new RegExp('\\b' + key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b','i');
+      const questionText = regex.test(s) ? s.replace(regex, '_____') : s.split(' ').slice(0,8).join(' ') + '...';
+
+      // Collect distractor candidates from other sentences' keys
+      const otherKeys = sentences.map(ss => pickKey(ss)).filter(k => k && k.toLowerCase() !== key.toLowerCase());
+      const distractors = shuffle(otherKeys).slice(0,3);
+      const options = shuffle([key, ...distractors].slice(0,4));
+      const correctIndex = options.findIndex(o => o === key);
+
+      return {
+        question: questionText,
+        options,
+        correctIndex: correctIndex === -1 ? 0 : correctIndex
+      };
+    });
   };
 
   const handleFileUpload = (event) => {
@@ -129,27 +342,42 @@ export default function StudyMode() {
     setFileContent('');
   };
 
-  const clearHistory = () => {
-    if (historyItems.length > 0) {
-      if (window.confirm('Are you sure you want to clear all history?')) {
-        alert('History cleared!');
-        // In a real app, you would update the state to clear historyItems
+  const clearSavedSets = () => {
+    if (savedSets.length > 0) {
+      if (window.confirm('Are you sure you want to clear all saved study sets?')) {
+        try {
+          localStorage.removeItem('studyta_saved_sets');
+        } catch (e) { console.warn('Failed to clear saved sets', e); }
+        setSavedSets([]);
+        alert('Saved study sets cleared!');
       }
     }
   };
 
-  // Handle history item click to navigate to study modes
-  const handleHistoryItemClick = (title) => {
-    if (title.includes('Multiple Choice')) {
-      navigate('/MultipleChoiceMode');
-    } else if (title.includes('True/False')) {
-      navigate('/TrueFalseMode');
-    } else if (title.includes('Flashcard')) {
-      navigate('/FlashCardMode');
-    } else {
-      // Default to flashcards if no specific mode detected
-      navigate('/FlashCardMode');
+  // Handle history item click: select the study mode but DO NOT navigate.
+  // User must click the Create button to actually navigate into the study mode.
+  const handleSavedSetClick = (title) => {
+    // Find the saved set by title (titles are not guaranteed unique so prefer the first match)
+    const entry = savedSets.find(h => h.title === title);
+    if (!entry) {
+      alert('History item not found.');
+      return;
     }
+    setStudyMode(entry.mode || 'flashcards');
+    // Restore session and navigate directly to saved materials
+    try {
+      const sess = {
+        questions: entry.questions || null,
+        sourceText: entry.sourceText || null,
+        title: entry.title || null,
+        mode: entry.mode || null,
+        createdAt: Date.now(),
+      };
+      sessionStorage.setItem('studyta_session', JSON.stringify(sess));
+    } catch (e) {
+      console.warn('Failed to restore session to sessionStorage', e);
+    }
+    navigateToStudyMode(entry.mode, { questions: entry.questions, sourceText: entry.sourceText, title: entry.title });
   };
 
   return (
@@ -339,89 +567,82 @@ export default function StudyMode() {
           {/* History Section - 30% width (3/10 columns) */}
           <div className="lg:col-span-3">
             <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-white'} rounded-xl p-6 shadow-lg h-[500px] flex flex-col`}>
-              <h2 className={`text-3xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>
-                History
-              </h2>
+                  <h2 className={`text-3xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>
+                    Saved Study Sets
+                  </h2>
 
-              {/* History Content - Takes available space */}
+              {/* Saved Sets Content - Takes available space */}
               <div className="flex-1 overflow-y-auto mb-4">
-                {historyItems.length > 0 ? (
-                  <div className="space-y-3">
-                    {historyItems.map((item, index) => (
-                      <div 
-                        key={index}
-                        onClick={() => handleHistoryItemClick(item.title)}
-                        className={`p-3 rounded-lg border cursor-pointer hover:shadow-md transition-all duration-200 ${
-                          darkMode 
-                            ? 'border-gray-600 bg-[#3a2a20] text-white hover:bg-[#4a3528]' 
-                            : 'border-[#D9D9D9] bg-white text-[#8D5A3F] hover:bg-gray-50'
-                        }`}
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'}`}>Filter:</div>
+                  <select
+                    value={savedFilter}
+                    onChange={(e) => setSavedFilter(e.target.value)}
+                    className={`text-sm rounded-md px-2 py-1 border focus:outline-none ${darkMode ? 'bg-[#3a2a20] border-gray-600 text-white' : 'bg-white border-[#D9D9D9] text-[#8D5A3F]'}`}
+                  >
+                    <option value="all">All</option>
+                    <option value="multipleChoice">Multiple Choice</option>
+                    <option value="trueFalse">True or False</option>
+                    <option value="flashcards">Flashcards</option>
+                  </select>
+                </div>
+
+                {(() => {
+                  const filteredSets = savedFilter === 'all' ? savedSets : savedSets.filter(s => s.mode === savedFilter);
+                  if (filteredSets.length === 0) {
+                    return (
+                      <div className={`p-8 text-center rounded-xl border-1 h-full flex flex-col items-center justify-center
+                        ${darkMode ? 'border-gray-600 bg-[#3a2a20] text-gray-400' : 'border-gray-300 bg-white text-[#8D5A3F]'}`}
                       >
-                        {/* Title - Center Left */}
-                        <div className="flex items-center justify-between">
-                          <h4 className={`font-semibold text-sm ${darkMode ? 'text-white' : 'text-[#8D5A3F]'}`}>
-                            {item.title}
-                          </h4>
-                        </div>
-                        
-                        {/* Date - Bottom Right */}
-                        <div className="flex justify-end mt-2">
-                          <p className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-[#B77A57]'}`}>
-                            {item.date}
-                          </p>
-                        </div>
+                        <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-4">
+                          <path d="M40 0C17.92 0 0 17.92 0 40C0 62.08 17.92 80 40 80C62.08 80 80 62.08 80 40C80 17.92 62.08 0 40 0ZM40 72C22.36 72 8 57.64 8 40C8 22.36 22.36 8 40 8C57.64 8 72 22.36 72 40C72 57.64 57.64 72 40 72ZM44 20H36V44H44V20ZM44 52H36V60H44V52Z" fill="#71412A"/>
+                        </svg>
+                        <p className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'}`}>
+                          {savedFilter === 'all' ? 'No saved study sets yet' : 'No saved sets for this mode'}
+                        </p>
+                        <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-[#B77A57]'}`}>
+                          {savedFilter === 'all' ? 'Saved study sets will appear here' : 'Try a different filter or create a new set'}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className={`p-8 text-center rounded-xl border-1 h-full flex flex-col items-center justify-center
-                    ${darkMode
-                      ? 'border-gray-600 bg-[#3a2a20] text-gray-400'
-                      : 'border-gray-300 bg-white text-[#8D5A3F]'
-                    }`}>
-                    {/* SVG Icon */}
-                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-4">
-                      <path d="M40 0C17.92 0 0 17.92 0 40C0 62.08 17.92 80 40 80C62.08 80 80 62.08 80 40C80 17.92 62.08 0 40 0ZM40 72C22.36 72 8 57.64 8 40C8 22.36 22.36 8 40 8C57.64 8 72 22.36 72 40C72 57.64 57.64 72 40 72ZM44 20H36V44H44V20ZM44 52H36V60H44V52Z" fill="#71412A"/>
-                    </svg>
-                    <p className={`font-semibold mb-2 ${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'}`}>
-                      No study history yet
-                    </p>
-                    <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-[#B77A57]'}`}>
-                      Created study materials will appear here
-                    </p>
-                  </div>
-                )}
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-3">
+                      {filteredSets.map((item, index) => (
+                        <div 
+                          key={index}
+                          onClick={() => handleSavedSetClick(item.title)}
+                          className={`p-3 rounded-lg border cursor-pointer hover:shadow-md transition-all duration-200 ${darkMode ? 'border-gray-600 bg-[#3a2a20] text-white hover:bg-[#4a3528]' : 'border-[#D9D9D9] bg-white text-[#8D5A3F] hover:bg-gray-50'}`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <h4 className={`font-semibold text-sm ${darkMode ? 'text-white' : 'text-[#8D5A3F]'}`}>{item.title}</h4>
+                            <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-[#B77A57]'}`}>{item.date}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Clear History Button - Bottom Left */}
               <div className="mt-auto">
                 <button
-                  onClick={clearHistory}
-                  disabled={historyItems.length === 0}
+                  onClick={clearSavedSets}
+                  disabled={savedSets.length === 0}
                   className={`text-[#8D5A3F] hover:text-red-700 font-semibold text-xs ${
-                    historyItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                    savedSets.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
-                  Clear History
+                  Clear Saved Sets
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Generated Study Materials Area - Will be populated after creation */}
-        {(fileContent || selectedFile) && (
-          <div className={`mt-8 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'} rounded-xl p-6 shadow-lg`}>
-            <h3 className={`text-3xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>
-              Generated Study Materials
-            </h3>
-            <div className="text-center py-8">
-              <p className={`font-semibold ${darkMode ? 'text-gray-400' : 'text-[#8D5A3F]'}`}>
-                Study materials will appear here after generation...
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Note: The explicit "Generated Study Materials" preview panel was removed per request. */}
       </main>
     </div>
   );
