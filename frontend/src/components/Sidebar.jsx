@@ -1,14 +1,12 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
 
 export default function Sidebar() {
   // UI state: sidebar open/closed (hamburger toggles)
   const [isOpen, setIsOpen] = useState(false);
   // Track hovered item for hover highlight without opening
   const [hovered, setHovered] = useState(null);
-  const [logoutHovered, setLogoutHovered] = useState(false);
-  const { isAuthenticated, logout } = useAuth();
+  // logout button removed per request; no auth-specific UI needed here
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -112,46 +110,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Logout - bottom */}
-      {isAuthenticated && (
-        <div className="px-2 pb-3 mt-auto">
-          <button
-            onClick={handleLogout}
-            onMouseEnter={() => setLogoutHovered(true)}
-            onMouseLeave={() => setLogoutHovered(false)}
-            className={`w-full ${isOpen ? "px-2" : "px-0"} transition-all duration-200`}
-          >
-            {isOpen ? (
-              <div
-                className={`flex items-center justify-start gap-3 py-2.5 rounded-xl`}
-                style={{
-                  backgroundColor: logoutHovered ? `${COLORS.accent}80` : "transparent",
-                  color: COLORS.dark,
-                }}
-              >
-                <span className="w-7 h-7 flex items-center justify-center flex-shrink-0" style={{ lineHeight: 0, marginLeft: "6px" }}>
-                  <img src="/SideBarIcons/LgOut.png" alt="Logout" className="w-7 h-7 object-contain" />
-                </span>
-                <span className="text-base select-none">Log out</span>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-1.5">
-                <span
-                  className="flex items-center justify-center mx-auto"
-                  style={{
-                    width: 50,
-                    height: 50,
-                    borderRadius: 14,
-                    backgroundColor: logoutHovered ? `${COLORS.accent}80` : "transparent",
-                  }}
-                >
-                  <img src="/SideBarIcons/LgOut.png" alt="Logout" className="w-7 h-7 object-contain" />
-                </span>
-              </div>
-            )}
-          </button>
-        </div>
-      )}
+      {/* Logout removed: no bottom auth action shown in sidebar. */}
     </aside>
   );
 }
