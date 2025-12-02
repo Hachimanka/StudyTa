@@ -22,7 +22,7 @@ export async function uploadFile(file, folderId = 'root', token) {
 }
 
 export async function deleteFile(fileId, token) {
-  const res = await fetch(`${API_BASE}/file/${fileId}`, {
+  const res = await fetch(`${API_BASE}/files/${fileId}`, {
     method: 'DELETE',
     headers: token ? { Authorization: `Bearer ${token}` } : {}
   })
@@ -37,4 +37,30 @@ export async function downloadFile(fileId, token) {
   if (!res.ok) throw new Error('Failed to download file')
   const blob = await res.blob()
   return blob
+}
+
+export async function createFolder(name, parentFolderId = null, token) {
+  const res = await fetch(`${API_BASE}/folders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ name, parentFolderId })
+  })
+  if (!res.ok) throw new Error('Failed to create folder')
+  return res.json()
+}
+
+export async function renameFile(fileId, name, token) {
+  const res = await fetch(`${API_BASE}/files/${fileId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ name })
+  })
+  if (!res.ok) throw new Error('Failed to rename file')
+  return res.json()
 }
