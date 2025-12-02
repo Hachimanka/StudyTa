@@ -1,6 +1,6 @@
 import React from 'react'
 
-export default function FileListBox({ files = [], onItemClick, loading = false }) {
+export default function FileListBox({ files = [], onItemClick, loading = false, onItemContextMenu }) {
   if (loading) {
     // Match skeleton count to existing file length (fallback to 4 if none yet)
     const skeletonCount = files.length > 0 ? files.length : 4
@@ -37,6 +37,12 @@ export default function FileListBox({ files = [], onItemClick, loading = false }
           key={`${file.id || file.name}-${file.lastModified || idx}-${idx}`}
           className="flex items-center justify-between px-4 py-3 rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
           onClick={() => onItemClick && onItemClick(file)}
+          onContextMenu={(e) => {
+            if (onItemContextMenu) {
+              e.preventDefault();
+              onItemContextMenu(e, file);
+            }
+          }}
         >
           <div className="flex items-center gap-3">
             <span className="inline-block w-6 h-6 rounded-full bg-[#8D5A3F]"></span>
