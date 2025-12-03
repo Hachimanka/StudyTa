@@ -29,8 +29,9 @@ export default function Home() {
   const fetchLibraryStats = async () => {
     try {
       const API_BASE = import.meta.env.VITE_API_BASE || ''
+      const userId = user?._id
       const [filesRes, foldersRes] = await Promise.all([
-        fetch(`${API_BASE}/api/library/files`, {
+        fetch(`${API_BASE}/api/library/files${userId ? `?userId=${encodeURIComponent(userId)}` : ''}`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         }),
         fetch(`${API_BASE}/api/library/folders`, {
@@ -39,20 +40,21 @@ export default function Home() {
       ]);
 
       if (filesRes.ok && foldersRes.ok) {
-        const files = await filesRes.json();
+        const filesRaw = await filesRes.json();
         const folders = await foldersRes.json();
+        const files = Array.isArray(filesRaw) ? filesRaw.map(f => ({
+          name: f.originalName || f.fileName,
+          uploadDate: f.createdAt,
+          size: f.fileSize || 0,
+          type: f.fileType || 'unknown'
+        })) : [];
         
         // Calculate total size and get recent files
-        const totalSize = files.reduce((sum, file) => sum + (file.fileSize || 0), 0);
+        const totalSize = files.reduce((sum, file) => sum + (file.size || 0), 0);
         const recentFiles = files
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .sort((a, b) => new Date(b.uploadDate) - new Date(a.uploadDate))
           .slice(0, 5)
-          .map(file => ({
-            name: file.originalName || file.fileName,
-            uploadDate: file.createdAt,
-            size: file.fileSize,
-            type: file.fileType
-          }));
+          ;
 
         setLibraryStats({
           totalFiles: files.length,

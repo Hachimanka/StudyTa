@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
+import { useAuth } from '../context/AuthContext';
 // Import the components
 import EventModal from '../components/calendar/EventModal';
 import ViewEventsModal from '../components/calendar/ViewEventsModal';
 import CalendarGrid from '../components/calendar/calendarGrid';
 
 const Calendar = () => {
+  const { user } = useAuth();
   // Set current date to real-time
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
@@ -32,6 +34,32 @@ const Calendar = () => {
     // Cleanup interval on unmount
     return () => clearInterval(intervalId);
   }, []);
+
+  // Load events from backend
+  useEffect(() => {
+    const load = async () => {
+      if (!user?._id) { setEvents([]); return; }
+      try {
+        const API_BASE = import.meta.env.VITE_API_BASE || ''
+        const res = await fetch(`${API_BASE}/api/calendar?userId=${encodeURIComponent(user._id)}`);
+        if (res.ok) {
+          const data = await res.json();
+          // Normalize to { id, title, date, ... } where date is ISO date (yyyy-mm-dd) for day grouping
+          const normalized = data.map(ev => ({
+            id: ev._id,
+            title: ev.title,
+            description: ev.description,
+            start: ev.start,
+            end: ev.end,
+            allDay: !!ev.allDay,
+            date: new Date(ev.start).toISOString().split('T')[0],
+          }));
+          setEvents(normalized);
+        }
+      } catch {}
+    };
+    load();
+  }, [user?._id]);
 
   // Handle date click - now opens ViewEventsModal instead of EventModal
   const handleDateClick = (date) => {
@@ -85,19 +113,85 @@ const Calendar = () => {
   };
 
   const handleAddEvent = (newEvent) => {
-    setEvents([...events, newEvent]);
+    // Persist to backend
+    (async () => {
+      try {
+        const API_BASE = import.meta.env.VITE_API_BASE || ''
+        const payload = {
+          userId: user?._id,
+          title: newEvent.title,
+          description: newEvent.description,
+          start: newEvent.start || new Date(selectedDate).toISOString(),
+          end: newEvent.end || null,
+          allDay: !!newEvent.allDay,
+        };
+        const res = await fetch(`${API_BASE}/api/calendar`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          const saved = await res.json();
+          const added = {
+            id: saved._id,
+            title: saved.title,
+            description: saved.description,
+            start: saved.start,
+            end: saved.end,
+            allDay: !!saved.allDay,
+            date: new Date(saved.start).toISOString().split('T')[0],
+          };
+          setEvents(prev => [...prev, added]);
+        }
+      } catch {}
+    })();
   };
 
   const handleUpdateEvent = (updatedEvent) => {
-    setEvents(events.map(ev => ev.id === updatedEvent.id ? updatedEvent : ev));
+    (async () => {
+      try {
+        const API_BASE = import.meta.env.VITE_API_BASE || ''
+        const res = await fetch(`${API_BASE}/api/calendar/${updatedEvent.id}`, {
+          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+            title: updatedEvent.title,
+            description: updatedEvent.description,
+            start: updatedEvent.start,
+            end: updatedEvent.end,
+            allDay: !!updatedEvent.allDay,
+          })
+        });
+        if (res.ok) {
+          const saved = await res.json();
+          const normalized = {
+            id: saved._id,
+            title: saved.title,
+            description: saved.description,
+            start: saved.start,
+            end: saved.end,
+            allDay: !!saved.allDay,
+            date: new Date(saved.start).toISOString().split('T')[0],
+          };
+          setEvents(prev => prev.map(ev => ev.id === normalized.id ? normalized : ev));
+        }
+      } catch {}
+    })();
   };
 
   const handleDeleteEvent = (id) => {
-    setEvents(events.filter(ev => ev.id !== id));
+    (async () => {
+      try {
+        const API_BASE = import.meta.env.VITE_API_BASE || ''
+        const res = await fetch(`${API_BASE}/api/calendar/${id}`, { method: 'DELETE' });
+        if (res.ok) setEvents(prev => prev.filter(ev => ev.id !== id));
+      } catch {}
+    })();
   };
 
   const handleDeleteSelectedEvents = (eventIds) => {
-    setEvents(events.filter(ev => !eventIds.includes(ev.id)));
+    // Delete each selected
+    (async () => {
+      const API_BASE = import.meta.env.VITE_API_BASE || ''
+      await Promise.all(eventIds.map(id => fetch(`${API_BASE}/api/calendar/${id}`, { method: 'DELETE' })))
+      setEvents(prev => prev.filter(ev => !eventIds.includes(ev.id)));
+    })();
   };
 
   // Get events for the selected date

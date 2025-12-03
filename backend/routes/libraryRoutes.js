@@ -65,7 +65,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     if (req.user) {
       return ctrlUploadFile(req, res)
     }
-    const userId = TEMP_USER_ID;
+    const userId = req.body?.userId || TEMP_USER_ID;
     const { folderId = 'root' } = req.body;
 
     if (!req.file) {
@@ -403,7 +403,11 @@ router.get('/files', async (req, res) => {
     if (req.user) {
       return ctrlListFiles(req, res)
     }
-    const files = await UploadedFile.find({ userId: TEMP_USER_ID });
+    const requestedUserId = req.query.userId;
+    if (!requestedUserId) {
+      return res.status(400).json({ error: 'userId query param is required' });
+    }
+    const files = await UploadedFile.find({ userId: requestedUserId }).sort({ createdAt: -1 });
     res.json(files);
   } catch (error) {
     console.error('Error fetching files:', error);

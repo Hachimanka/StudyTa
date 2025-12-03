@@ -15,6 +15,15 @@ export function AuthProvider({ children }) {
     }
   })
 
+  const [user, setUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem('stuyta_user')
+      return raw ? JSON.parse(raw) : null
+    } catch (e) {
+      return null
+    }
+  });
+
   useEffect(() => {
     try {
       if (isAuthenticated) localStorage.setItem('stuyta_auth', '1')
@@ -24,25 +33,16 @@ export function AuthProvider({ children }) {
     }
   }, [isAuthenticated])
 
-  // Login with backend
-  const [user, setUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem('stuyta_user')
-      return stored ? JSON.parse(stored) : null
-    } catch (e) {
-      return null
-    }
-  });
-
   useEffect(() => {
     try {
       if (user) localStorage.setItem('stuyta_user', JSON.stringify(user))
       else localStorage.removeItem('stuyta_user')
     } catch (e) {
-      console.error('Failed to save user to localStorage', e)
+      // ignore
     }
   }, [user])
 
+  // Login with backend
   const login = async (email, password, cb) => {
     try {
       const API_BASE = import.meta.env.VITE_API_BASE || ''
