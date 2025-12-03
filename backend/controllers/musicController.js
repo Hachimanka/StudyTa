@@ -98,7 +98,7 @@ export const deleteTrack = async (req, res) => {
 			console.warn('Failed to remove file from disk', e.message);
 		}
 
-		await doc.remove();
+		await doc.deleteOne();
 		console.log('deleteTrack: removed document', doc._id?.toString());
 		res.json({ success: true });
 	} catch (err) {
