@@ -25,7 +25,24 @@ export function AuthProvider({ children }) {
   }, [isAuthenticated])
 
   // Login with backend
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('stuyta_user')
+      return stored ? JSON.parse(stored) : null
+    } catch (e) {
+      return null
+    }
+  });
+
+  useEffect(() => {
+    try {
+      if (user) localStorage.setItem('stuyta_user', JSON.stringify(user))
+      else localStorage.removeItem('stuyta_user')
+    } catch (e) {
+      console.error('Failed to save user to localStorage', e)
+    }
+  }, [user])
+
   const login = async (email, password, cb) => {
     try {
       const API_BASE = import.meta.env.VITE_API_BASE || ''
@@ -107,6 +124,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     try {
       localStorage.removeItem('stuyta_auth');
+      localStorage.removeItem('stuyta_user');
       localStorage.removeItem('token');
       // Dispatch custom event to notify other components
       window.dispatchEvent(new Event('authChanged'));
