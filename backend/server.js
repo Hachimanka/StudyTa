@@ -14,6 +14,7 @@ import userRoutes from './routes/userRoutes.js';
 import libraryRoutes from './routes/libraryRoutes.js';
 import summarizeRoutes from './routes/SummarizeRoute.js';
 import studymodeRoute from './routes/studymodeRoute.js';
+import calendarRoute from './routes/calendarRoute.js';
 import musicRoutes from './routes/musicRoute.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,6 +52,8 @@ app.use('/api/library', libraryRoutes);
 app.use('/api/summarize', summarizeRoutes);
 // Study mode / quizzes
 app.use('/api/studymode', studymodeRoute);
+// Calendar routes
+app.use('/api/calendar', calendarRoute);
 
 // Music routes (upload, list, update, delete)
 app.use('/api/music', musicRoutes);

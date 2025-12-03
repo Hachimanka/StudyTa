@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const RecentFilesList = ({ darkMode, themeColors, recentFiles }) => {
   // Mock files to match the image when no real files exist
@@ -32,8 +33,10 @@ const RecentFilesList = ({ darkMode, themeColors, recentFiles }) => {
       
       <div className="space-y-4">
         {displayFiles.map((file, index) => (
+          <Link to="/library" key={index} className="block"
+            onClick={(e) => { /* could pass state later to preselect */ }}
+          >
           <div
-            key={index}
             className={`relative p-4 rounded-xl shadow-sm transition-colors duration-300 ${
               darkMode ? "bg-[#3a2a20] hover:bg-[#4a3528]" : "bg-white hover:bg-gray-100"
             }`}
@@ -77,6 +80,7 @@ const RecentFilesList = ({ darkMode, themeColors, recentFiles }) => {
               {formatDateTime(file.uploadDate)}
             </span>
           </div>
+          </Link>
         ))}
       </div>
     </div>

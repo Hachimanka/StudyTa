@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 const StudyCard = ({ darkMode, themeColors }) => {
   return (
-    <Link to="/focus" className="w-full">
+    <Link to="/study" className="w-full">
       <button
         className={`w-full p-6 rounded-xl flex items-center justify-center text-center transition-all duration-300 hover:scale-105 ${
           darkMode 
