@@ -1,17 +1,19 @@
 const API_BASE = '/api/library'
 
-export async function listFiles(token) {
-  const res = await fetch(`${API_BASE}/files`, {
+export async function listFiles(token, userId) {
+  const q = userId ? `?userId=${encodeURIComponent(userId)}` : ''
+  const res = await fetch(`${API_BASE}/files${q}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {}
   })
   if (!res.ok) throw new Error('Failed to fetch files')
   return res.json()
 }
 
-export async function uploadFile(file, folderId = 'root', token) {
+export async function uploadFile(file, folderId = 'root', token, userId) {
   const form = new FormData()
   form.append('file', file)
   form.append('folderId', folderId)
+  if (userId) form.append('userId', userId)
   const res = await fetch(`${API_BASE}/upload`, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,

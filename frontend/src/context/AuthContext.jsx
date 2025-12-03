@@ -15,6 +15,15 @@ export function AuthProvider({ children }) {
     }
   })
 
+  const [user, setUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem('stuyta_user')
+      return raw ? JSON.parse(raw) : null
+    } catch (e) {
+      return null
+    }
+  });
+
   useEffect(() => {
     try {
       if (isAuthenticated) localStorage.setItem('stuyta_auth', '1')
@@ -24,8 +33,16 @@ export function AuthProvider({ children }) {
     }
   }, [isAuthenticated])
 
+  useEffect(() => {
+    try {
+      if (user) localStorage.setItem('stuyta_user', JSON.stringify(user))
+      else localStorage.removeItem('stuyta_user')
+    } catch (e) {
+      // ignore
+    }
+  }, [user])
+
   // Login with backend
-  const [user, setUser] = useState(null);
   const login = async (email, password, cb) => {
     try {
       const API_BASE = import.meta.env.VITE_API_BASE || ''
@@ -107,6 +124,7 @@ export function AuthProvider({ children }) {
     setUser(null);
     try {
       localStorage.removeItem('stuyta_auth');
+      localStorage.removeItem('stuyta_user');
       localStorage.removeItem('token');
       // Dispatch custom event to notify other components
       window.dispatchEvent(new Event('authChanged'));

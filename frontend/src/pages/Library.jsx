@@ -4,8 +4,10 @@ import FileSearchBox from '../components/library/FileSearchBox'
 import FileUploadButton from '../components/library/FileUploadButton'
 import FileListBox from '../components/library/FileListBox'
 import { listFiles, uploadFile, deleteFile as apiDeleteFile, renameFile as apiRenameFile } from '../services/LibraryService'
+import { useAuth } from '../context/AuthContext'
 
 export default function Library() {
+  const { user } = useAuth()
   // Track uploaded files list (newest first)
   const [files, setFiles] = useState([])
   // Controlled search input
@@ -31,7 +33,11 @@ export default function Library() {
       setLoading(true)
       setError(null)
       try {
-        const data = await listFiles()
+        if (!user?._id) {
+          setFiles([])
+          return
+        }
+        const data = await listFiles(undefined, user?._id)
         // data may already be array of file docs; normalize minimal fields used in UI
         const normalized = data.map(f => ({
           id: f._id || f.id,
@@ -50,16 +56,20 @@ export default function Library() {
       }
     }
     fetchFiles()
-  }, [])
+  }, [user?._id])
 
   // Handle file selection from upload button component: prepend to list
   const handleFileSelected = async (file) => {
     if (!file) return
+    if (!user?._id) {
+      setError('You must be logged in to upload')
+      return
+    }
     setError(null)
     try {
       // Upload to backend then refresh list
-      await uploadFile(file)
-      const data = await listFiles()
+      await uploadFile(file, 'root', undefined, user?._id)
+      const data = await listFiles(undefined, user?._id)
       const normalized = data.map(f => ({
         id: f._id || f.id,
         name: f.originalName || f.name || f.fileName,
