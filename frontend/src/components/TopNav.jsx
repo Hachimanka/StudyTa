@@ -189,8 +189,8 @@ export default function TopNav() {
                   <h2 className="text-center font-semibold text-lg leading-tight text-[#FFFFFF]">
                     {displayName}
                   </h2>
-                  <p className="italic text-sm text-[#FFFFFF] mt-1 mb-4 line-clamp-2 max-w-[13rem] text-center">
-                    {bioText}
+                  <p className="italic text-sm text-[#FFFFFF] mt-2 mb-4 line-clamp-2 max-w-[13rem] text-center">
+                    {bioText || 'No bio provided'}
                   </p>
                 </div>
                 <div className="space-y-3 mt-2">
