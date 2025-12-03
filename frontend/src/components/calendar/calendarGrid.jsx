@@ -99,12 +99,14 @@ const CalendarGrid = ({ currentDate, events, selectedDate, onDateClick, onEventC
                 {dayEvents.map(ev => {
 
                   // ADD PRIORITY COLORS
-                  const priorityClass = 
+                  const priorityClass =
                     ev.priority === "high"
                       ? "bg-red-200 text-red-700 border-red-300 hover:bg-red-300"
                       : ev.priority === "low"
                         ? "bg-green-200 text-green-700 border-green-300 hover:bg-green-300"
-                        : "bg-[#E6D5C4] text-[#5D4037] hover:bg-[#D7C4B0] border-[#D7C4B0]";
+                        : ev.priority === "medium"
+                          ? "bg-[#D7C4B0] text-[#5D4037] border-[#D7C4B0] hover:bg-[#CBB7A3]"
+                          : "bg-[#E6D5C4] text-[#5D4037] hover:bg-[#D7C4B0] border-[#D7C4B0]";
 
                   return (
                     <div 
@@ -124,6 +126,10 @@ const CalendarGrid = ({ currentDate, events, selectedDate, onDateClick, onEventC
                         {ev.priority === 'low' ? (
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-3 h-3 flex-shrink-0" aria-hidden="true">
                             <path fill="#00D26A" d="M30 16c0 7.732-6.268 14-14 14S2 23.732 2 16S8.268 2 16 2s14 6.268 14 14Z"/>
+                          </svg>
+                        ) : ev.priority === 'medium' ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-3 h-3 flex-shrink-0" aria-hidden="true">
+                            <path fill="#A1887F" d="M30 16c0 7.732-6.268 14-14 14S2 23.732 2 16S8.268 2 16 2s14 6.268 14 14Z"/>
                           </svg>
                         ) : ev.priority === 'high' ? (
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-3 h-3 flex-shrink-0" aria-hidden="true">

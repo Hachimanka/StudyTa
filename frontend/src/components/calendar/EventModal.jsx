@@ -176,6 +176,10 @@ const EventModal = ({
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32" className="w-4 h-4" aria-hidden="true">
                     <path fill="#00D26A" d="M30 16c0 7.732-6.268 14-14 14S2 23.732 2 16S8.268 2 16 2s14 6.268 14 14Z"/>
                   </svg>
+                ) : priority === 'medium' ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32" className="w-4 h-4" aria-hidden="true">
+                    <path fill="#A1887F" d="M30 16c0 7.732-6.268 14-14 14S2 23.732 2 16S8.268 2 16 2s14 6.268 14 14Z"/>
+                  </svg>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 32 32" className="w-4 h-4" aria-hidden="true">
                     <path fill="#F8312F" d="M30 16c0 7.732-6.268 14-14 14S2 23.732 2 16S8.268 2 16 2s14 6.268 14 14Z"/>
@@ -190,6 +194,7 @@ const EventModal = ({
                 className="w-full mt-2 p-3 rounded bg-white text-[#5D4037] shadow-sm focus:ring-2 focus:ring-[#8B5E3C]/50"
             >
                 <option value="low">Low Priority</option>
+                <option value="medium">Medium Priority</option>
                 <option value="high">High Priority</option>
             </select>
             </div>
