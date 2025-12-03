@@ -1,13 +1,11 @@
 ﻿import React, { useState, useEffect, useRef } from 'react'
 import Sidebar from '../components/Sidebar'
 import ChatWidget from '../components/ChatWidget'
+import { useAuth } from '../context/AuthContext'
 
 export default function Music() {
   const [query, setQuery] = useState('')
-  const [tracks, setTracks] = useState([
-    { id: 1, name: 'White noise.mp3', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3', duration: '3:12' },
-    { id: 2, name: 'golden.mp3', url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3', duration: '3:45' }
-  ])
+  const [tracks, setTracks] = useState([])
 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -16,6 +14,36 @@ export default function Music() {
   const [isRepeat, setIsRepeat] = useState(false)
   const [isShuffle, setIsShuffle] = useState(false)
   const audioRef = useRef(null)
+  const { user } = useAuth()
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+
+  // Load only the current user's persisted tracks so uploads survive refresh
+  useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      try {
+        if (!user || !user._id) { setTracks([]); return }
+        const resp = await fetch(`/api/music?owner=${encodeURIComponent(user._id)}&includeNull=true`)
+        if (!resp.ok) { setTracks([]); return }
+        const data = await resp.json()
+        if (!mounted) return
+        const mapped = Array.isArray(data) ? data.map(d => ({
+          id: d._id || d.id || Date.now(),
+          name: d.name || 'Unknown',
+          url: d.url,
+          duration: d.duration || '0:00'
+        })) : []
+        setTracks(mapped)
+      } catch (e) {
+        setTracks([])
+      }
+    }
+    load()
+    return () => { mounted = false }
+  }, [user])
 
   useEffect(() => {
     const a = audioRef.current
@@ -135,6 +163,8 @@ export default function Music() {
     // Try uploading to the backend. Fall back to object URL on failure.
     const form = new FormData()
     form.append('track', file)
+    // Attach logged-in user id if available so backend can set ownership
+    if (user && user._id) form.append('user_id', user._id)
 
     fetch('/api/music/upload', { method: 'POST', body: form })
       .then(async (resp) => {
@@ -241,20 +271,37 @@ export default function Music() {
 
               <div className="space-y-3 overflow-auto h-[400px] pb-4">
                 {filtered.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => handleSelect(tracks.indexOf(t))}
-                    className={`w-full text-left p-4 rounded-lg flex items-center gap-4 border ${tracks.indexOf(t) === currentIndex ? 'shadow-md bg-[#fff5f2]' : 'bg-white'}`}>
-                    <div className="w-10 h-10 rounded-full bg-[#7a4a36] flex items-center justify-center text-white">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true">
-                        <path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
-                      </svg>
+                  <div key={t.id} className={`w-full p-0 rounded-lg ${tracks.indexOf(t) === currentIndex ? 'shadow-md bg-[#fff5f2]' : 'bg-white'}`}>
+                    <div className="flex items-center justify-between w-full">
+                      <button
+                        onClick={() => handleSelect(tracks.indexOf(t))}
+                        className="w-full text-left p-4 rounded-l-lg flex items-center gap-4 border-0"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-[#7a4a36] flex items-center justify-center text-white">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true">
+                            <path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-[#5f341e]">{t.name}</div>
+                          <div className="text-xs text-gray-500">{t.duration}</div>
+                        </div>
+                      </button>
+
+                      <div className="pr-3 pl-2">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); setShowDeleteModal(true); }}
+                          className="p-2 rounded-md hover:bg-red-100 text-red-600"
+                          aria-label={`Delete ${t.name}`}
+                          title={`Delete ${t.name}`}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <div className="text-sm font-medium text-[#5f341e]">{t.name}</div>
-                      <div className="text-xs text-gray-500">{t.duration}</div>
-                    </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -309,6 +356,53 @@ export default function Music() {
               </div>
 
               <audio ref={audioRef} />
+
+              {/* Delete Confirmation Modal */}
+              {showDeleteModal && deleteTarget && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                  <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+                    <h3 className="text-lg font-semibold text-[#5f341e] mb-2">Delete Track</h3>
+                    <p className="text-sm text-gray-600 mb-4">Are you sure you want to delete <strong>{deleteTarget.name}</strong>? This action cannot be undone.</p>
+                    <div className="flex justify-end gap-3">
+                      <button onClick={() => { if (!isDeleting) { setShowDeleteModal(false); setDeleteTarget(null); } }} className="px-4 py-2 rounded-md border">Cancel</button>
+                      <button
+                        onClick={async () => {
+                          if (!deleteTarget || isDeleting) return
+                          setIsDeleting(true)
+                          setDeleteError('')
+                          try {
+                            const id = deleteTarget.id || deleteTarget._id
+                            if (id) {
+                              const resp = await fetch(`/api/music/${id}`, { method: 'DELETE' })
+                              if (!resp.ok) {
+                                const body = await resp.json().catch(() => ({}))
+                                const msg = body?.error || 'Failed to delete on server'
+                                setDeleteError(msg)
+                                setIsDeleting(false)
+                                return
+                              }
+                            }
+
+                            // If no id existed (local-only track) or server deletion succeeded, remove from UI
+                            setTracks((prev) => prev.filter((x) => (x.id || x._id) !== (deleteTarget.id || deleteTarget._id)))
+                            setShowDeleteModal(false)
+                            setDeleteTarget(null)
+                          } catch (e) {
+                            setDeleteError('Network error while deleting')
+                          } finally {
+                            setIsDeleting(false)
+                          }
+                        }}
+                        className="px-4 py-2 rounded-md bg-red-600 text-white"
+                        disabled={isDeleting}
+                      >{isDeleting ? 'Deleting...' : 'Delete'}</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {deleteError && (
+                <div className="mt-3 text-sm text-red-600 px-4">{deleteError}</div>
+              )}
             </div>
           </div>
         </div>

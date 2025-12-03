@@ -14,11 +14,13 @@ export const uploadTrack = async (req, res) => {
 		const filename = req.file.filename;
 		const publicUrl = `${req.protocol}://${req.get('host')}/${uploadsRel}/${filename}`;
 
+		const owner = req.body && req.body.user_id ? req.body.user_id : null;
 		const doc = await Music.create({
 			name: req.file.originalname,
 			filename,
 			url: publicUrl,
 			size: req.file.size,
+			owner: owner || null,
 		});
 
 		res.json(doc);
@@ -30,7 +32,13 @@ export const uploadTrack = async (req, res) => {
 
 export const listTracks = async (req, res) => {
 	try {
-		const docs = await Music.find().sort({ uploadedAt: -1 }).limit(200).lean();
+		const owner = req.query.owner || req.query.user_id || null;
+		const includeNull = String(req.query.includeNull || '').toLowerCase() === 'true';
+		let criteria = {};
+		if (owner) {
+			criteria = includeNull ? { $or: [{ owner }, { owner: null }] } : { owner };
+		}
+		const docs = await Music.find(criteria).sort({ uploadedAt: -1 }).limit(200).lean();
 		res.json(docs);
 	} catch (err) {
 		console.error('listTracks error:', err);
@@ -58,18 +66,40 @@ export const updateTrack = async (req, res) => {
 export const deleteTrack = async (req, res) => {
 	try {
 		const id = req.params.id;
-		const doc = await Music.findById(id);
-		if (!doc) return res.status(404).json({ error: 'Not found' });
+		console.log('deleteTrack requested for id:', id);
+
+		// Try to find by ObjectId first
+		let doc = null;
+		try {
+			if (id && id.match(/^[0-9a-fA-F]{24}$/)) {
+				doc = await Music.findById(id);
+			}
+		} catch (e) {
+			console.warn('findById threw', e.message);
+		}
+
+		// Fallback: try to find by filename or by stored id field
+		if (!doc) {
+			doc = await Music.findOne({ $or: [{ filename: id }, { _id: id }, { name: id }] });
+		}
+
+		if (!doc) {
+			console.warn('deleteTrack: no document matched for id:', id);
+			return res.status(404).json({ error: 'Track not found' });
+		}
 
 		// delete file from disk if exists
 		try {
 			const filePath = path.join(__dirname, '..', 'uploads', 'music', doc.filename);
-			if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+			if (fs.existsSync(filePath)) {
+				fs.unlinkSync(filePath);
+			}
 		} catch (e) {
 			console.warn('Failed to remove file from disk', e.message);
 		}
 
 		await doc.remove();
+		console.log('deleteTrack: removed document', doc._id?.toString());
 		res.json({ success: true });
 	} catch (err) {
 		console.error('deleteTrack error:', err);
