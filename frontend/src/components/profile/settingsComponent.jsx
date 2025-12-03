@@ -5,8 +5,8 @@ export const ToggleSwitch = ({ label, subLabel, checked, onChange }) => {
   return (
     <div className="flex items-center justify-between mb-4">
       <div className="text-left">
-        <p className="font-bold text-[#5C4033]">{label}</p>
-        <p className="text-xs text-[#8D6E63]">{subLabel}</p>
+        <p className="font-bold text-[#6F422B]">{label}</p>
+        <p className="text-xs text-[#6F422B]">{subLabel}</p>
       </div>
       <div 
         onClick={() => onChange(!checked)}
@@ -52,7 +52,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }) => {
                 <input 
                   type="email" 
                   placeholder="Email" 
-                  className="w-full p-3 rounded-lg bg-white outline-none text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-[#8B5E3C]/40 transition-shadow"
+                  className="w-full p-3 rounded-lg bg-white outline-none text-[#6F422B] placeholder-gray-400 focus:ring-2 focus:ring-[#8B5E3C]/40 transition-shadow"
                 />
               </div>
 
@@ -61,7 +61,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }) => {
                 <input 
                   type="password" 
                   placeholder="Enter password" 
-                  className="w-full p-3 rounded-lg bg-white outline-none text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-[#8B5E3C]/40 transition-shadow"
+                  className="w-full p-3 rounded-lg bg-white outline-none text-[#6F422B] placeholder-gray-400 focus:ring-2 focus:ring-[#8B5E3C]/40 transition-shadow"
                 />
                 <div className="flex justify-between items-center mt-1">
                   <label className="flex items-center text-xs text-white cursor-pointer select-none">
@@ -76,12 +76,12 @@ export const ChangePasswordModal = ({ isOpen, onClose }) => {
                 <input 
                   type="password" 
                   placeholder="Enter password" 
-                  className="w-full p-3 rounded-lg bg-white outline-none text-gray-700 placeholder-gray-400 mb-2 focus:ring-2 focus:ring-[#8B5E3C]/40 transition-shadow"
+                  className="w-full p-3 rounded-lg bg-white outline-none text-[#6F422B] placeholder-gray-400 mb-2 focus:ring-2 focus:ring-[#8B5E3C]/40 transition-shadow"
                 />
                 <input 
                   type="password" 
                   placeholder="Confirm password" 
-                  className="w-full p-3 rounded-lg bg-white outline-none text-gray-700 placeholder-gray-400 focus:ring-2 focus:ring-[#8B5E3C]/40 transition-shadow"
+                  className="w-full p-3 rounded-lg bg-white outline-none text-[#6F422B] placeholder-gray-400 focus:ring-2 focus:ring-[#8B5E3C]/40 transition-shadow"
                 />
                 <label className="flex items-center text-xs text-white mt-1 cursor-pointer select-none">
                   <input type="checkbox" className="mr-1 accent-[#5C4033]" /> Show password
@@ -102,7 +102,7 @@ export const ChangePasswordModal = ({ isOpen, onClose }) => {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onClose}
-                className="w-full bg-white text-[#5C4033] py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
+                className="w-full bg-white text-[#6F422B] py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
               >
                 Cancel
               </motion.button>
