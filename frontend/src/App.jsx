@@ -2,6 +2,7 @@ import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, RequireAuth } from './context/AuthContext'
 import { SettingsProvider } from './context/SettingsContext'
+import { PlayerProvider } from './context/PlayerContext'
 import TopNav from './components/TopNav'
 import Landing from './pages/LandingPage'
 import Login from './pages/LoginPage'
@@ -28,6 +29,7 @@ export default function App() {
   return (
     <AuthProvider>
       <SettingsProvider>
+        <PlayerProvider>
         {/* Top navigation shown on landing and authenticated routes */}
         <TopNav />
         {/* ChatWidget will be rendered at the app level and will show only when authenticated */}
@@ -56,6 +58,7 @@ export default function App() {
         <AuthenticatedWidget />
         {/* Global music player stays mounted across routes */}
         <GlobalMusicPlayer />
+        </PlayerProvider>
       </SettingsProvider>
     </AuthProvider>
   )

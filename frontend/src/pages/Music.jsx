@@ -1,23 +1,32 @@
-﻿﻿import React, { useState, useEffect, useRef } from 'react'
+﻿import React, { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import Sidebar from '../components/Sidebar'
 import ChatWidget from '../components/ChatWidget'
 import { useAuth } from '../context/AuthContext'
+import { usePlayer } from '../context/PlayerContext'
 
 export default function Music() {
   const { user } = useAuth()
+  const {
+    queue, setQueue,
+    index: currentIndex, setIndex: setCurrentIndex,
+    isPlaying, setIsPlaying,
+    currentTime, duration,
+    repeat: isRepeat, setRepeat: setIsRepeat,
+    shuffle: isShuffle, setShuffle: setIsShuffle,
+    playPause: handlePlayPause,
+    select: handleSelect,
+    prev: handlePrev,
+    next: handleNext,
+    seek: seekPct,
+    audioRef
+  } = usePlayer()
   const [query, setQuery] = useState('')
   const [tracks, setTracks] = useState([])
 
   const API_BASE = import.meta.env.VITE_API_BASE || ''
 
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [isRepeat, setIsRepeat] = useState(false)
-  const [isShuffle, setIsShuffle] = useState(false)
-  const audioRef = useRef(null)
+  // playback managed globally by PlayerContext
 
   useEffect(() => {
     fetchTracks()
@@ -25,8 +34,11 @@ export default function Music() {
 
   const fetchTracks = async () => {
     try {
-      const params = { includeNull: true }
-      if (user && user._id) params.user_id = user._id
+      // Fetch only the logged-in user's uploads
+      const params = {}
+      if (user && user._id) {
+        params.owner = user._id
+      }
       const res = await axios.get(`${API_BASE}/api/music`, { params })
       setTracks(res.data)
     } catch (err) {
@@ -34,95 +46,27 @@ export default function Music() {
     }
   }
 
-  useEffect(() => {
-    const a = audioRef.current
-    if (!a) return
-    const onTime = () => setCurrentTime(a.currentTime || 0)
-    const onLoaded = () => setDuration(a.duration || 0)
-    const onEnded = () => {
-      if (isRepeat) {
-        // restart the same track
-        a.currentTime = 0
-        a.play().catch(() => {})
-      } else {
-        handleNext()
-      }
-    }
-    a.addEventListener('timeupdate', onTime)
-    a.addEventListener('loadedmetadata', onLoaded)
-    a.addEventListener('ended', onEnded)
-    return () => {
-      a.removeEventListener('timeupdate', onTime)
-      a.removeEventListener('loadedmetadata', onLoaded)
-      a.removeEventListener('ended', onEnded)
-    }
-  }, [currentIndex, isRepeat])
+  // event wiring handled in PlayerProvider
 
   // Keep the native loop flag in sync (optional but safe)
-  useEffect(() => {
-    const a = audioRef.current
-    if (!a) return
-    a.loop = !!isRepeat
-  }, [isRepeat])
+  // loop handled globally
 
   useEffect(() => {
-    const a = audioRef.current
-    if (!a || !tracks[currentIndex]) return
-    a.src = tracks[currentIndex].url
-    if (isPlaying) a.play().catch(() => {})
-  }, [currentIndex, tracks])
+    setQueue(tracks)
+  }, [tracks, setQueue])
 
   const filtered = tracks.filter((t) => t.name.toLowerCase().includes(query.toLowerCase()))
 
-  function handlePlayPause() {
-    const a = audioRef.current
-    if (!a) return
-    if (isPlaying) {
-      a.pause()
-      setIsPlaying(false)
-    } else {
-      a.play().catch(() => {})
-      setIsPlaying(true)
-    }
-  }
+  // use global handlePlayPause
 
-  function handleSelect(index) {
-    setCurrentIndex(index)
-    setIsPlaying(true)
-    const a = audioRef.current
-    if (a) {
-      a.src = tracks[index].url
-      a.play().catch(() => {})
-    }
-  }
+  // use global handleSelect
 
-  function handlePrev() {
-    const prev = (currentIndex - 1 + tracks.length) % tracks.length
-    handleSelect(prev)
-  }
+  // use global handlePrev
 
-  function handleNext() {
-    let next
-    if (isShuffle) {
-      // pick a random different index
-      if (tracks.length <= 1) next = currentIndex
-      else {
-        do {
-          next = Math.floor(Math.random() * tracks.length)
-        } while (next === currentIndex)
-      }
-    } else {
-      next = (currentIndex + 1) % tracks.length
-    }
-    handleSelect(next)
-  }
+  // use global handleNext
 
   function toggleRepeat() {
-    setIsRepeat((s) => {
-      const next = !s
-      if (next) setIsShuffle(false)
-      return next
-    })
+    setIsRepeat((s) => { const next = !s; if (next) setIsShuffle(false); return next })
   }
 
   function toggleShuffle() {
@@ -138,11 +82,7 @@ export default function Music() {
     const rect = bar.getBoundingClientRect()
     const clickX = (e.clientX || 0) - rect.left
     const pct = Math.max(0, Math.min(1, clickX / rect.width))
-    const a = audioRef.current
-    if (a && duration) {
-      a.currentTime = pct * duration
-      setCurrentTime(a.currentTime)
-    }
+    if (duration) { seekPct(pct) }
   }
 
   function handleDelete(e, id) {
@@ -175,7 +115,10 @@ export default function Music() {
 
     const formData = new FormData()
     formData.append('track', file)
-    if (user && user._id) formData.append('user_id', user._id)
+    // Tag upload with current user for ownership on server
+    if (user && user._id) {
+      formData.append('user_id', user._id)
+    }
 
     axios.post(`${API_BASE}/api/music/upload`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
@@ -247,7 +190,11 @@ export default function Music() {
                     key={t._id}
                     onClick={() => handleSelect(tracks.indexOf(t))}
                     className={`w-full text-left p-4 rounded-lg flex items-center gap-4 border cursor-pointer ${tracks.indexOf(t) === currentIndex ? 'shadow-md bg-[#fff5f2]' : 'bg-white'}`}>
-                    <div className="w-10 h-10 rounded-full bg-[#7a4a36] flex items-center justify-center text-white"></div>
+                    <div className="w-10 h-10 rounded-full bg-[#7a4a36] flex items-center justify-center text-white">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 4v8.8c-.58-.19-1.23-.3-1.9-.3-2.1 0-3.8 1.17-3.8 2.6s1.7 2.6 3.8 2.6 3.8-1.17 3.8-2.6V8h7V4H9Z" fill="#fff"/>
+                      </svg>
+                    </div>
                     <div className="flex-1">
                       <div className="text-sm font-medium text-[#5f341e]">{t.name}</div>
                       <div className="text-xs text-gray-500">{t.duration}</div>
@@ -268,7 +215,12 @@ export default function Music() {
 
             {/* Right card (narrower) */}
             <div className="bg-white rounded-xl p-6 lg:w-1/3 h-[480px] flex flex-col items-center justify-between">
-              <div className="w-40 h-40 bg-[#7a4a36] rounded-md mb-4" />
+              <div className="w-40 h-40 bg-[#7a4a36] rounded-md mb-4 flex items-center justify-center">
+                {/* Simple music note icon */}
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 4v10.35c-.6-.23-1.26-.35-1.95-.35-2.21 0-4 1.34-4 3s1.79 3 4 3 4-1.34 4-3V8h7V4H9Z" fill="#fff"/>
+                </svg>
+              </div>
               <div className="text-center text-sm text-[#5f341e] mb-6">Instrumental beats for concentration</div>
 
               <div className="w-full">
@@ -311,7 +263,7 @@ export default function Music() {
                 </div>
               </div>
 
-              <audio ref={audioRef} />
+              {/* audio element is provided globally by PlayerProvider */}
             </div>
           </div>
         </div>
