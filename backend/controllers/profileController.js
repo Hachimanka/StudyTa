@@ -72,11 +72,38 @@ export async function updateProfile(req, res) {
     if (!profile) {
       profile = new Profile({ userId });
     }
-
     if (typeof fullName === 'string') profile.fullName = fullName;
     if (typeof username === 'string') profile.username = username;
     if (typeof bio === 'string') profile.bio = bio;
-    if (profileImageUrl) profile.profileImageUrl = profileImageUrl;
+
+    // If a new file was uploaded, attempt to remove the previous avatar file from disk
+    if (profileImageUrl) {
+      try {
+        const oldUrl = profile.profileImageUrl;
+        if (oldUrl && typeof oldUrl === 'string') {
+          const marker = '/uploads/avatars/';
+          const idx = oldUrl.indexOf(marker);
+          if (idx !== -1) {
+            const rel = oldUrl.slice(idx); // /uploads/avatars/filename
+            const relPath = rel.replace(/^\//, '');
+            const oldPath = path.join(__dirname, '..', relPath);
+            // Ensure file exists and then remove
+            if (fs.existsSync(oldPath)) {
+              try {
+                fs.unlinkSync(oldPath);
+                console.log('Deleted old avatar:', oldPath);
+              } catch (delErr) {
+                console.warn('Failed to delete old avatar:', oldPath, delErr.message);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error while attempting to remove old avatar:', e.message);
+      }
+
+      profile.profileImageUrl = profileImageUrl;
+    }
     profile.updatedAt = new Date();
 
     await profile.save();
