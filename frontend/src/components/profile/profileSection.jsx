@@ -79,47 +79,69 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
     fetchProfile();
   }, [user]);
 
-  const saveProfile = async () => {
+const saveProfile = async () => {
+  try {
+    if (!user || !user._id) return alert('Not authenticated');
+    const API_BASE = import.meta.env.VITE_API_BASE || '';
+    const form = new FormData();
+    form.append('fullName', formData.fullName || '');
+    form.append('username', formData.username || '');
+    form.append('bio', formData.bio || '');
+    form.append('email', formData.email || '');
+    if (avatarFile) form.append('profileImage', avatarFile);
+
+    const res = await fetch(`${API_BASE}/api/profile/${user._id}`, {
+      method: 'PUT',
+      body: form
+    });
+    const data = await res.json();
+    if (!res.ok) return alert(data.message || 'Failed to save');
+
+    // Update localStorage user snapshot to keep UI in sync
     try {
-      if (!user || !user._id) return alert('Not authenticated');
-      const API_BASE = import.meta.env.VITE_API_BASE || '';
-      const form = new FormData();
-      form.append('fullName', formData.fullName || '');
-      form.append('username', formData.username || '');
-      form.append('bio', formData.bio || '');
-      form.append('email', formData.email || '');
-      if (avatarFile) form.append('profileImage', avatarFile);
-
-      const res = await fetch(`${API_BASE}/api/profile/${user._id}`, {
-        method: 'PUT',
-        body: form
-      });
-      const data = await res.json();
-      if (!res.ok) return alert(data.message || 'Failed to save');
-
-      // Update localStorage user snapshot to keep UI in sync
-      try {
-        const storedRaw = localStorage.getItem('stuyta_user');
-        let stored = storedRaw ? JSON.parse(storedRaw) : {};
-        stored.name = data.user?.name || stored.name;
-        // Attach profile fields
-        stored.profile = data.profile || stored.profile;
-        if (data.profile && data.profile.profileImageUrl) stored.avatarUrl = data.profile.profileImageUrl;
-        localStorage.setItem('stuyta_user', JSON.stringify(stored));
-        window.dispatchEvent(new Event('authChanged'));
-        // Let AuthContext and other components refresh their in-memory user/profile
-        window.dispatchEvent(new Event('profileUpdated'));
-      } catch (e) {
-        // ignore
+      const storedRaw = localStorage.getItem('stuyta_user');
+      let stored = storedRaw ? JSON.parse(storedRaw) : {};
+      
+      // Update all relevant fields
+      stored.name = data.user?.name || stored.name;
+      stored.email = data.user?.email || stored.email;
+      stored.profile = data.profile || stored.profile;
+      
+      // Ensure avatarUrl is set in multiple places for compatibility
+      if (data.profile?.profileImageUrl) {
+        stored.avatarUrl = data.profile.profileImageUrl;
+        stored.avatar = data.profile.profileImageUrl;
+        stored.profileImageUrl = data.profile.profileImageUrl;
       }
-
-      alert('Profile updated');
-      setAvatarFile(null);
-    } catch (err) {
-      console.error('saveProfile error', err);
-      alert('Save failed');
+      
+      // Also update any stored user profile data
+      stored.fullName = data.profile?.fullName || stored.fullName;
+      stored.username = data.profile?.username || stored.username;
+      stored.bio = data.profile?.bio || stored.bio;
+      
+      localStorage.setItem('stuyta_user', JSON.stringify(stored));
+      
+      // Dispatch multiple events to ensure all components update
+      window.dispatchEvent(new Event('authChanged'));
+      window.dispatchEvent(new Event('profileUpdated'));
+      window.dispatchEvent(new Event('storage'));
+      
+    } catch (e) {
+      console.warn('LocalStorage update failed:', e);
     }
-  };
+
+    // Update local state preview with new image URL
+    if (data.profile?.profileImageUrl) {
+      setAvatarPreview(data.profile.profileImageUrl);
+    }
+    
+    alert('Profile updated');
+    setAvatarFile(null);
+  } catch (err) {
+    console.error('saveProfile error', err);
+    alert('Save failed');
+  }
+};
 
   return (
     <div className="bg-[#F5E6D3] rounded-2xl p-6 shadow-sm border border-[#E6D0B3] relative">
