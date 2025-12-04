@@ -1,27 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion'; 
+import { useAuth } from '../../context/AuthContext';
 
 /* ProfileSection Component */
 export const ProfileSection = ({ onOpenPasswordModal }) => {
-  // Hardcoded initial data
+  const { user } = useAuth();
+
   const initialData = {
-    fullName: "Placeholder",
-    bio: "Placeholder",
-    username: "placeholder",
-    email: "placeholder",
-    avatar: ""
+    fullName: '',
+    bio: '',
+    username: '',
+    email: '',
+    avatar: ''
   };
 
   const [formData, setFormData] = useState(initialData);
 
   const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
   const fileInputRef = useRef(null);
 
   const hasChanges = 
     formData.fullName !== initialData.fullName ||
     formData.bio !== initialData.bio ||
     formData.username !== initialData.username ||
-    formData.avatar !== initialData.avatar;
+    formData.avatar !== initialData.avatar ||
+    !!avatarFile;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,6 +44,7 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
     if (!file) return;
     const url = URL.createObjectURL(file);
     setAvatarPreview(url);
+    setAvatarFile(file);
     setFormData(prev => ({ ...prev, avatar: file.name }));
   };
 
@@ -48,6 +53,73 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
       if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     };
   }, [avatarPreview]);
+
+  // Load profile from backend when user available
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        if (!user || !user._id) return;
+        const API_BASE = import.meta.env.VITE_API_BASE || '';
+        const res = await fetch(`${API_BASE}/api/profile/${user._id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const p = data.profile || {};
+        setFormData({
+          fullName: p.fullName || data.user?.name || '',
+          bio: p.bio || '',
+          username: p.username || '',
+          email: data.user?.email || '',
+          avatar: p.profileImageUrl || ''
+        });
+        if (p.profileImageUrl) setAvatarPreview(p.profileImageUrl);
+      } catch (err) {
+        console.warn('Failed to load profile', err);
+      }
+    };
+    fetchProfile();
+  }, [user]);
+
+  const saveProfile = async () => {
+    try {
+      if (!user || !user._id) return alert('Not authenticated');
+      const API_BASE = import.meta.env.VITE_API_BASE || '';
+      const form = new FormData();
+      form.append('fullName', formData.fullName || '');
+      form.append('username', formData.username || '');
+      form.append('bio', formData.bio || '');
+      form.append('email', formData.email || '');
+      if (avatarFile) form.append('profileImage', avatarFile);
+
+      const res = await fetch(`${API_BASE}/api/profile/${user._id}`, {
+        method: 'PUT',
+        body: form
+      });
+      const data = await res.json();
+      if (!res.ok) return alert(data.message || 'Failed to save');
+
+      // Update localStorage user snapshot to keep UI in sync
+      try {
+        const storedRaw = localStorage.getItem('stuyta_user');
+        let stored = storedRaw ? JSON.parse(storedRaw) : {};
+        stored.name = data.user?.name || stored.name;
+        // Attach profile fields
+        stored.profile = data.profile || stored.profile;
+        if (data.profile && data.profile.profileImageUrl) stored.avatarUrl = data.profile.profileImageUrl;
+        localStorage.setItem('stuyta_user', JSON.stringify(stored));
+        window.dispatchEvent(new Event('authChanged'));
+        // Let AuthContext and other components refresh their in-memory user/profile
+        window.dispatchEvent(new Event('profileUpdated'));
+      } catch (e) {
+        // ignore
+      }
+
+      alert('Profile updated');
+      setAvatarFile(null);
+    } catch (err) {
+      console.error('saveProfile error', err);
+      alert('Save failed');
+    }
+  };
 
   return (
     <div className="bg-[#F5E6D3] rounded-2xl p-6 shadow-sm border border-[#E6D0B3] relative">
@@ -73,7 +145,7 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
             {avatarPreview ? (
               <img src={avatarPreview} alt="avatar preview" className="w-full h-full object-cover" />
             ) : (
-              formData.fullName.charAt(0)
+              (formData.fullName || 'U').charAt(0)
             )}
           </motion.div>
         </div>
@@ -139,6 +211,7 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
         <motion.button 
           whileHover={hasChanges ? { scale: 1.02 } : {}}
           whileTap={hasChanges ? { scale: 0.98 } : {}}
+          onClick={saveProfile}
           disabled={!hasChanges}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-colors ${
             hasChanges 

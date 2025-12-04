@@ -16,6 +16,7 @@ import summarizeRoutes from './routes/SummarizeRoute.js';
 import studymodeRoute from './routes/studymodeRoute.js';
 import calendarRoute from './routes/calendarRoute.js';
 import musicRoutes from './routes/musicRoute.js';
+import profileRoute from './routes/profileRoute.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +45,9 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api', ocrRoutes);
 
 app.use('/api', userRoutes);
+
+// Profile routes (fetch/update profile, avatar upload)
+app.use('/api/profile', profileRoute);
 
 // Register library routes
 app.use('/api/library', libraryRoutes);

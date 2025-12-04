@@ -42,6 +42,28 @@ export function AuthProvider({ children }) {
     }
   }, [user])
 
+  // Listen for profile updates dispatched by other components so we can refresh in-memory user
+  useEffect(() => {
+    const handleProfileUpdated = async () => {
+      try {
+        if (!user || !user._id) return;
+        const API_BASE = import.meta.env.VITE_API_BASE || '';
+        const res = await fetch(`${API_BASE}/api/profile/${user._id}`);
+        if (!res.ok) return;
+        const payload = await res.json();
+        const profile = payload.profile || null;
+        setUser((prev) => ({ ...prev, profile, username: profile?.username || prev?.username, bio: profile?.bio || prev?.bio }));
+        // persist the merged user
+        try { localStorage.setItem('stuyta_user', JSON.stringify({ ...(JSON.parse(localStorage.getItem('stuyta_user') || '{}')), profile })); } catch (_) {}
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdated);
+    return () => window.removeEventListener('profileUpdated', handleProfileUpdated);
+  }, [user]);
+
   // Login with backend
   const login = async (email, password, cb) => {
     try {
@@ -55,16 +77,19 @@ export function AuthProvider({ children }) {
       if (res.ok) {
         setIsAuthenticated(true);
         // Set basic user returned by login
-        setUser(data.user);
-        // Attempt to fetch extended user info (UserInfo model) and attach it
+        // Attach basic user and then try to fetch full profile (username, bio, avatar)
+        const baseUser = data.user || {};
+        setUser(baseUser);
         try {
-          const infoRes = await fetch(`${API_BASE}/api/userinfo/${data.user._id}`);
-          if (infoRes.ok) {
-            const info = await infoRes.json();
-            setUser((prev) => ({ ...prev, info }));
+          const profileRes = await fetch(`${API_BASE}/api/profile/${baseUser._id}`);
+          if (profileRes.ok) {
+            const profilePayload = await profileRes.json();
+            const profile = profilePayload.profile || null;
+            // Attach profile under `profile` and also copy username for convenience
+            setUser((prev) => ({ ...prev, profile, username: profile?.username || prev?.username, bio: profile?.bio || prev?.bio }));
           }
         } catch (infoErr) {
-          console.warn('Failed to fetch userinfo:', infoErr);
+          console.warn('Failed to fetch profile:', infoErr);
         }
         // Dispatch custom event to notify other components
         window.dispatchEvent(new Event('authChanged'));
