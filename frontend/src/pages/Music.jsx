@@ -1,11 +1,15 @@
-﻿import React, { useState, useEffect, useRef } from 'react'
+﻿﻿import React, { useState, useEffect, useRef } from 'react'
+import axios from 'axios'
 import Sidebar from '../components/Sidebar'
 import ChatWidget from '../components/ChatWidget'
 import { useAuth } from '../context/AuthContext'
 
 export default function Music() {
+  const { user } = useAuth()
   const [query, setQuery] = useState('')
   const [tracks, setTracks] = useState([])
+
+  const API_BASE = import.meta.env.VITE_API_BASE || ''
 
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -14,36 +18,21 @@ export default function Music() {
   const [isRepeat, setIsRepeat] = useState(false)
   const [isShuffle, setIsShuffle] = useState(false)
   const audioRef = useRef(null)
-  const { user } = useAuth()
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [deleteTarget, setDeleteTarget] = useState(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState('')
 
-  // Load only the current user's persisted tracks so uploads survive refresh
   useEffect(() => {
-    let mounted = true
-    const load = async () => {
-      try {
-        if (!user || !user._id) { setTracks([]); return }
-        const resp = await fetch(`/api/music?owner=${encodeURIComponent(user._id)}&includeNull=true`)
-        if (!resp.ok) { setTracks([]); return }
-        const data = await resp.json()
-        if (!mounted) return
-        const mapped = Array.isArray(data) ? data.map(d => ({
-          id: d._id || d.id || Date.now(),
-          name: d.name || 'Unknown',
-          url: d.url,
-          duration: d.duration || '0:00'
-        })) : []
-        setTracks(mapped)
-      } catch (e) {
-        setTracks([])
-      }
-    }
-    load()
-    return () => { mounted = false }
+    fetchTracks()
   }, [user])
+
+  const fetchTracks = async () => {
+    try {
+      const params = { includeNull: true }
+      if (user && user._id) params.user_id = user._id
+      const res = await axios.get(`${API_BASE}/api/music`, { params })
+      setTracks(res.data)
+    } catch (err) {
+      console.error('Failed to fetch tracks', err)
+    }
+  }
 
   useEffect(() => {
     const a = audioRef.current
@@ -156,48 +145,68 @@ export default function Music() {
     }
   }
 
+  function handleDelete(e, id) {
+    e.stopPropagation()
+    if (!window.confirm('Delete this track?')) return
+
+    // Optimistic update or wait for server? Let's wait for server to be safe
+    axios.delete(`${API_BASE}/api/music/${id}`)
+      .then(() => {
+        const idx = tracks.findIndex((t) => t._id === id)
+        if (idx === -1) return
+
+        if (idx < currentIndex) {
+          setCurrentIndex((c) => c - 1)
+        } else if (idx === currentIndex) {
+          setIsPlaying(false)
+          setCurrentIndex(0)
+        }
+        setTracks((prev) => prev.filter((t) => t._id !== id))
+      })
+      .catch((err) => {
+        console.error('Delete failed', err)
+        alert('Failed to delete track')
+      })
+  }
+
   function handleUpload(e) {
     const file = e.target.files && e.target.files[0]
     if (!file) return
 
-    // Try uploading to the backend. Fall back to object URL on failure.
-    const form = new FormData()
-    form.append('track', file)
-    // Attach logged-in user id if available so backend can set ownership
-    if (user && user._id) form.append('user_id', user._id)
+    const formData = new FormData()
+    formData.append('track', file)
+    if (user && user._id) formData.append('user_id', user._id)
 
-    fetch('/api/music/upload', { method: 'POST', body: form })
-      .then(async (resp) => {
-        if (!resp.ok) throw new Error('Upload failed')
-        const j = await resp.json()
-        // Use backend _id when available
-        const id = j._id || Date.now()
-        const next = { id, name: j.name || file.name, url: j.url, duration: '0:00' }
-        setTracks((s) => [...s, next])
-        // Update duration using metadata and persist to backend when available
-        updateTrackDuration(id, j.url, false).then(({ seconds, formatted }) => {
-          if (j._id && seconds) {
-            try {
-              fetch(`/api/music/${j._id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ durationSeconds: seconds, duration: formatted })
-              }).catch(() => {})
-            } catch (e) {}
-          }
-        }).catch(() => {})
-        setQuery('')
+    axios.post(`${API_BASE}/api/music/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    .then((res) => {
+      const newTrack = res.data
+      // Add to list immediately
+      setTracks((prev) => [...prev, newTrack])
+      
+      // Calculate duration
+      const tempAudio = new Audio()
+      tempAudio.src = newTrack.url
+      tempAudio.addEventListener('loadedmetadata', () => {
+        const durSec = tempAudio.duration || 0
+        const m = Math.floor(durSec / 60)
+        const sec = Math.floor(durSec % 60).toString().padStart(2, '0')
+        const durStr = `${m}:${sec}`
+
+        // Update backend with duration
+        axios.put(`${API_BASE}/api/music/${newTrack._id}`, { duration: durStr, durationSeconds: durSec })
+          .then((updRes) => {
+            // Update local state
+            setTracks((prev) => prev.map((t) => t._id === newTrack._id ? updRes.data : t))
+          })
+          .catch(err => console.error('Failed to update duration', err))
       })
-      .catch(() => {
-        // Fallback to local object URL
-        const url = URL.createObjectURL(file)
-        const id = Date.now()
-        const next = { id, name: file.name, url, duration: '0:00' }
-        setTracks((s) => [...s, next])
-        // Update duration and revoke object URL after read (no backend persist)
-        updateTrackDuration(id, url, true).catch(() => {})
-        setQuery('')
-      })
+    })
+    .catch((err) => {
+      console.error('Upload failed', err)
+      alert('Upload failed')
+    })
   }
 
   function formatSeconds(s) {
@@ -205,43 +214,6 @@ export default function Music() {
     const m = Math.floor(s / 60)
     const sec = Math.floor(s % 60).toString().padStart(2, '0')
     return `${m}:${sec}`
-  }
-
-  // Load audio metadata for a URL and update the corresponding track's duration
-  function updateTrackDuration(id, url, revokeAfter = false) {
-    return new Promise((resolve, reject) => {
-      try {
-        const a = new Audio()
-        const cleanup = () => {
-          a.src = ''
-          a.removeEventListener('loadedmetadata', onLoaded)
-          a.removeEventListener('error', onError)
-          if (revokeAfter && url && url.startsWith('blob:')) {
-            try { URL.revokeObjectURL(url) } catch (e) {}
-          }
-        }
-
-        const onLoaded = () => {
-          const seconds = isFinite(a.duration) ? Math.floor(a.duration) : 0
-          const dur = seconds ? formatSeconds(seconds) : '0:00'
-          setTracks((prev) => prev.map((t) => (t.id === id ? { ...t, duration: dur } : t)))
-          cleanup()
-          resolve({ seconds, formatted: dur })
-        }
-
-        const onError = (e) => {
-          cleanup()
-          reject(e || new Error('Failed to load metadata'))
-        }
-
-        a.addEventListener('loadedmetadata', onLoaded)
-        a.addEventListener('error', onError)
-        a.preload = 'metadata'
-        a.src = url
-      } catch (err) {
-        reject(err)
-      }
-    })
   }
 
   return (
@@ -271,36 +243,24 @@ export default function Music() {
 
               <div className="space-y-3 overflow-auto h-[400px] pb-4">
                 {filtered.map((t) => (
-                  <div key={t.id} className={`w-full p-0 rounded-lg ${tracks.indexOf(t) === currentIndex ? 'shadow-md bg-[#fff5f2]' : 'bg-white'}`}>
-                    <div className="flex items-center justify-between w-full">
-                      <button
-                        onClick={() => handleSelect(tracks.indexOf(t))}
-                        className="w-full text-left p-4 rounded-l-lg flex items-center gap-4 border-0"
-                      >
-                        <div className="w-10 h-10 rounded-full bg-[#7a4a36] flex items-center justify-center text-white">
-                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true">
-                            <path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
-                          </svg>
-                        </div>
-                        <div className="flex-1">
-                          <div className="text-sm font-medium text-[#5f341e]">{t.name}</div>
-                          <div className="text-xs text-gray-500">{t.duration}</div>
-                        </div>
-                      </button>
-
-                      <div className="pr-3 pl-2">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(t); setShowDeleteModal(true); }}
-                          className="p-2 rounded-md hover:bg-red-100 text-red-600"
-                          aria-label={`Delete ${t.name}`}
-                          title={`Delete ${t.name}`}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
+                  <div
+                    key={t._id}
+                    onClick={() => handleSelect(tracks.indexOf(t))}
+                    className={`w-full text-left p-4 rounded-lg flex items-center gap-4 border cursor-pointer ${tracks.indexOf(t) === currentIndex ? 'shadow-md bg-[#fff5f2]' : 'bg-white'}`}>
+                    <div className="w-10 h-10 rounded-full bg-[#7a4a36] flex items-center justify-center text-white"></div>
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-[#5f341e]">{t.name}</div>
+                      <div className="text-xs text-gray-500">{t.duration}</div>
                     </div>
+                    <button
+                      onClick={(e) => handleDelete(e, t._id)}
+                      className="p-2 text-gray-400 hover:text-red-600 transition-colors rounded-full hover:bg-red-50"
+                      title="Delete"
+                    >
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -308,11 +268,7 @@ export default function Music() {
 
             {/* Right card (narrower) */}
             <div className="bg-white rounded-xl p-6 lg:w-1/3 h-[480px] flex flex-col items-center justify-between">
-              <div className="w-40 h-40 bg-[#7a4a36] rounded-md mb-4 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-16 h-16 text-white" fill="currentColor" aria-hidden="true">
-                  <path d="M12 3v10.55A4 4 0 1014 17V7h4V3h-6z" />
-                </svg>
-              </div>
+              <div className="w-40 h-40 bg-[#7a4a36] rounded-md mb-4" />
               <div className="text-center text-sm text-[#5f341e] mb-6">Instrumental beats for concentration</div>
 
               <div className="w-full">
@@ -356,53 +312,6 @@ export default function Music() {
               </div>
 
               <audio ref={audioRef} />
-
-              {/* Delete Confirmation Modal */}
-              {showDeleteModal && deleteTarget && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                  <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-                    <h3 className="text-lg font-semibold text-[#5f341e] mb-2">Delete Track</h3>
-                    <p className="text-sm text-gray-600 mb-4">Are you sure you want to delete <strong>{deleteTarget.name}</strong>? This action cannot be undone.</p>
-                    <div className="flex justify-end gap-3">
-                      <button onClick={() => { if (!isDeleting) { setShowDeleteModal(false); setDeleteTarget(null); } }} className="px-4 py-2 rounded-md border">Cancel</button>
-                      <button
-                        onClick={async () => {
-                          if (!deleteTarget || isDeleting) return
-                          setIsDeleting(true)
-                          setDeleteError('')
-                          try {
-                            const id = deleteTarget.id || deleteTarget._id
-                            if (id) {
-                              const resp = await fetch(`/api/music/${id}`, { method: 'DELETE' })
-                              if (!resp.ok) {
-                                const body = await resp.json().catch(() => ({}))
-                                const msg = body?.error || 'Failed to delete on server'
-                                setDeleteError(msg)
-                                setIsDeleting(false)
-                                return
-                              }
-                            }
-
-                            // If no id existed (local-only track) or server deletion succeeded, remove from UI
-                            setTracks((prev) => prev.filter((x) => (x.id || x._id) !== (deleteTarget.id || deleteTarget._id)))
-                            setShowDeleteModal(false)
-                            setDeleteTarget(null)
-                          } catch (e) {
-                            setDeleteError('Network error while deleting')
-                          } finally {
-                            setIsDeleting(false)
-                          }
-                        }}
-                        className="px-4 py-2 rounded-md bg-red-600 text-white"
-                        disabled={isDeleting}
-                      >{isDeleting ? 'Deleting...' : 'Delete'}</button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {deleteError && (
-                <div className="mt-3 text-sm text-red-600 px-4">{deleteError}</div>
-              )}
             </div>
           </div>
         </div>
