@@ -51,7 +51,7 @@ export default function TopNav() {
   const { displayName, initial, avatarUrl } = useMemo(() => {
     let parsedStorage = null;
     try {
-      const raw = localStorage.getItem("studytA_user") || localStorage.getItem("user");
+      const raw = localStorage.getItem("stuyta_user") || localStorage.getItem("studytA_user") || localStorage.getItem("user");
       if (raw) parsedStorage = JSON.parse(raw);
     } catch {
       parsedStorage = null;
@@ -67,18 +67,24 @@ export default function TopNav() {
         [parsedStorage?.firstName, parsedStorage?.lastName].filter(Boolean).join(" ")
       : null;
 
-    const name = nameFromUser || nameFromStorage || user?.username || user?.email || "Account";
+    // Prefer username (from user.profile or user.username or storage) over full name
+    const usernameCandidate =
+      user?.profile?.username || user?.username || parsedStorage?.profile?.username || parsedStorage?.username || null;
+
+    const name = usernameCandidate || nameFromUser || nameFromStorage || user?.email || "Account";
     const init = (name?.trim?.()?.[0] || user?.email?.[0] || "U").toUpperCase();
 
-    // Common possible avatar fields
+    // Common possible avatar fields (also check profile fields)
     const avatarCandidates = [
       user?.avatar,
       user?.avatarUrl,
+      user?.profile?.profileImageUrl,
       user?.profilePicture,
       user?.photo,
       user?.image,
       parsedStorage?.avatar,
       parsedStorage?.avatarUrl,
+      parsedStorage?.profile?.profileImageUrl,
       parsedStorage?.profilePicture,
       parsedStorage?.photo,
       parsedStorage?.image
@@ -116,7 +122,20 @@ export default function TopNav() {
     };
   }, [open]);
 
-  const bioText = user?.bio || user?.about || "";
+  const bioText =
+    user?.profile?.bio ||
+    user?.bio ||
+    user?.about ||
+    (() => {
+      try {
+        const raw = localStorage.getItem('stuyta_user') || localStorage.getItem('studytA_user') || localStorage.getItem('user');
+        if (!raw) return '';
+        const parsed = JSON.parse(raw);
+        return parsed?.profile?.bio || parsed?.bio || '';
+      } catch (_) {
+        return '';
+      }
+    })();
 
   // Authenticated Topbar UI (after login)
   if (isAuthenticated && !isLanding) {

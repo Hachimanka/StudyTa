@@ -133,9 +133,16 @@ export default function Home() {
       if (user?._id) {
         try {
           const API_BASE = import.meta.env.VITE_API_BASE || ''
-          const res = await fetch(`${API_BASE}/api/userinfo/${user._id}`);
-          const info = await res.json();
-          setFullName(info.fullName || profileName);
+          // Prefer profile endpoint which contains username and profile fields
+          const res = await fetch(`${API_BASE}/api/profile/${user._id}`);
+          if (res.ok) {
+            const payload = await res.json();
+            const p = payload.profile || {};
+            // Show username primarily; fall back to fullName or profileName
+            setFullName(p.username || p.fullName || profileName);
+          } else {
+            setFullName(profileName);
+          }
         } catch {
           setFullName(profileName);
         }
@@ -166,6 +173,20 @@ export default function Home() {
   }, [libraryStats, loading]);
 
   const themeColors = getThemeColors();
+
+  // Derive avatar URL: prefer profile.profileImageUrl, then user.avatarUrl, then localStorage
+  const avatarUrl = (() => {
+    try {
+      const fromUser = user?.profile?.profileImageUrl || user?.avatarUrl || null;
+      if (fromUser) return fromUser;
+      const raw = localStorage.getItem('stuyta_user') || localStorage.getItem('studytA_user') || localStorage.getItem('user');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed?.profile?.profileImageUrl || parsed?.avatarUrl || null;
+    } catch (e) {
+      return user?.profile?.profileImageUrl || user?.avatarUrl || null;
+    }
+  })();
 
   // Utility function to format file size
   const formatFileSize = (bytes) => {
@@ -225,7 +246,11 @@ export default function Home() {
               {/* Left: Profile Image */}
               <div className="flex items-center">
                 <div className="w-20 h-20 rounded-full bg-[#FFFFFF] border-2 border-[#6F422B] text-[#845C47] flex items-center justify-center font-semibold focus:outline-none focus:ring-2 focus:ring-[#FDF3EA]/60 focus:ring-offset-2 focus:ring-offset-[#845845] transition-shadow overflow-hidden">
-                  {getInitial()}
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    getInitial()
+                  )}
                 </div>
               </div>
 
