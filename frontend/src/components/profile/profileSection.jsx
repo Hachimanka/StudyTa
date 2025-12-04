@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion'; 
 import { useAuth } from '../../context/AuthContext';
 
@@ -16,16 +16,26 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
 
   const [formData, setFormData] = useState(initialData);
 
+  // Keep a snapshot of the original loaded profile so we can compare for changes
+  const [originalData, setOriginalData] = useState(initialData);
+
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  const hasChanges = 
-    formData.fullName !== initialData.fullName ||
-    formData.bio !== initialData.bio ||
-    formData.username !== initialData.username ||
-    formData.avatar !== initialData.avatar ||
-    !!avatarFile;
+  const hasChanges = useMemo(() => {
+    // If a new avatar file has been selected that's a change
+    if (avatarFile) return true;
+
+    // Compare each visible field against the original loaded snapshot
+    if (!originalData) return false;
+    return (
+      (formData.fullName || '') !== (originalData.fullName || '') ||
+      (formData.bio || '') !== (originalData.bio || '') ||
+      (formData.username || '') !== (originalData.username || '') ||
+      (formData.avatar || '') !== (originalData.avatar || '')
+    );
+  }, [formData, originalData, avatarFile]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -65,6 +75,14 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
         const data = await res.json();
         const p = data.profile || {};
         setFormData({
+          fullName: p.fullName || data.user?.name || '',
+          bio: p.bio || '',
+          username: p.username || '',
+          email: data.user?.email || '',
+          avatar: p.profileImageUrl || ''
+        });
+        // Save the loaded profile snapshot for change-detection
+        setOriginalData({
           fullName: p.fullName || data.user?.name || '',
           bio: p.bio || '',
           username: p.username || '',
@@ -134,7 +152,18 @@ const saveProfile = async () => {
     if (data.profile?.profileImageUrl) {
       setAvatarPreview(data.profile.profileImageUrl);
     }
-    
+
+    // Update original snapshot so Save button becomes disabled again
+    const newSnapshot = {
+      fullName: data.profile?.fullName || formData.fullName || '',
+      bio: data.profile?.bio || formData.bio || '',
+      username: data.profile?.username || formData.username || '',
+      email: data.user?.email || formData.email || '',
+      avatar: data.profile?.profileImageUrl || formData.avatar || ''
+    };
+    setOriginalData(newSnapshot);
+    setFormData(prev => ({ ...prev, ...newSnapshot }));
+
     alert('Profile updated');
     setAvatarFile(null);
   } catch (err) {

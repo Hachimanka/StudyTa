@@ -104,9 +104,16 @@ const { displayName, initial, avatarUrl } = useMemo(() => {
     }
   }
   
-  // Ensure avatar URL is valid (starts with http or /)
-  if (avatar && !avatar.startsWith('http') && !avatar.startsWith('/')) {
-    avatar = null;
+  // If avatar is a relative path (doesn't start with http or /), resolve it against API base
+  try {
+    const API_BASE = import.meta.env.VITE_API_BASE || '';
+    if (avatar && !avatar.startsWith('http') && !avatar.startsWith('/')) {
+      // normalize: remove any leading ./ or / from avatar then prefix
+      const cleaned = avatar.replace(/^\.\//, '').replace(/^\//, '');
+      avatar = API_BASE ? `${API_BASE.replace(/\/$/, '')}/${cleaned}` : `/${cleaned}`;
+    }
+  } catch (e) {
+    // If import.meta is not available for some reason, just keep avatar as-is
   }
   
   return { displayName: name, initial: init, avatarUrl: avatar };
@@ -192,6 +199,7 @@ const { displayName, initial, avatarUrl } = useMemo(() => {
             >
               {avatarUrl ? (
                 <img
+                  key={avatarUrl}
                   src={avatarUrl}
                   alt={`${displayName} avatar`}
                   className="w-full h-full object-cover"
@@ -215,6 +223,7 @@ const { displayName, initial, avatarUrl } = useMemo(() => {
                   <div className="w-28 h-28 rounded-full bg-[#FFFFFF] border-3 border-[#6F422B] flex items-center justify-center text-5xl font-semibold mb-4 overflow-hidden">
                     {avatarUrl ? (
                       <img
+                        key={avatarUrl}
                         src={avatarUrl}
                         alt={`${displayName} avatar large`}
                         className="w-full h-full object-cover"
