@@ -48,50 +48,76 @@ export default function TopNav() {
   const isLanding = location && location.pathname === "/";
 
   // Derive user's display name, initial (uppercase), and potential avatar image
-  const { displayName, initial, avatarUrl } = useMemo(() => {
-    let parsedStorage = null;
-    try {
-      const raw = localStorage.getItem("stuyta_user") || localStorage.getItem("studytA_user") || localStorage.getItem("user");
-      if (raw) parsedStorage = JSON.parse(raw);
-    } catch {
-      parsedStorage = null;
+// Add a new effect to refresh avatar when profile updates
+useEffect(() => {
+  const handleProfileUpdate = () => {
+    setForceUpdate((prev) => prev + 1);
+  };
+  
+  window.addEventListener('profileUpdated', handleProfileUpdate);
+  return () => {
+    window.removeEventListener('profileUpdated', handleProfileUpdate);
+  };
+}, []);
+
+// Update the useMemo to prioritize freshly updated data
+const { displayName, initial, avatarUrl } = useMemo(() => {
+  let parsedStorage = null;
+  try {
+    const raw = localStorage.getItem("stuyta_user") || localStorage.getItem("studytA_user") || localStorage.getItem("user");
+    if (raw) parsedStorage = JSON.parse(raw);
+  } catch {
+    parsedStorage = null;
+  }
+
+  const nameFromUser = user?.name || user?.fullName || null;
+  const nameFromStorage = parsedStorage?.name || parsedStorage?.fullName || null;
+  const usernameCandidate = user?.profile?.username || user?.username || parsedStorage?.profile?.username || parsedStorage?.username || null;
+  
+  const name = usernameCandidate || nameFromUser || nameFromStorage || user?.email || "Account";
+  const init = (name?.trim?.()?.[0] || user?.email?.[0] || "U").toUpperCase();
+
+  // Check for avatar in order of priority:
+  // 1. Direct from user object (recently updated)
+  // 2. From localStorage (parsedStorage)
+  // 3. From user's profile object
+  
+  let avatar = null;
+  
+  // Check user object first (most recent)
+  if (user?.profile?.profileImageUrl) {
+    avatar = user.profile.profileImageUrl;
+  } else if (user?.avatarUrl) {
+    avatar = user.avatarUrl;
+  } else if (user?.avatar) {
+    avatar = user.avatar;
+  }
+  
+  // Then check localStorage
+  if (!avatar && parsedStorage) {
+    if (parsedStorage.profile?.profileImageUrl) {
+      avatar = parsedStorage.profile.profileImageUrl;
+    } else if (parsedStorage.avatarUrl) {
+      avatar = parsedStorage.avatarUrl;
+    } else if (parsedStorage.avatar) {
+      avatar = parsedStorage.avatar;
     }
-
-    const nameFromUser =
-      user?.name ||
-      [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-      user?.fullName || null;
-    const nameFromStorage = parsedStorage
-      ? parsedStorage?.name ||
-        parsedStorage?.fullName ||
-        [parsedStorage?.firstName, parsedStorage?.lastName].filter(Boolean).join(" ")
-      : null;
-
-    // Prefer username (from user.profile or user.username or storage) over full name
-    const usernameCandidate =
-      user?.profile?.username || user?.username || parsedStorage?.profile?.username || parsedStorage?.username || null;
-
-    const name = usernameCandidate || nameFromUser || nameFromStorage || user?.email || "Account";
-    const init = (name?.trim?.()?.[0] || user?.email?.[0] || "U").toUpperCase();
-
-    // Common possible avatar fields (also check profile fields)
-    const avatarCandidates = [
-      user?.avatar,
-      user?.avatarUrl,
-      user?.profile?.profileImageUrl,
-      user?.profilePicture,
-      user?.photo,
-      user?.image,
-      parsedStorage?.avatar,
-      parsedStorage?.avatarUrl,
-      parsedStorage?.profile?.profileImageUrl,
-      parsedStorage?.profilePicture,
-      parsedStorage?.photo,
-      parsedStorage?.image
-    ].filter(Boolean);
-    const avatar = avatarCandidates.find((v) => typeof v === "string" && v.length > 3) || null;
-    return { displayName: name, initial: init, avatarUrl: avatar };
-  }, [user, forceUpdate]);
+  }
+  
+  // If avatar is a relative path (doesn't start with http or /), resolve it against API base
+  try {
+    const API_BASE = import.meta.env.VITE_API_BASE || '';
+    if (avatar && !avatar.startsWith('http') && !avatar.startsWith('/')) {
+      // normalize: remove any leading ./ or / from avatar then prefix
+      const cleaned = avatar.replace(/^\.\//, '').replace(/^\//, '');
+      avatar = API_BASE ? `${API_BASE.replace(/\/$/, '')}/${cleaned}` : `/${cleaned}`;
+    }
+  } catch (e) {
+    // If import.meta is not available for some reason, just keep avatar as-is
+  }
+  
+  return { displayName: name, initial: init, avatarUrl: avatar };
+}, [user, forceUpdate]);
 
   // Dropdown state
   const [open, setOpen] = useState(false);
@@ -173,6 +199,7 @@ export default function TopNav() {
             >
               {avatarUrl ? (
                 <img
+                  key={avatarUrl}
                   src={avatarUrl}
                   alt={`${displayName} avatar`}
                   className="w-full h-full object-cover"
@@ -196,6 +223,7 @@ export default function TopNav() {
                   <div className="w-28 h-28 rounded-full bg-[#FFFFFF] border-3 border-[#6F422B] flex items-center justify-center text-5xl font-semibold mb-4 overflow-hidden">
                     {avatarUrl ? (
                       <img
+                        key={avatarUrl}
                         src={avatarUrl}
                         alt={`${displayName} avatar large`}
                         className="w-full h-full object-cover"

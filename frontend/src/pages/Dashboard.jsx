@@ -175,18 +175,26 @@ export default function Home() {
   const themeColors = getThemeColors();
 
   // Derive avatar URL: prefer profile.profileImageUrl, then user.avatarUrl, then localStorage
-  const avatarUrl = (() => {
-    try {
-      const fromUser = user?.profile?.profileImageUrl || user?.avatarUrl || null;
-      if (fromUser) return fromUser;
-      const raw = localStorage.getItem('stuyta_user') || localStorage.getItem('studytA_user') || localStorage.getItem('user');
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      return parsed?.profile?.profileImageUrl || parsed?.avatarUrl || null;
-    } catch (e) {
-      return user?.profile?.profileImageUrl || user?.avatarUrl || null;
-    }
-  })();
+const avatarUrl = (() => {
+  try {
+    // First check user object from auth context
+    const fromUser = user?.profile?.profileImageUrl || user?.avatarUrl || null;
+    if (fromUser) return fromUser;
+    
+    // Then check localStorage
+    const raw = localStorage.getItem('stuyta_user') || localStorage.getItem('studytA_user') || localStorage.getItem('user');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    
+    // Check multiple possible locations in localStorage
+    const fromStorage = parsed?.profile?.profileImageUrl || parsed?.avatarUrl || parsed?.avatar || null;
+    
+    return fromStorage;
+  } catch (e) {
+    console.warn('Error getting avatar URL:', e);
+    return null;
+  }
+})();
 
   // Utility function to format file size
   const formatFileSize = (bytes) => {
