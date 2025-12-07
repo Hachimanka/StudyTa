@@ -1,14 +1,21 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import Sidebar from '../components/Sidebar'
 import ChatWidget from '../components/ChatWidget'
+import { useAuth } from '../context/AuthContext'
 
 export default function Analytics() {
-  // Static placeholder data for frontend-only implementation
-  const stats = [
-    { label: 'Hours Studied', value: 36 },
-    { label: 'Topics Covered', value: 12 },
-    { label: 'Study Streak', value: 7 },
-  ]
+  // Local UI state and placeholders (will be replaced by backend data)
+  const { user } = useAuth()
+  const [stats, setStats] = useState([
+    { label: 'Hours Studied', value: 0 },
+    { label: 'Topics Covered', value: 0 },
+    { label: 'Study Streak', value: 0 },
+  ])
+
+  const [lineData, setLineData] = useState(null)
+  const [donutData, setDonutData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   // Dropdown state for chart range selectors
   const [lineOpen, setLineOpen] = useState(false)
@@ -18,18 +25,18 @@ export default function Analytics() {
   const [lineRangeKey, setLineRangeKey] = useState('7')
   const [donutRangeKey, setDonutRangeKey] = useState('7')
 
-  const lineRangeLabel = lineRangeKey === '7' ? 'Last 7 days' : lineRangeKey === '4' ? 'Last 30 days' : 'Last year'
-  const donutRangeLabel = donutRangeKey === '7' ? 'Last 7 days' : donutRangeKey === '4' ? 'Last 30 days' : donutRangeKey === '12' ? 'Last year' : 'All time'
+  const lineRangeLabel = lineRangeKey === '7' ? 'Last 7 days' : lineRangeKey === '30' ? 'Last 30 days' : 'Last year'
+  const donutRangeLabel = donutRangeKey === '7' ? 'Last 7 days' : donutRangeKey === '30' ? 'Last 30 days' : donutRangeKey === '365' ? 'Last year' : 'All time'
 
   const lineRangeOptions = [
     { key: '7', label: 'Last 7 days' },
-    { key: '4', label: 'Last 30 days' },
-    { key: '12', label: 'Last year' },
+    { key: '30', label: 'Last 30 days' },
+    { key: '365', label: 'Last year' },
   ]
   const donutRangeOptions = [
     { key: '7', label: 'Last 7 days' },
-    { key: '4', label: 'Last 30 days' },
-    { key: '12', label: 'Last year' },
+    { key: '30', label: 'Last 30 days' },
+    { key: '365', label: 'Last year' },
     { key: 'all', label: 'All time' },
   ]
 
@@ -45,35 +52,143 @@ export default function Analytics() {
     return () => document.removeEventListener('mousedown', onDocClick)
   }, [])
 
-  // Mock datasets (one value per point). Values scaled for visual plotting.
+  // Mock datasets fallback for offline/dev
   const mockData = useMemo(() => ({
-    '7': [3.5, 4.1, 2.8, 5.2, 5.0, 3.1, 4.6],
-    '4': [12, 15, 9, 14],
-    '12': [40, 36, 42, 38, 45, 50, 47, 43, 39, 44, 48, 52],
+    '7': [30, 40, 20, 50, 45, 25, 35],
+    '30': Array.from({ length: 30 }, () => Math.floor(Math.random() * 60)),
+    '365': Array.from({ length: 12 }, () => Math.floor(Math.random() * 200)),
   }), [])
 
+  const API_BASE = import.meta.env.VITE_API_BASE || ''
+
+  const fetchStats = useCallback(async (range = '7', { updateTop = false } = {}) => {
+    try {
+      setLoading(true)
+      setError(null)
+      const userId = user?._id
+      const url = `${API_BASE}/api/analytics/stats?range=${range}${userId ? `&userId=${userId}` : ''}`
+      const res = await fetch(url, { headers: { 'Content-Type': 'application/json' } })
+      if (!res.ok) {
+        const payload = await res.json().catch(() => ({}))
+        throw new Error(payload.error || 'Failed to load analytics')
+      }
+      const payload = await res.json()
+      // update top-level stats only when requested (avoid overwriting when fetching chart-specific ranges)
+      if (updateTop) {
+        setStats([
+          { label: 'Hours Studied', value: payload.totalHours ?? 0 },
+          { label: 'Topics Covered', value: payload.topicsFinished ?? 0 },
+          { label: 'Study Streak', value: payload.streak ?? 0 },
+        ])
+      }
+      // always update chart data returned for this range
+      if (payload.line) setLineData(payload.line)
+      if (payload.donut) setDonutData(payload.donut)
+    } catch (err) {
+      console.error('fetchStats error', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }, [API_BASE, user])
+
+  // On mount: fetch global stats (all time) and initial charts
+  useEffect(() => {
+    fetchStats('all', { updateTop: true })
+    fetchStats(lineRangeKey, { updateTop: false })
+    fetchStats(donutRangeKey, { updateTop: false })
+  }, [])
+
+  // When a range selector changes, fetch appropriate chart data
+  useEffect(() => {
+    fetchStats(lineRangeKey, { updateTop: false })
+  }, [lineRangeKey])
+
+  useEffect(() => {
+    fetchStats(donutRangeKey, { updateTop: false })
+  }, [donutRangeKey])
+
   // Build SVG path and points so the line passes through each dot
+  // Scale always starts at 0 (so Y axis restarts at 0) and max is rounded up to nearest hour (60 minutes)
   function buildLineChart(values, innerWidth = 520, innerHeight = 180) {
-    if (!values || values.length === 0) return { path: '', points: [] }
-    const max = Math.max(...values)
-    const min = Math.min(...values)
+    if (!values || values.length === 0) return { path: '', points: [], padTop: 8, h: innerHeight - 16, scaleMaxHours: 1, hours: [0,1] }
     const padTop = 8
     const padBottom = 8
     const h = innerHeight - padTop - padBottom
     const count = values.length
     const step = count === 1 ? 0 : innerWidth / (count - 1)
+
+    // scale from 0 to nearest-hour-above-max, but do not add extra padding
+    // unless the base exceeds 5 hours — in that case add one extra hour
+    const maxVal = Math.max(...values, 0)
+    const baseHours = Math.ceil(maxVal / 60)
+    let scaleMaxHours = Math.max(1, baseHours)
+    if (baseHours > 5) scaleMaxHours = baseHours + 1
+    const scaleMaxMinutes = scaleMaxHours * 60
+
     const points = values.map((v, i) => {
       const x = Math.round(i * step)
-      const t = max === min ? 0.5 : (v - min) / (max - min)
+      const t = scaleMaxMinutes === 0 ? 0.5 : (v / scaleMaxMinutes)
       const y = Math.round(padTop + (1 - t) * h)
       return { x, y, v }
     })
     const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
-    return { path, points }
+
+    // generate integer hours from 0 .. scaleMaxHours
+    const hours = Array.from({ length: scaleMaxHours + 1 }, (_, i) => i)
+
+    return { path, points, padTop, h, scaleMaxHours, hours }
   }
 
-  const lineValues = mockData[lineRangeKey] || []
-  const { path: linePath, points: linePoints } = buildLineChart(lineValues)
+  // prefer server-provided line values, fallback to mock data
+  // prefer server-provided line values, fallback to zeros (no fake activity)
+  // For 7-day view, map dates to Monday..Sunday so chart always starts on Monday
+  let lineValues = []
+  if (lineRangeKey === '7') {
+    // initialize Monday..Sunday with zeros
+    const week = Array.from({ length: 7 }, () => 0)
+    if (lineData && Array.isArray(lineData.labels) && Array.isArray(lineData.values)) {
+      for (let i = 0; i < lineData.labels.length; i++) {
+        const lbl = lineData.labels[i]
+        const val = lineData.values[i] || 0
+        const d = new Date(lbl)
+        // map JS getDay() (0=Sun..6=Sat) to Monday=0..Sunday=6
+        const idx = ((d.getDay() + 6) % 7)
+        week[idx] = (week[idx] || 0) + val
+      }
+    }
+    // if no backend data, week stays all zeros (no mock data)
+    lineValues = week
+  } else {
+    if (lineData && lineData.values && lineData.values.length) {
+      lineValues = lineData.values
+    } else {
+      // fallback to zeros of appropriate length (avoid showing mock activity)
+      if (lineRangeKey === '30') lineValues = Array.from({ length: 30 }, () => 0)
+      else if (lineRangeKey === '365') lineValues = Array.from({ length: 12 }, () => 0)
+      else lineValues = []
+    }
+  }
+  const { path: linePath, points: linePoints, padTop, h, scaleMaxHours, hours } = buildLineChart(lineValues)
+
+  // helper to format x-axis labels
+  function formatXAxisLabels() {
+    if (lineRangeKey === '7') return ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
+    if (lineData && Array.isArray(lineData.labels) && lineData.labels.length) {
+      return lineData.labels.map(lbl => {
+        try {
+          const d = new Date(lbl)
+          if (lineRangeKey === '30') return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+          return d.toLocaleDateString(undefined, { month: 'short' })
+        } catch (e) {
+          return lbl
+        }
+      })
+    }
+    // fallback
+    if (lineRangeKey === '30') return Array.from({ length: 30 }, (_, i) => `D${i+1}`)
+    return Array.from({ length: lineValues.length }, (_, i) => `M${i+1}`)
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -151,9 +266,22 @@ export default function Analytics() {
                 <svg className="w-full h-full" viewBox="0 0 600 260" preserveAspectRatio="none">
                   <rect width="100%" height="100%" fill="#fff" rx="12" />
                   <g transform="translate(40,20)">
-                    {[0,1,2,3,4,5,6].map((r,i)=> (
-                      <line key={i} x1={0} x2={520} y1={(i*34)} y2={(i*34)} stroke="#f3e6df" strokeWidth="1" />
-                    ))}
+                    {(() => {
+                      // Show labels 0..N where N = max(5, scaleMaxHours)
+                      const maxLabel = Math.max(5, scaleMaxHours || 0)
+                      const display = Array.from({ length: maxLabel + 1 }, (_, i) => i)
+                      return display.map((hr) => {
+                        // Position labels evenly from bottom (0h) to top (Nh)
+                        const ratio = hr / (maxLabel || 1)
+                        const yPos = Math.round(padTop + (1 - ratio) * h)
+                        return (
+                          <g key={hr}>
+                            <line x1={0} x2={520} y1={yPos} y2={yPos} stroke="#f3e6df" strokeWidth="1" />
+                            <text x={-12} y={yPos + 4} fontSize="11" fill="#5C4333" textAnchor="end">{`${hr}h`}</text>
+                          </g>
+                        )
+                      })
+                    })()}
                     <path d={linePath} fill="none" stroke="#E59C5C" strokeWidth="3" strokeLinecap="round" />
                     {linePoints.map((p, i) => (
                       <circle key={i} cx={p.x} cy={p.y} r="5" fill="#6F422B" stroke="#fff" strokeWidth="2" />
@@ -161,10 +289,10 @@ export default function Analytics() {
                   </g>
                 </svg>
                 <div className="mt-3 text-xs text-[#5C4333] flex justify-between">
-                  {/* x-axis labels: for 7 days show Mon..Sun, for 4 show W1..W4, for 12 show M1..M12 */}
-                  {lineRangeKey === '7' && ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map((d,i)=>(<span key={i}>{d}</span>))}
-                  {lineRangeKey === '4' && ['Wk1','Wk2','Wk3','Wk4'].map((d,i)=>(<span key={i}>{d}</span>))}
-                  {lineRangeKey === '12' && ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].map((d,i)=>(<span key={i} className="text-xs">{d}</span>))}
+                  {(() => {
+                    const labels = formatXAxisLabels()
+                    return labels.slice(0, lineValues.length).map((d, i) => (<span key={i}>{d}</span>))
+                  })()}
                 </div>
               </div>
             </section>
@@ -201,18 +329,71 @@ export default function Analytics() {
               </div>
 
               <div className="flex items-center gap-8">
-                <svg width="260" height="180" viewBox="0 0 260 180" className="flex-shrink-0">
-                  <circle cx="130" cy="90" r="56" fill="#fff" />
-                  <circle cx="130" cy="90" r="56" stroke="#6F422B" strokeWidth="26" strokeDasharray="95 60 45 40 40" strokeLinecap="butt" fill="none" transform="rotate(-90 130 90)" />
-                  <circle cx="130" cy="90" r="30" fill="#fff" />
-                </svg>
+                <div className="flex-shrink-0">
+                  {/* Donut chart: stacked stroked circles to create slices */}
+                  <svg width="260" height="180" viewBox="0 0 260 180">
+                    <defs />
+                    <g transform="translate(130,90)">
+                      <circle r="56" fill="#fff" />
+                      {(() => {
+                        const colors = ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#BDA08A','#9C7A5A']
+                        const radius = 56
+                        const circumference = 2 * Math.PI * radius
+                        const strokeWidth = 26
+                        const items = (donutData && donutData.length) ? donutData : []
+                        const total = items.reduce((s, it) => s + (it.minutes || 0), 0) || 0
+                        let offset = 0
+                        if (total === 0) {
+                          // render a faint ring as placeholder
+                          return (
+                            <g>
+                              <circle r={radius} fill="none" stroke="#E9D8D0" strokeWidth={strokeWidth} transform="rotate(-90)" />
+                              <circle r="30" fill="#fff" />
+                            </g>
+                          )
+                        }
+
+                        return items.map((it, idx) => {
+                          const portion = (it.minutes || 0) / total
+                          const len = portion * circumference
+                          const dashArray = `${len} ${Math.max(0, circumference - len)}`
+                          const dashOffset = offset
+                          offset += len
+                          const color = colors[idx % colors.length]
+                          return (
+                            <g key={idx}>
+                              <circle r={radius} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="butt"
+                                strokeDasharray={dashArray}
+                                strokeDashoffset={-dashOffset}
+                                transform="rotate(-90)" />
+                              <circle r="30" fill="#fff" />
+                            </g>
+                          )
+                        })
+                      })()}
+                    </g>
+                  </svg>
+                </div>
 
                 <ul className="text-sm text-[#5C4333] space-y-3">
-                  <li className="flex items-center"><span className="inline-block w-3 h-3 mr-3 bg-[#6F422B] rounded-sm"></span>Mathematics</li>
-                  <li className="flex items-center"><span className="inline-block w-3 h-3 mr-3 bg-[#E59C5C] rounded-sm"></span>Physics</li>
-                  <li className="flex items-center"><span className="inline-block w-3 h-3 mr-3 bg-[#CFA88F] rounded-sm"></span>Chemistry</li>
-                  <li className="flex items-center"><span className="inline-block w-3 h-3 mr-3 bg-[#F6E6DA] rounded-sm"></span>Biology</li>
-                  <li className="flex items-center"><span className="inline-block w-3 h-3 mr-3 bg-[#E9D8D0] rounded-sm border" ></span>Literature</li>
+                  {(donutData && donutData.length) ? donutData.map((d, i) => {
+                    const colors = ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#BDA08A','#9C7A5A']
+                    const color = colors[i % colors.length]
+                    const minutes = d.minutes || 0
+                    const pct = donutData.reduce((s,it)=>s+(it.minutes||0),0) || 0
+                    const percent = pct ? Math.round((minutes / pct) * 100) : 0
+                    return (
+                      <li key={i} className="flex items-center justify-between w-56">
+                        <div className="flex items-center">
+                          <span className="inline-block w-3 h-3 mr-3 rounded-sm" style={{ backgroundColor: color }}></span>
+                          <span>{d.topic}</span>
+                        </div>
+                        <div className="text-xs text-[#5C4333]">{minutes}m · {percent}%</div>
+                      </li>
+                    )
+                  }) : (
+                    <li className="text-xs text-[#5C4333]">No topic data available</li>
+                  )}
                 </ul>
               </div>
             </section>

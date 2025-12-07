@@ -17,6 +17,7 @@ import studymodeRoute from './routes/studymodeRoute.js';
 import calendarRoute from './routes/calendarRoute.js';
 import musicRoutes from './routes/musicRoute.js';
 import profileRoute from './routes/profileRoute.js';
+import analyticsRoutes from './routes/analyticsRoutes.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,6 +77,9 @@ app.use('/api/calendar', calendarRoute);
 
 // Music routes (upload, list, update, delete)
 app.use('/api/music', musicRoutes);
+
+// Analytics routes
+app.use('/api/analytics', analyticsRoutes);
 
 // Serve uploaded files statically - FIXED PATH
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
