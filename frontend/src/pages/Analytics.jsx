@@ -1,13 +1,25 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
 import Sidebar from '../components/Sidebar'
 import ChatWidget from '../components/ChatWidget'
+import { useAuth } from '../context/AuthContext'
+import axios from 'axios'
 
 export default function Analytics() {
-  // Static placeholder data for frontend-only implementation
+  const { user } = useAuth()
+  const [summary, setSummary] = useState({ totalSessions: 0, totalDurationSeconds: 0, byMode: [] })
+  const [weekly, setWeekly] = useState([])
+  const formatHMS = (secs) => {
+    const s = Math.max(0, Math.floor(secs || 0))
+    const h = Math.floor(s / 3600)
+    const m = Math.floor((s % 3600) / 60)
+    const ss = s % 60
+    const pad = (n) => String(n).padStart(2, '0')
+    return `${h}:${pad(m)}:${pad(ss)}`
+  }
   const stats = [
-    { label: 'Hours Studied', value: 36 },
-    { label: 'Topics Covered', value: 12 },
-    { label: 'Study Streak', value: 7 },
+    { label: 'Time Studied', value: formatHMS(summary.totalDurationSeconds || 0) },
+    { label: 'Total Sessions', value: summary.totalSessions || 0 },
+    { label: 'Active Modes', value: (summary.byMode || []).length },
   ]
 
   // Dropdown state for chart range selectors
@@ -47,10 +59,10 @@ export default function Analytics() {
 
   // Mock datasets (one value per point). Values scaled for visual plotting.
   const mockData = useMemo(() => ({
-    '7': [3.5, 4.1, 2.8, 5.2, 5.0, 3.1, 4.6],
-    '4': [12, 15, 9, 14],
-    '12': [40, 36, 42, 38, 45, 50, 47, 43, 39, 44, 48, 52],
-  }), [])
+    '7': weekly.slice(-7).map(w => Math.round((w.duration || 0)/3600)),
+    '4': weekly.slice(-4).map(w => Math.round((w.duration || 0)/3600)),
+    '12': weekly.slice(-12).map(w => Math.round((w.duration || 0)/3600)),
+  }), [weekly])
 
   // Build SVG path and points so the line passes through each dot
   function buildLineChart(values, innerWidth = 520, innerHeight = 180) {
@@ -75,6 +87,24 @@ export default function Analytics() {
   const lineValues = mockData[lineRangeKey] || []
   const { path: linePath, points: linePoints } = buildLineChart(lineValues)
 
+  useEffect(() => {
+    async function load() {
+      if (!user?._id) return
+      try {
+        const base = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+        const [sRes, wRes] = await Promise.all([
+          axios.get(`${base}/api/analytics/summary`, { params: { userId: user._id } }),
+          axios.get(`${base}/api/analytics/weekly`, { params: { userId: user._id, weeks: 12 } })
+        ])
+        setSummary(sRes.data || { totalSessions: 0, totalDurationSeconds: 0, byMode: [] })
+        setWeekly((wRes.data?.weeks || []).map(x => ({ label: x.label, duration: x.duration, sessions: x.sessions })))
+      } catch (err) {
+        console.error('Load analytics failed', err)
+      }
+    }
+    load()
+  }, [user?._id])
+
   return (
     <div className="flex min-h-screen">
       <Sidebar />
@@ -96,7 +126,29 @@ export default function Analytics() {
                   <p className="text-xs text-[#5C4333]">{s.label}</p>
                   <div className="mt-2 text-3xl font-bold text-[#6F422B]">{s.value}</div>
                 </div>
-                <div className="w-12 h-12 rounded-lg bg-[#6F422B]" />
+                <div className="w-12 h-12 rounded-lg bg-[#6F422B] flex items-center justify-center">
+                  {/* Simple icon inside the brown square */}
+                  {i === 0 && (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="9" stroke="#FFFFFF" strokeWidth="2" />
+                      <path d="M12 6v6l4 2" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                  {i === 1 && (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 20V10" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M10 20V6" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M16 20V13" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M22 20V8" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  )}
+                  {i === 2 && (
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M3 18h18" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M6 15l6-9 6 9" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -157,7 +209,7 @@ export default function Analytics() {
 
             <section className="bg-white rounded-2xl p-6 shadow-md">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-[#6F422B]">Time per Subject</h3>
+                <h3 className="text-lg font-semibold text-[#6F422B]">Time by Study Mode</h3>
                 <div className="relative" ref={donutBtnRef}>
                   <button
                     onClick={() => setDonutOpen(v => !v)}
@@ -189,16 +241,32 @@ export default function Analytics() {
               <div className="flex items-center gap-8">
                 <svg width="260" height="180" viewBox="0 0 260 180" className="flex-shrink-0">
                   <circle cx="130" cy="90" r="56" fill="#fff" />
-                  <circle cx="130" cy="90" r="56" stroke="#6F422B" strokeWidth="26" strokeDasharray="95 60 45 40 40" strokeLinecap="butt" fill="none" transform="rotate(-90 130 90)" />
+                  {(() => {
+                    const total = (summary.byMode || []).reduce((a,b)=> a + (b.duration||0), 0)
+                    const colors = ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D']
+                    let acc = 0
+                    return (summary.byMode || []).map((m, idx) => {
+                      const frac = total > 0 ? (m.duration || 0) / total : 0
+                      const dash = Math.max(0, Math.round(frac * 2 * Math.PI * 56))
+                      const gap = Math.round((2 * Math.PI * 56) - dash)
+                      const rotate = (acc / (2 * Math.PI * 56)) * 360
+                      acc += dash
+                      return (
+                        <circle key={m.mode} cx="130" cy="90" r="56" stroke={colors[idx%colors.length]} strokeWidth="26" strokeDasharray={`${dash} ${gap}`} strokeLinecap="butt" fill="none" transform={`rotate(${rotate-90} 130 90)`} />
+                      )
+                    })
+                  })()}
                   <circle cx="130" cy="90" r="30" fill="#fff" />
                 </svg>
 
                 <ul className="text-sm text-[#5C4333] space-y-3">
-                  <li className="flex items-center"><span className="inline-block w-3 h-3 mr-3 bg-[#6F422B] rounded-sm"></span>Mathematics</li>
-                  <li className="flex items-center"><span className="inline-block w-3 h-3 mr-3 bg-[#E59C5C] rounded-sm"></span>Physics</li>
-                  <li className="flex items-center"><span className="inline-block w-3 h-3 mr-3 bg-[#CFA88F] rounded-sm"></span>Chemistry</li>
-                  <li className="flex items-center"><span className="inline-block w-3 h-3 mr-3 bg-[#F6E6DA] rounded-sm"></span>Biology</li>
-                  <li className="flex items-center"><span className="inline-block w-3 h-3 mr-3 bg-[#E9D8D0] rounded-sm border" ></span>Literature</li>
+                  {(summary.byMode || []).map((m, idx) => (
+                    <li key={m.mode} className="flex items-center">
+                      <span className="inline-block w-3 h-3 mr-3 rounded-sm" style={{ backgroundColor: ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D'][idx%6] }}></span>
+                      {m.mode} — {Math.round((m.duration||0)/3600)}h
+                    </li>
+                  ))}
+                  {(summary.byMode || []).length === 0 && <li className="text-[#5C4333]">No study sessions yet.</li>}
                 </ul>
               </div>
             </section>
