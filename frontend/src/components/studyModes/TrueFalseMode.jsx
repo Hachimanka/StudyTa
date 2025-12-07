@@ -3,10 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSettings } from '../../context/SettingsContext';
 import Sidebar from '../Sidebar';
 import ConfirmSaveModal from '../ConfirmSaveModal';
+import { useAuth } from '../../context/AuthContext';
 
 export default function TrueFalseMode() {
   const { darkMode } = useSettings();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const startedAtRef = useRef(Date.now());
 
   // Editable title state
   const [title, setTitle] = useState('Title!!!!!');
@@ -183,6 +186,23 @@ export default function TrueFalseMode() {
       }
     }, 700);
   };
+
+  // When finished, record a completed session for analytics
+  useEffect(() => {
+    if (!finished) return;
+    (async () => {
+      try {
+        if (!user?._id) return;
+        const durationSeconds = Math.max(0, Math.floor((Date.now() - (startedAtRef.current || Date.now()))/1000));
+        await fetch(`/api/studymode/sessions/complete`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user._id, mode: 'trueFalse', startedAt: startedAtRef.current, endedAt: Date.now(), durationSeconds })
+        });
+      } catch (e) {
+        console.warn('Failed to record completed session', e);
+      }
+    })();
+  }, [finished, user?._id]);
 
   // Generate questions for a target mode from session or current sourceText, then navigate
   const generateAndNavigate = async (targetMode) => {
