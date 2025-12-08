@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import TopNav from "../components/TopNav";
+import Leftpic from "../assets/Leftpic.svg";
 
 export default function ForgotPassword(){
   const [email, setEmail] = useState('')
@@ -56,108 +56,114 @@ export default function ForgotPassword(){
   }
 
   return (
-    <>
-      <TopNav />
-
+    <div
+      className={`min-h-screen w-full flex items-center justify-center px-4 transition-colors duration-500 ${
+        isDark ? "bg-[#1f1b16]" : "bg-[#F5E9DF]"
+      }`}
+    >
+      {/* MAIN BOX */}
       <div
-        className={`min-h-screen w-full flex items-center justify-center px-4 transition-colors duration-500 ${
-          isDark ? "bg-[#1f1b16]" : "bg-[#F5E9DF]"
+        className={`rounded-3xl shadow-xl grid grid-cols-2 gap-2 transition-colors duration-500 ${
+          isDark ? "bg-[#2e2119]" : "bg-[#BE8E78]"
         }`}
+        style={{ width: "700px", height: "580px", padding: "12px" }}
       >
-        {/* MAIN BOX */}
+        {/* LEFT IMAGE BOX */}
         <div
-          className={`rounded-3xl shadow-xl grid grid-cols-2 gap-2 transition-colors duration-500 ${
-            isDark ? "bg-[#2e2119]" : "bg-[#BE8E78]"
+          className={`rounded-xl overflow-hidden ${
+            isDark ? "bg-[#3a2a20]" : "bg-[#D9D9D9]"
           }`}
-          style={{ width: "700px", height: "580px", padding: "12px" }}
+          style={{ width: "300px", height: "556px" }}
         >
-          {/* LEFT IMAGE BOX */}
-          <div
-            className={`rounded-xl ${
-              isDark ? "bg-[#3a2a20]" : "bg-[#D9D9D9]"
-            }`}
-            style={{ width: "300px", height: "500px" }}
-          ></div>
+          <img 
+            src={Leftpic} 
+            alt="Decoration" 
+            style={{ 
+              width: "100%", 
+              height: "100%", 
+              objectFit: "cover" 
+            }}
+          />
+        </div>
 
-          {/* RIGHT FORM SECTION */}
-          <div className="flex flex-col justify-center" style={{ marginTop: "-20px" }}>
-            {/* Title */}
-            <h2
-              className={`${isDark ? "text-[#f5e9df]" : "text-white"}`}
+        {/* RIGHT FORM SECTION */}
+        <div className="flex flex-col justify-center" style={{ marginTop: "-20px" }}>
+          {/* Title */}
+          <h2
+            className={`${isDark ? "text-[#f5e9df]" : "text-white"}`}
+            style={{
+              fontSize: "30px",
+              fontWeight: 500,
+              fontStyle: "italic",
+              marginBottom: "12px",
+            }}
+          >
+            Forgot password
+          </h2>
+
+          {/* Subtext */}
+          <p
+            className={`${isDark ? "text-[#f5e9df]/70" : "text-white/90"}`}
+            style={{ fontSize: "14px", fontWeight: 300 }}
+          >
+            Remembered?{" "}
+            <Link
+              to="/login"
               style={{
-                fontSize: "30px",
-                fontWeight: 500,
+                fontSize: "14px",
+                fontWeight: 300,
                 fontStyle: "italic",
-                marginBottom: "12px",
+                color: "#3F2BC6",
               }}
             >
-              Forgot password
-            </h2>
+              Sign in
+            </Link>
+          </p>
 
-            {/* Subtext */}
-            <p
-              className={`${isDark ? "text-[#f5e9df]/70" : "text-white/90"}`}
-              style={{ fontSize: "14px", fontWeight: 300 }}
+          {/* FORM */}
+          <form className="space-y-4 mt-6" onSubmit={onSubmit}>
+            {/* Email Input */}
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="rounded-md border"
+              style={{
+                width: "300px",
+                height: "42px",
+                paddingLeft: "10px",
+                fontSize: "14px",
+                fontWeight: 200,
+                fontStyle: "italic",
+                color: "#796060",
+                backgroundColor: isDark ? "#3a2a20" : "white",
+                borderColor: "#d3b49b",
+                outline: "none",
+              }}
+              onFocus={(e) => e.target.style.borderColor = "#6F422B"}
+              onBlur={(e) => e.target.style.borderColor = "#d3b49b"}
+            />
+
+            {/* Send Code Button */}
+            <button
+              type="submit"
+              style={{
+                width: "300px",
+                height: "42px",
+                backgroundColor: "#6F422B",
+                color: "white",
+                borderRadius: "13px",
+                fontSize: "14px",
+                fontWeight: 500,
+                marginTop: "12px",
+              }}
             >
-              Remembered?{" "}
-              <Link
-                to="/login"
-                style={{
-                  fontSize: "20px",
-                  fontWeight: 300,
-                  fontStyle: "italic",
-                  color: "#3F2BC6",
-                }}
-              >
-                Sign in
-              </Link>
-            </p>
-
-            {/* FORM */}
-            <form className="space-y-4 mt-6" onSubmit={onSubmit}>
-              {/* Email Input */}
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="rounded-md border"
-                style={{
-                  width: "300px",
-                  height: "42px",
-                  paddingLeft: "10px",
-                  fontSize: "14px",
-                  fontWeight: 200,
-                  fontStyle: "italic",
-                  color: "#796060",
-                  backgroundColor: isDark ? "#3a2a20" : "white",
-                  borderColor: "#d3b49b",
-                  outline: "none",
-                }}
-                onFocus={(e) => e.target.style.borderColor = "#6F422B"}
-                onBlur={(e) => e.target.style.borderColor = "#d3b49b"}
-              />
-
-              {/* Send Code Button */}
-              <button
-                type="submit"
-                style={{
-                  width: "300px",
-                  height: "42px",
-                  backgroundColor: "#6F422B",
-                  color: "white",
-                  borderRadius: "13px",
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  marginTop: "12px",
-                }}
-              >
-                Send Code
-              </button>
-            </form>
-          </div>
+              Send Code
+            </button>
+          </form>
         </div>
       </div>
-    </>
+    </div>
   )
 }
