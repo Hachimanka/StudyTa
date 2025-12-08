@@ -80,6 +80,9 @@ app.use('/api/analytics', analyticsRoutes);
 // Music routes (upload, list, update, delete)
 app.use('/api/music', musicRoutes);
 
+// Analytics routes
+app.use('/api/analytics', analyticsRoutes);
+
 // Serve uploaded files statically - FIXED PATH
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
