@@ -4,8 +4,16 @@ import * as emailService from "../services/emailVerificationService.js";
 export async function register(req, res) {
   try {
     const { name, email, password } = req.body;
-    await registerService.register(name, email, password, emailService.sendVerification);
-    res.status(200).json({ message: "Verification email sent. Please check your inbox." });
+    const token = await registerService.register(name, email, password, emailService.sendVerification);
+    // In non-production, include token to allow manual testing without public URL
+    const isProd = String(process.env.NODE_ENV).toLowerCase() === 'production';
+    const payload = { message: "Verification email sent. Please check your inbox." };
+    if (!isProd) {
+      payload.debugToken = token;
+      const backendBase = process.env.BACKEND_BASE || `http://localhost:${process.env.PORT || 5000}`;
+      payload.debugVerifyUrl = `${backendBase.replace(/\/$/, '')}/api/verify-email?token=${token}`;
+    }
+    res.status(200).json(payload);
   } catch (err) {
     console.error("registerController error:", err);
     const status = err && err.status ? err.status : 500;

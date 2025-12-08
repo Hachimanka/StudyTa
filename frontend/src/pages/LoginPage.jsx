@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import Leftpic from "../assets/Leftpic.svg";
 
 export default function Login() {
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [verifiedMsg, setVerifiedMsg] = useState("");
 
   const [isDark, setIsDark] = useState(() => {
     try {
@@ -31,6 +33,14 @@ export default function Login() {
       window.removeEventListener("storage", onThemeChanged);
     };
   }, []);
+
+  // Show a friendly message if redirected after email verification
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("verified") === "1") {
+      setVerifiedMsg("Your email is verified. Please sign in.");
+    }
+  }, [location.search]);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -79,6 +89,20 @@ export default function Login() {
 
         {/* RIGHT FORM SECTION */}
         <div className="flex flex-col justify-center" style={{ marginTop: "-20px" }}>
+          {verifiedMsg && (
+            <div
+              style={{
+                backgroundColor: "#3F2BC6",
+                color: "white",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                fontSize: "12px",
+                marginBottom: "10px",
+              }}
+            >
+              {verifiedMsg}
+            </div>
+          )}
           {/* Title */}
           <h2
             className={`${isDark ? "text-[#f5e9df]" : "text-white"}`}
