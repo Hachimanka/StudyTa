@@ -47,13 +47,16 @@ if (!process.env.BACKEND_BASE) {
 
 const app = express();
 
-// Configure CORS properly
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Configure CORS properly for localhost and Vercel deployment
+app.use(
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'https://study-ta-blond.vercel.app'
+    ],
+    credentials: true
+  })
+);
 
 app.use(express.json({ limit: '10mb' }));
 

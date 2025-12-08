@@ -21,6 +21,7 @@ export default function Signup() {
 
   const { signup } = useAuth();
   const navigate = useNavigate();
+  const [verifyInfo, setVerifyInfo] = useState(null);
 
   useEffect(() => {
     const onThemeChanged = () => {
@@ -45,12 +46,25 @@ export default function Signup() {
       return;
     }
     setLoading(true);
-    await signup(name, email, password, () => {
+    try {
+      const API_BASE = import.meta.env.VITE_API_BASE || '';
+      const res = await fetch(`${API_BASE}/api/register`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        if (data.debugVerifyUrl) setVerifyInfo({ url: data.debugVerifyUrl });
+        alert(data.message || 'Verification email sent. Please check your inbox.');
+        navigate('/login');
+      } else {
+        alert(data.message || 'Registration failed');
+      }
+    } catch (err) {
+      alert('Registration error');
+    } finally {
       setLoading(false);
-      alert("Registration started! Please check your email and verify your account before logging in.");
-      navigate("/login");
-    });
-    setLoading(false);
+    }
   };
 
   return (
@@ -120,6 +134,11 @@ export default function Signup() {
 
           {/* FORM */}
           <form className="space-y-4 mt-6" onSubmit={onSubmit}>
+            {verifyInfo?.url && (
+              <div style={{ backgroundColor: '#3F2BC6', color: 'white', borderRadius: '8px', padding: '8px 12px', fontSize: '12px' }}>
+                Dev verify link: <a href={verifyInfo.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline', color: 'white' }}>{verifyInfo.url}</a>
+              </div>
+            )}
             {/* Name and Last Name - Side by Side */}
             <div style={{ display: "flex", gap: "14px" }}>
               <input
