@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useRef, useEffect, useMemo } from 'react'
 import Sidebar from '../components/Sidebar'
 import ChatWidget from '../components/ChatWidget'
 import { useAuth } from '../context/AuthContext'
@@ -59,59 +59,12 @@ export default function Analytics() {
 
   // Mock datasets fallback for offline/dev
   const mockData = useMemo(() => ({
-    '7': weekly.slice(-7).map(w => Math.round((w.duration || 0)/3600)),
-    '4': weekly.slice(-4).map(w => Math.round((w.duration || 0)/3600)),
-    '12': weekly.slice(-12).map(w => Math.round((w.duration || 0)/3600)),
+    '7': weekly.slice(-7).map(w => Math.round((w.duration || 0) / 60)),
+    '4': weekly.slice(-4).map(w => Math.round((w.duration || 0) / 60)),
+    '12': weekly.slice(-12).map(w => Math.round((w.duration || 0) / 60)),
   }), [weekly])
 
-  const API_BASE = import.meta.env.VITE_API_BASE || ''
-
-  const fetchStats = useCallback(async (range = '7', { updateTop = false } = {}) => {
-    try {
-      setLoading(true)
-      setError(null)
-      const userId = user?._id
-      const url = `${API_BASE}/api/analytics/stats?range=${range}${userId ? `&userId=${userId}` : ''}`
-      const res = await fetch(url, { headers: { 'Content-Type': 'application/json' } })
-      if (!res.ok) {
-        const payload = await res.json().catch(() => ({}))
-        throw new Error(payload.error || 'Failed to load analytics')
-      }
-      const payload = await res.json()
-      // update top-level stats only when requested (avoid overwriting when fetching chart-specific ranges)
-      if (updateTop) {
-        setStats([
-          { label: 'Hours Studied', value: payload.totalHours ?? 0 },
-          { label: 'Topics Covered', value: payload.topicsFinished ?? 0 },
-          { label: 'Study Streak', value: payload.streak ?? 0 },
-        ])
-      }
-      // always update chart data returned for this range
-      if (payload.line) setLineData(payload.line)
-      if (payload.donut) setDonutData(payload.donut)
-    } catch (err) {
-      console.error('fetchStats error', err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }, [API_BASE, user])
-
-  // On mount: fetch global stats (all time) and initial charts
-  useEffect(() => {
-    fetchStats('all', { updateTop: true })
-    fetchStats(lineRangeKey, { updateTop: false })
-    fetchStats(donutRangeKey, { updateTop: false })
-  }, [])
-
-  // When a range selector changes, fetch appropriate chart data
-  useEffect(() => {
-    fetchStats(lineRangeKey, { updateTop: false })
-  }, [lineRangeKey])
-
-  useEffect(() => {
-    fetchStats(donutRangeKey, { updateTop: false })
-  }, [donutRangeKey])
+  // No server-side chart endpoints used here; derive chart data from weekly summary
 
   // Build SVG path and points so the line passes through each dot
   // Scale always starts at 0 (so Y axis restarts at 0) and max is rounded up to nearest hour (60 minutes)
@@ -150,49 +103,33 @@ export default function Analytics() {
   // For 7-day view, map dates to Monday..Sunday so chart always starts on Monday
   let lineValues = []
   if (lineRangeKey === '7') {
-    // initialize Monday..Sunday with zeros
-    const week = Array.from({ length: 7 }, () => 0)
-    if (lineData && Array.isArray(lineData.labels) && Array.isArray(lineData.values)) {
-      for (let i = 0; i < lineData.labels.length; i++) {
-        const lbl = lineData.labels[i]
-        const val = lineData.values[i] || 0
-        const d = new Date(lbl)
-        // map JS getDay() (0=Sun..6=Sat) to Monday=0..Sunday=6
-        const idx = ((d.getDay() + 6) % 7)
-        week[idx] = (week[idx] || 0) + val
-      }
-    }
-    // if no backend data, week stays all zeros (no mock data)
-    lineValues = week
+    // last 7 entries from weekly; convert seconds to minutes
+    const last7 = weekly.slice(-7)
+    lineValues = last7.map(w => Math.round((w.duration || 0) / 60))
+  } else if (lineRangeKey === '30') {
+    const last30 = weekly.slice(-30)
+    lineValues = last30.map(w => Math.round((w.duration || 0) / 60))
+    // if backend only returns weeks, we might have fewer than 30 points
+    if (lineValues.length === 0) lineValues = Array.from({ length: 30 }, () => 0)
   } else {
-    if (lineData && lineData.values && lineData.values.length) {
-      lineValues = lineData.values
-    } else {
-      // fallback to zeros of appropriate length (avoid showing mock activity)
-      if (lineRangeKey === '30') lineValues = Array.from({ length: 30 }, () => 0)
-      else if (lineRangeKey === '365') lineValues = Array.from({ length: 12 }, () => 0)
-      else lineValues = []
-    }
+    // 365 -> show monthly aggregates; weekly may carry labels as dates
+    const last12 = weekly.slice(-12)
+    lineValues = last12.map(w => Math.round((w.duration || 0) / 60))
+    if (lineValues.length === 0) lineValues = Array.from({ length: 12 }, () => 0)
   }
   const { path: linePath, points: linePoints, padTop, h, scaleMaxHours, hours } = buildLineChart(lineValues)
 
   // helper to format x-axis labels
   function formatXAxisLabels() {
-    if (lineRangeKey === '7') return ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
-    if (lineData && Array.isArray(lineData.labels) && lineData.labels.length) {
-      return lineData.labels.map(lbl => {
-        try {
-          const d = new Date(lbl)
-          if (lineRangeKey === '30') return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-          return d.toLocaleDateString(undefined, { month: 'short' })
-        } catch (e) {
-          return lbl
-        }
-      })
-    }
-    // fallback
-    if (lineRangeKey === '30') return Array.from({ length: 30 }, (_, i) => `D${i+1}`)
-    return Array.from({ length: lineValues.length }, (_, i) => `M${i+1}`)
+    if (lineRangeKey === '7') return weekly.slice(-7).map(w => {
+      try { return new Date(w.label).toLocaleDateString(undefined, { weekday: 'short' }) } catch { return 'Day' }
+    })
+    if (lineRangeKey === '30') return weekly.slice(-30).map(w => {
+      try { return new Date(w.label).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) } catch { return 'D' }
+    })
+    return weekly.slice(-12).map(w => {
+      try { return new Date(w.label).toLocaleDateString(undefined, { month: 'short' }) } catch { return 'M' }
+    })
   }
 
   useEffect(() => {
