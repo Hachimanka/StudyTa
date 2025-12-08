@@ -1,5 +1,6 @@
 import express from 'express';
 import Quiz from '../models/Quiz.js';
+import { startSession, endSession, updateSessionMode, completeSession } from '../controllers/studymodeController.js'
 
 const router = express.Router();
 
@@ -46,3 +47,9 @@ router.get('/quizzes/:userId', async (req, res) => {
 });
 
 export default router;
+
+// Study sessions
+router.post('/sessions/start', startSession)
+router.post('/sessions/end', endSession)
+router.post('/sessions/update-mode', updateSessionMode)
+router.post('/sessions/complete', completeSession)

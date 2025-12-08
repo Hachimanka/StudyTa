@@ -2,20 +2,25 @@ import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import Sidebar from '../components/Sidebar'
 import ChatWidget from '../components/ChatWidget'
 import { useAuth } from '../context/AuthContext'
+import axios from 'axios'
 
 export default function Analytics() {
-  // Local UI state and placeholders (will be replaced by backend data)
   const { user } = useAuth()
-  const [stats, setStats] = useState([
-    { label: 'Hours Studied', value: 0 },
-    { label: 'Topics Covered', value: 0 },
-    { label: 'Study Streak', value: 0 },
-  ])
-
-  const [lineData, setLineData] = useState(null)
-  const [donutData, setDonutData] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [summary, setSummary] = useState({ totalSessions: 0, totalDurationSeconds: 0, byMode: [] })
+  const [weekly, setWeekly] = useState([])
+  const formatHMS = (secs) => {
+    const s = Math.max(0, Math.floor(secs || 0))
+    const h = Math.floor(s / 3600)
+    const m = Math.floor((s % 3600) / 60)
+    const ss = s % 60
+    const pad = (n) => String(n).padStart(2, '0')
+    return `${h}:${pad(m)}:${pad(ss)}`
+  }
+  const stats = [
+    { label: 'Time Studied', value: formatHMS(summary.totalDurationSeconds || 0) },
+    { label: 'Total Sessions', value: summary.totalSessions || 0 },
+    { label: 'Active Modes', value: (summary.byMode || []).length },
+  ]
 
   // Dropdown state for chart range selectors
   const [lineOpen, setLineOpen] = useState(false)
@@ -54,10 +59,10 @@ export default function Analytics() {
 
   // Mock datasets fallback for offline/dev
   const mockData = useMemo(() => ({
-    '7': [30, 40, 20, 50, 45, 25, 35],
-    '30': Array.from({ length: 30 }, () => Math.floor(Math.random() * 60)),
-    '365': Array.from({ length: 12 }, () => Math.floor(Math.random() * 200)),
-  }), [])
+    '7': weekly.slice(-7).map(w => Math.round((w.duration || 0)/3600)),
+    '4': weekly.slice(-4).map(w => Math.round((w.duration || 0)/3600)),
+    '12': weekly.slice(-12).map(w => Math.round((w.duration || 0)/3600)),
+  }), [weekly])
 
   const API_BASE = import.meta.env.VITE_API_BASE || ''
 
@@ -189,6 +194,24 @@ export default function Analytics() {
     if (lineRangeKey === '30') return Array.from({ length: 30 }, (_, i) => `D${i+1}`)
     return Array.from({ length: lineValues.length }, (_, i) => `M${i+1}`)
   }
+
+  useEffect(() => {
+    async function load() {
+      if (!user?._id) return
+      try {
+        const base = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+        const [sRes, wRes] = await Promise.all([
+          axios.get(`${base}/api/analytics/summary`, { params: { userId: user._id } }),
+          axios.get(`${base}/api/analytics/weekly`, { params: { userId: user._id, weeks: 12 } })
+        ])
+        setSummary(sRes.data || { totalSessions: 0, totalDurationSeconds: 0, byMode: [] })
+        setWeekly((wRes.data?.weeks || []).map(x => ({ label: x.label, duration: x.duration, sessions: x.sessions })))
+      } catch (err) {
+        console.error('Load analytics failed', err)
+      }
+    }
+    load()
+  }, [user?._id])
 
   return (
     <div className="flex min-h-screen">
@@ -329,71 +352,34 @@ export default function Analytics() {
               </div>
 
               <div className="flex items-center gap-8">
-                <div className="flex-shrink-0">
-                  {/* Donut chart: stacked stroked circles to create slices */}
-                  <svg width="260" height="180" viewBox="0 0 260 180">
-                    <defs />
-                    <g transform="translate(130,90)">
-                      <circle r="56" fill="#fff" />
-                      {(() => {
-                        const colors = ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#BDA08A','#9C7A5A']
-                        const radius = 56
-                        const circumference = 2 * Math.PI * radius
-                        const strokeWidth = 26
-                        const items = (donutData && donutData.length) ? donutData : []
-                        const total = items.reduce((s, it) => s + (it.minutes || 0), 0) || 0
-                        let offset = 0
-                        if (total === 0) {
-                          // render a faint ring as placeholder
-                          return (
-                            <g>
-                              <circle r={radius} fill="none" stroke="#E9D8D0" strokeWidth={strokeWidth} transform="rotate(-90)" />
-                              <circle r="30" fill="#fff" />
-                            </g>
-                          )
-                        }
-
-                        return items.map((it, idx) => {
-                          const portion = (it.minutes || 0) / total
-                          const len = portion * circumference
-                          const dashArray = `${len} ${Math.max(0, circumference - len)}`
-                          const dashOffset = offset
-                          offset += len
-                          const color = colors[idx % colors.length]
-                          return (
-                            <g key={idx}>
-                              <circle r={radius} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="butt"
-                                strokeDasharray={dashArray}
-                                strokeDashoffset={-dashOffset}
-                                transform="rotate(-90)" />
-                              <circle r="30" fill="#fff" />
-                            </g>
-                          )
-                        })
-                      })()}
-                    </g>
-                  </svg>
-                </div>
+                <svg width="260" height="180" viewBox="0 0 260 180" className="flex-shrink-0">
+                  <circle cx="130" cy="90" r="56" fill="#fff" />
+                  {(() => {
+                    const total = (summary.byMode || []).reduce((a,b)=> a + (b.duration||0), 0)
+                    const colors = ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D']
+                    let acc = 0
+                    return (summary.byMode || []).map((m, idx) => {
+                      const frac = total > 0 ? (m.duration || 0) / total : 0
+                      const dash = Math.max(0, Math.round(frac * 2 * Math.PI * 56))
+                      const gap = Math.round((2 * Math.PI * 56) - dash)
+                      const rotate = (acc / (2 * Math.PI * 56)) * 360
+                      acc += dash
+                      return (
+                        <circle key={m.mode} cx="130" cy="90" r="56" stroke={colors[idx%colors.length]} strokeWidth="26" strokeDasharray={`${dash} ${gap}`} strokeLinecap="butt" fill="none" transform={`rotate(${rotate-90} 130 90)`} />
+                      )
+                    })
+                  })()}
+                  <circle cx="130" cy="90" r="30" fill="#fff" />
+                </svg>
 
                 <ul className="text-sm text-[#5C4333] space-y-3">
-                  {(donutData && donutData.length) ? donutData.map((d, i) => {
-                    const colors = ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#BDA08A','#9C7A5A']
-                    const color = colors[i % colors.length]
-                    const minutes = d.minutes || 0
-                    const pct = donutData.reduce((s,it)=>s+(it.minutes||0),0) || 0
-                    const percent = pct ? Math.round((minutes / pct) * 100) : 0
-                    return (
-                      <li key={i} className="flex items-center justify-between w-56">
-                        <div className="flex items-center">
-                          <span className="inline-block w-3 h-3 mr-3 rounded-sm" style={{ backgroundColor: color }}></span>
-                          <span>{d.topic}</span>
-                        </div>
-                        <div className="text-xs text-[#5C4333]">{minutes}m · {percent}%</div>
-                      </li>
-                    )
-                  }) : (
-                    <li className="text-xs text-[#5C4333]">No topic data available</li>
-                  )}
+                  {(summary.byMode || []).map((m, idx) => (
+                    <li key={m.mode} className="flex items-center">
+                      <span className="inline-block w-3 h-3 mr-3 rounded-sm" style={{ backgroundColor: ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D'][idx%6] }}></span>
+                      {m.mode} — {Math.round((m.duration||0)/3600)}h
+                    </li>
+                  ))}
+                  {(summary.byMode || []).length === 0 && <li className="text-[#5C4333]">No study sessions yet.</li>}
                 </ul>
               </div>
             </section>

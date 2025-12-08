@@ -17,7 +17,14 @@ export async function register(req, res) {
 export async function verify(req, res) {
   try {
     const { token } = req.query;
-    await registerService.verifyToken(token);
+    const user = await registerService.verifyToken(token);
+    // If a frontend base is configured, redirect the user there with a success hint
+    const frontendBase = process.env.FRONTEND_BASE;
+    if (frontendBase) {
+      const target = `${frontendBase.replace(/\/$/, '')}/login?verified=1`;
+      return res.redirect(target);
+    }
+    // Otherwise return a simple success message
     res.send("Email verified! You can now log in.");
   } catch (err) {
     console.error("verify controller error:", err);

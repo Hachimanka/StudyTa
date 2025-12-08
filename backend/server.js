@@ -17,7 +17,7 @@ import studymodeRoute from './routes/studymodeRoute.js';
 import calendarRoute from './routes/calendarRoute.js';
 import musicRoutes from './routes/musicRoute.js';
 import profileRoute from './routes/profileRoute.js';
-import analyticsRoutes from './routes/analyticsRoutes.js'
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -74,6 +74,8 @@ app.use('/api/summarize', summarizeRoutes);
 app.use('/api/studymode', studymodeRoute);
 // Calendar routes
 app.use('/api/calendar', calendarRoute);
+// Analytics routes (based on StudyMode sessions)
+app.use('/api/analytics', analyticsRoutes);
 
 // Music routes (upload, list, update, delete)
 app.use('/api/music', musicRoutes);
