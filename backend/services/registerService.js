@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import Users from "../models/userModel.js";
+import Users from "../models/Users.js";
 
 // In-memory pending verification store. Replace with DB in production.
 const pendingVerifications = {};

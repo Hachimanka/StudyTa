@@ -9,7 +9,7 @@ export default function TrueFalseMode() {
   const { darkMode } = useSettings();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const startedAtRef = useRef(Date.now());
+  const startedAtRef = useRef(null);
 
   // Editable title state
   const [title, setTitle] = useState('Title!!!!!');
@@ -161,6 +161,11 @@ export default function TrueFalseMode() {
     if (!questions.length || finished) return;
     if (userAnswers[qIndex] !== null) return; // already answered
 
+    // Start the timer on the user's first interaction (first answer)
+    if (!startedAtRef.current) {
+      startedAtRef.current = Date.now();
+    }
+
     setSelected(val);
     setShowFeedback(true);
 
@@ -193,10 +198,11 @@ export default function TrueFalseMode() {
     (async () => {
       try {
         if (!user?._id) return;
-        const durationSeconds = Math.max(0, Math.floor((Date.now() - (startedAtRef.current || Date.now()))/1000));
+        const startMs = startedAtRef.current || Date.now();
+        const durationSeconds = Math.max(0, Math.floor((Date.now() - startMs)/1000));
         await fetch(`/api/studymode/sessions/complete`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user._id, mode: 'trueFalse', startedAt: startedAtRef.current, endedAt: Date.now(), durationSeconds })
+          body: JSON.stringify({ userId: user._id, mode: 'trueFalse', startedAt: startMs, endedAt: Date.now(), durationSeconds })
         });
       } catch (e) {
         console.warn('Failed to record completed session', e);

@@ -9,7 +9,7 @@ export default function MultipleChoiceMode() {
   const { darkMode } = useSettings();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const startedAtRef = useRef(Date.now());
+  const startedAtRef = useRef(null);
 
   // Editable title state
   const [title, setTitle] = useState('Title11111');
@@ -44,10 +44,11 @@ export default function MultipleChoiceMode() {
     (async () => {
       try {
         if (!user?._id) return;
-        const durationSeconds = Math.max(0, Math.floor((Date.now() - (startedAtRef.current || Date.now()))/1000));
+        const startMs = startedAtRef.current || Date.now();
+        const durationSeconds = Math.max(0, Math.floor((Date.now() - startMs)/1000));
         await fetch(`/api/studymode/sessions/complete`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user._id, mode: 'multipleChoice', startedAt: startedAtRef.current, endedAt: Date.now(), durationSeconds })
+          body: JSON.stringify({ userId: user._id, mode: 'multipleChoice', startedAt: startMs, endedAt: Date.now(), durationSeconds })
         });
       } catch (e) {
         console.warn('Failed to record completed session', e);
@@ -83,6 +84,7 @@ export default function MultipleChoiceMode() {
     setFinished(false);
     setSelected(null);
     setShowFeedback(false);
+    startedAtRef.current = null;
   }, [questions]);
 
   useEffect(() => {
@@ -435,6 +437,7 @@ export default function MultipleChoiceMode() {
                           key={idx}
                           onClick={() => {
                             if (showFeedback || finished) return;
+                            if (!startedAtRef.current) startedAtRef.current = Date.now();
                             setSelected(idx);
                             setShowFeedback(true);
                             setUserAnswers(prev => {
