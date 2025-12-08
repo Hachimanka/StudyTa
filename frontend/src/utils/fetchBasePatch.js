@@ -2,7 +2,7 @@
 // Only affects requests starting with '/api/' to keep external URLs untouched.
 (function patchFetchBase() {
   try {
-    const API_BASE = (typeof import !== 'undefined' && import.meta && import.meta.env && import.meta.env.VITE_API_BASE) || '';
+    const API_BASE = (typeof importMeta !== 'undefined' ? importMeta.env?.VITE_API_BASE : import.meta?.env?.VITE_API_BASE) || import.meta?.env?.VITE_API_BASE || '';
     if (!API_BASE || typeof window === 'undefined' || !window.fetch) return;
 
     const base = String(API_BASE).replace(/\/$/, '');
