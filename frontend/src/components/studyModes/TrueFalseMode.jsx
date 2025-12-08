@@ -8,6 +8,85 @@ export default function TrueFalseMode() {
   const { darkMode } = useSettings();
   const navigate = useNavigate();
 
+  // API base URL
+  const API_BASE = import.meta.env.VITE_API_BASE || '';
+
+  // Function to record study sessions
+  const recordStudySession = async (topic, durationMinutes) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user?._id;
+      if (!userId) return;
+      
+      await fetch(`${API_BASE}/api/analytics/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId, 
+          topic, 
+          durationMinutes: Math.max(0.5, Math.round(durationMinutes * 10) / 10)
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to record study session', err);
+    }
+  };
+
+  // Function to trigger daily study start - only triggers streak once per day
+  const triggerDailyStudyStart = async () => {
+    try {
+      const today = new Date().toDateString();
+      const lastStudyDate = localStorage.getItem('studyta_last_study_date');
+      
+      // Only trigger if we haven't studied today yet
+      if (lastStudyDate === today) {
+        return; // Already triggered today
+      }
+      
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user?._id;
+      if (!userId) return;
+      
+      // Mark today as studied
+      localStorage.setItem('studyta_last_study_date', today);
+      
+      // Record a minimal session to trigger the streak
+      await fetch(`${API_BASE}/api/analytics/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId, 
+          topic: 'Daily Study Start', 
+          durationMinutes: 0.1 // Minimal to just trigger streak
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to trigger daily study start', err);
+    }
+  };
+
+  // Function to record topic completion
+  const recordTopicCompletion = async (topic) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user?._id;
+      if (!userId) return;
+      
+      // Record a minimal study session to mark topic as completed
+      await fetch(`${API_BASE}/api/analytics/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId, 
+          topic, 
+          durationMinutes: 1 // Minimum to count as studied
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to record topic completion', err);
+    }
+  };
+
   // Editable title state
   const [title, setTitle] = useState('Title!!!!!');
   const [editingTitle, setEditingTitle] = useState(false);
@@ -42,6 +121,45 @@ export default function TrueFalseMode() {
   const [loading, setLoading] = useState(false);
   const [savedAlready, setSavedAlready] = useState(false);
 
+  // Study time tracking states
+  const [startTime, setStartTime] = useState(null);
+  const [totalStudyTime, setTotalStudyTime] = useState(0);
+
+  // Start tracking when component mounts or when quiz starts
+  useEffect(() => {
+    if (questions.length > 0 && !finished) {
+      setStartTime(Date.now());
+      // Trigger daily study start (streak) only once per day
+      triggerDailyStudyStart();
+    }
+  }, [questions, finished]);
+
+  // Track time when user answers questions
+  useEffect(() => {
+    if (selected !== null && startTime) {
+      const endTime = Date.now();
+      const minutes = (endTime - startTime) / (1000 * 60);
+      setTotalStudyTime(prev => prev + minutes);
+      setStartTime(Date.now()); // Reset for next question
+    }
+  }, [selected, startTime]);
+
+  // Record session when component unmounts or quiz finishes
+  useEffect(() => {
+    return () => {
+      if (totalStudyTime > 0) {
+        recordStudySession(title || 'True/False Quiz', totalStudyTime);
+      }
+    };
+  }, [totalStudyTime, title]);
+
+  // Also record when quiz finishes
+  useEffect(() => {
+    if (finished && totalStudyTime > 0) {
+      recordStudySession(title || 'True/False Quiz', totalStudyTime);
+    }
+  }, [finished, totalStudyTime, title]);
+
   // Save current quiz to backend
   const handleSave = async () => {
     if (!questions || !questions.length) {
@@ -51,15 +169,19 @@ export default function TrueFalseMode() {
     setSaving(true);
     setSaveMessage('');
     try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const elapsedMinutes = startTime ? Math.max(1, Math.round((Date.now() - startTime) / 60000)) : 1;
       const payload = {
         title: title || 'Untitled Quiz',
         mode: 'trueFalse',
         questions,
         score,
         total: questions.length,
+        userId: user?._id,
+        durationMinutes: elapsedMinutes
       };
 
-      const res = await fetch('/api/studymode/save-quiz', {
+      const res = await fetch(`${API_BASE}/api/studymode/save-quiz`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -71,6 +193,9 @@ export default function TrueFalseMode() {
         setSaveMessage(data?.error || 'Save failed');
       } else {
         setSaveMessage('Saved');
+        // Record topic completion
+        await recordTopicCompletion(title || 'Study Session');
+        
         // Mark as saved locally to avoid duplicate saves and skip modal
         try {
           const rawSess = sessionStorage.getItem('studyta_session');
