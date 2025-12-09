@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import express from "express";
 import Users from "../models/Users.js";
 import { login } from "../controllers/loginController.js";
-import { register, verify } from "../controllers/registerController.js";
+import { register, verify, debugCheckToken, resend } from "../controllers/registerController.js";
 import { requestReset, reset } from "../controllers/forgotPasswordController.js";
 
 const router = express.Router();
@@ -30,6 +30,9 @@ router.post("/reset-password", reset);
 // Registration + verification delegated to controller
 router.post("/register", register);
 router.get("/verify-email", verify);
+router.post("/resend-verification", resend);
+// Debug route to inspect token status
+router.get("/debug/verify-token", debugCheckToken);
 
 router.get("/users", async (req, res) => {
   try {

@@ -27,11 +27,18 @@ export async function register(name, email, password, sendVerification) {
 }
 
 export async function verifyToken(token) {
+  console.log('[verifyToken] Incoming token:', token);
   const record = await EmailVerification.findOne({ token });
+  if (!record) {
+    console.warn('[verifyToken] No record found for token');
+  } else {
+    console.log('[verifyToken] Found record for email:', record.email, 'expiresAt:', record.expiresAt);
+  }
   if (!record) {
     throw { status: 400, message: "Invalid or expired verification token" };
   }
   if (record.expiresAt && record.expiresAt.getTime() < Date.now()) {
+    console.warn('[verifyToken] Token expired at:', record.expiresAt);
     await EmailVerification.deleteOne({ _id: record._id });
     throw { status: 400, message: "Invalid or expired verification token" };
   }
@@ -39,6 +46,7 @@ export async function verifyToken(token) {
   // Prevent duplicate account creation
   const existing = await Users.findOne({ email: record.email });
   if (existing) {
+    console.log('[verifyToken] User already exists for email, cleaning token');
     await EmailVerification.deleteOne({ _id: record._id });
     return existing;
   }
@@ -57,6 +65,7 @@ export async function verifyToken(token) {
 
   // Clean up token
   await EmailVerification.deleteOne({ _id: record._id });
+  console.log('[verifyToken] Verification complete, token removed');
   return newUser;
 }
 
