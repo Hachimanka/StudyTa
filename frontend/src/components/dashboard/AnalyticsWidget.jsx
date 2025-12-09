@@ -1,13 +1,27 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
-const AnalyticsWidget = ({ darkMode, themeColors, studyStats }) => {
+const AnalyticsWidget = ({ darkMode, themeColors, studyStats, analyticsStats }) => {
+  const navigate = useNavigate();
+  
+  // Use analyticsStats from API if available, fallback to studyStats from localStorage
+  const hoursStudied = analyticsStats?.hoursStudied ?? Math.floor((studyStats?.totalTime || 0) / 60);
+  const topicsCovered = analyticsStats?.topicsCovered ?? (studyStats?.topics || 0);
+
+  const handleNavigateToAnalytics = () => {
+    navigate('/analytics');
+  };
+  
   return (
     <div>
       <div className="grid grid-cols-2 gap-4">
-        {/* Hours Studied Box */}
-        <div className={`p-2 rounded-xl shadow transition-colors duration-300 ${
-          darkMode ? "bg-[#2e2119]" : "bg-white"
-        }`}>
+        {/* Hours Studied Box - Clickable */}
+        <button
+          onClick={handleNavigateToAnalytics}
+          className={`p-2 rounded-xl shadow transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-lg ${
+            darkMode ? "bg-[#2e2119] hover:bg-[#3a2a1f]" : "bg-white hover:bg-gray-50"
+          }`}
+        >
           <div className="flex items-center justify-between">
             {/* Hours Studied Text and Number */}
             <div className="text-center">
@@ -23,7 +37,7 @@ const AnalyticsWidget = ({ darkMode, themeColors, studyStats }) => {
                   darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                 }`}
               >
-                {Math.floor(studyStats.totalTime / 60) || 0}
+                {hoursStudied}
               </p>
             </div>
             
@@ -37,12 +51,15 @@ const AnalyticsWidget = ({ darkMode, themeColors, studyStats }) => {
               </svg>
             </div>
           </div>
-        </div>
+        </button>
 
-        {/* Topics Covered Box */}
-        <div className={`p-2 rounded-xl shadow transition-colors duration-300 ${
-          darkMode ? "bg-[#2e2119]" : "bg-white"
-        }`}>
+        {/* Topics Covered Box - Clickable */}
+        <button
+          onClick={handleNavigateToAnalytics}
+          className={`p-2 rounded-xl shadow transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-lg ${
+            darkMode ? "bg-[#2e2119] hover:bg-[#3a2a1f]" : "bg-white hover:bg-gray-50"
+          }`}
+        >
           <div className="flex items-center justify-between">
             {/* Topics Covered Text and Number */}
             <div className="text-center">
@@ -58,7 +75,7 @@ const AnalyticsWidget = ({ darkMode, themeColors, studyStats }) => {
                   darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                 }`}
               >
-                {studyStats.topics || 0}
+                {topicsCovered}
               </p>
             </div>
             
@@ -72,7 +89,7 @@ const AnalyticsWidget = ({ darkMode, themeColors, studyStats }) => {
               </svg>
             </div>
           </div>
-        </div>
+        </button>
       </div>
     </div>
   );

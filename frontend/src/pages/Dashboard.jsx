@@ -15,6 +15,11 @@ export default function Home() {
   const { user } = useAuth();
   const { darkMode, studyStats, profileName, getThemeColors } = useSettings();
   const [fullName, setFullName] = useState("");
+  const [analyticsStats, setAnalyticsStats] = useState({
+    hoursStudied: 0,
+    topicsCovered: 0,
+    streak: 0
+  }); // Stats from analytics API
   const [libraryStats, setLibraryStats] = useState({
     totalFiles: 0,
     totalFolders: 0,
@@ -24,6 +29,31 @@ export default function Home() {
   const [recentActivities, setRecentActivities] = useState([]);
   const [weeklyProgress, setWeeklyProgress] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Fetch analytics stats from API (shared with Analytics page)
+  const fetchAnalyticsStats = async () => {
+    try {
+      const API_BASE = import.meta.env.VITE_API_BASE || '';
+      let userId = user?._id;
+      if (!userId) {
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        userId = userData?._id;
+      }
+      if (!userId) return;
+
+      const res = await fetch(`${API_BASE}/api/analytics/stats?userId=${userId}&range=all`);
+      if (res.ok) {
+        const data = await res.json();
+        setAnalyticsStats({
+          hoursStudied: data.totalHours || 0,
+          topicsCovered: data.topicsFinished || 0,
+          streak: data.streak || 0
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch analytics stats:', err);
+    }
+  };
 
   // Fetch library statistics
   const fetchLibraryStats = async () => {
@@ -155,7 +185,8 @@ export default function Home() {
       setLoading(true);
       await Promise.all([
         fetchUserInfo(),
-        fetchLibraryStats()
+        fetchLibraryStats(),
+        fetchAnalyticsStats()
       ]);
       generateRecentActivities();
       generateWeeklyProgress();
@@ -295,7 +326,7 @@ const avatarUrl = (() => {
                         darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                       }`}
                     >
-                      {studyStats.streak}
+                      {analyticsStats.streak}
                     </p>
                   </div>
                   
@@ -392,7 +423,7 @@ const avatarUrl = (() => {
               </h3>
 
               {/* This Week Analytics */}
-              <AnalyticsWidget darkMode={darkMode} themeColors={themeColors} studyStats={studyStats} /> 
+              <AnalyticsWidget darkMode={darkMode} themeColors={themeColors} studyStats={studyStats} analyticsStats={analyticsStats} /> 
             </div>
           </div>
         </div>
