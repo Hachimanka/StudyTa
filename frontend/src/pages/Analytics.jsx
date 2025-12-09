@@ -22,39 +22,22 @@ export default function Analytics() {
     { label: 'Active Modes', value: (summary.byMode || []).length },
   ]
 
-  // Dropdown state for chart range selectors
-  const [lineOpen, setLineOpen] = useState(false)
-  const [donutOpen, setDonutOpen] = useState(false)
+  // Saved study sets for Time per Topic (from localStorage)
+  const [savedStudySets, setSavedStudySets] = useState([])
 
-  // keys represent number of points shown for the line chart
-  const [lineRangeKey, setLineRangeKey] = useState('7')
-  const [donutRangeKey, setDonutRangeKey] = useState('7')
-
-  const lineRangeLabel = lineRangeKey === '7' ? 'Last 7 days' : lineRangeKey === '30' ? 'Last 30 days' : 'Last year'
-  const donutRangeLabel = donutRangeKey === '7' ? 'Last 7 days' : donutRangeKey === '30' ? 'Last 30 days' : donutRangeKey === '365' ? 'Last year' : 'All time'
-
-  const lineRangeOptions = [
-    { key: '7', label: 'Last 7 days' },
-    { key: '30', label: 'Last 30 days' },
-    { key: '365', label: 'Last year' },
-  ]
-  const donutRangeOptions = [
-    { key: '7', label: 'Last 7 days' },
-    { key: '30', label: 'Last 30 days' },
-    { key: '365', label: 'Last year' },
-    { key: 'all', label: 'All time' },
-  ]
-
-  const lineBtnRef = useRef(null)
-  const donutBtnRef = useRef(null)
-
+  // Load saved study sets from localStorage
   useEffect(() => {
-    function onDocClick(e) {
-      if (lineBtnRef.current && !lineBtnRef.current.contains(e.target)) setLineOpen(false)
-      if (donutBtnRef.current && !donutBtnRef.current.contains(e.target)) setDonutOpen(false)
+    try {
+      const raw = localStorage.getItem('studyta_saved_sets')
+      if (raw) {
+        const sets = JSON.parse(raw)
+        if (Array.isArray(sets)) {
+          setSavedStudySets(sets)
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load saved study sets', e)
     }
-    document.addEventListener('mousedown', onDocClick)
-    return () => document.removeEventListener('mousedown', onDocClick)
   }, [])
 
   // Mock datasets fallback for offline/dev
@@ -67,35 +50,64 @@ export default function Analytics() {
   // No server-side chart endpoints used here; derive chart data from weekly summary
 
   // Build SVG path and points so the line passes through each dot
-  // Scale always starts at 0 (so Y axis restarts at 0) and max is rounded up to nearest hour (60 minutes)
+  // Y-axis shows hour labels with appropriate spacing for readability
   function buildLineChart(values, innerWidth = 520, innerHeight = 180) {
-    if (!values || values.length === 0) return { path: '', points: [], padTop: 8, h: innerHeight - 16, scaleMaxHours: 1, hours: [0,1] }
-    const padTop = 8
-    const padBottom = 8
-    const h = innerHeight - padTop - padBottom
-    const count = values.length
-    const step = count === 1 ? 0 : innerWidth / (count - 1)
+    if (!values || values.length === 0) {
+      // Return empty chart with proper defaults (0-4 hours, showing 0, 2, 4)
+      const padTop = 8;
+      const h = innerHeight - padTop - 8;
+      return { 
+        path: '', 
+        points: [], 
+        padTop, 
+        h, 
+        scaleMaxHours: 4, 
+        hourLabels: [0, 2, 4] 
+      };
+    }
+    
+    const padTop = 8;
+    const padBottom = 8;
+    const h = innerHeight - padTop - padBottom;
+    const count = values.length;
+    const step = count === 1 ? 0 : innerWidth / (count - 1);
 
-    // scale from 0 to nearest-hour-above-max, but do not add extra padding
-    // unless the base exceeds 5 hours — in that case add one extra hour
-    const maxVal = Math.max(...values, 0)
-    const baseHours = Math.ceil(maxVal / 60)
-    let scaleMaxHours = Math.max(1, baseHours)
-    if (baseHours > 5) scaleMaxHours = baseHours + 1
-    const scaleMaxMinutes = scaleMaxHours * 60
+    // Convert minutes to hours for display, capped at 24 hours per day
+    const hoursValues = values.map(v => Math.min(v / 60, 24));
+    const maxVal = Math.max(...hoursValues, 0);
+    
+    // Scale based on max value, round up to nice intervals for readability
+    // Use intervals: 4, 6, 8, 12, 16, 20, 24 hours
+    let scaleMaxHours;
+    if (maxVal <= 4) scaleMaxHours = 4;
+    else if (maxVal <= 6) scaleMaxHours = 6;
+    else if (maxVal <= 8) scaleMaxHours = 8;
+    else if (maxVal <= 12) scaleMaxHours = 12;
+    else if (maxVal <= 16) scaleMaxHours = 16;
+    else if (maxVal <= 20) scaleMaxHours = 20;
+    else scaleMaxHours = 24;
 
-    const points = values.map((v, i) => {
-      const x = Math.round(i * step)
-      const t = scaleMaxMinutes === 0 ? 0.5 : (v / scaleMaxMinutes)
-      const y = Math.round(padTop + (1 - t) * h)
-      return { x, y, v }
-    })
-    const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ')
+    const points = hoursValues.map((v, i) => {
+      const x = Math.round(i * step);
+      const t = scaleMaxHours === 0 ? 0 : (v / scaleMaxHours);
+      const y = Math.round(padTop + (1 - t) * h);
+      return { x, y, v: Math.round(v * 100) / 100 }; // Round to 2 decimals
+    });
+    
+    const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+    
+    // Generate hour labels with 2-hour increments for readability (max ~5 labels)
+    const labelStep = scaleMaxHours <= 6 ? 2 : scaleMaxHours <= 12 ? 3 : 4;
+    const hourLabels = [];
+    for (let i = 0; i <= scaleMaxHours; i += labelStep) {
+      hourLabels.push(i);
+    }
+    // Ensure max is always shown
+    if (hourLabels[hourLabels.length - 1] !== scaleMaxHours) {
+      hourLabels.push(scaleMaxHours);
+    }
 
-    // generate integer hours from 0 .. scaleMaxHours
-    const hours = Array.from({ length: scaleMaxHours + 1 }, (_, i) => i)
-
-    return { path, points, padTop, h, scaleMaxHours, hours }
+    return { path, points, padTop, h, scaleMaxHours, hourLabels };
   }
 
   // prefer server-provided line values, fallback to mock data
@@ -117,7 +129,8 @@ export default function Analytics() {
     lineValues = last12.map(w => Math.round((w.duration || 0) / 60))
     if (lineValues.length === 0) lineValues = Array.from({ length: 12 }, () => 0)
   }
-  const { path: linePath, points: linePoints, padTop, h, scaleMaxHours, hours } = buildLineChart(lineValues)
+  
+  const { path: linePath, points: linePoints, padTop, h, scaleMaxHours, hourLabels } = buildLineChart(lineValues)
 
   // helper to format x-axis labels
   function formatXAxisLabels() {
@@ -164,6 +177,13 @@ export default function Analytics() {
             <p className="mt-1 text-xl transition-colors duration-300 text-[#5C4333]">Understand your learning journey with smart insights.</p>
           </header>
 
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+              <p className="font-bold">Error loading analytics</p>
+              <p>{error}</p>
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-4 mb-8">
             {stats.map((s, i) => (
               <div key={i} className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm w-72">
@@ -194,65 +214,49 @@ export default function Analytics() {
             <section className="bg-white rounded-2xl p-6 shadow-md">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-[#6F422B]">Study Progress</h3>
-                <div className="relative" ref={lineBtnRef}>
-                  <button
-                    onClick={() => setLineOpen(v => !v)}
-                    className="text-sm text-[#5C4333] border border-[#E9D8D0] px-3 py-1 rounded"
-                    aria-expanded={lineOpen}
-                  >
-                    {lineRangeLabel} ▾
-                  </button>
-
-                  {lineOpen && (
-                    <div className="absolute right-0 mt-2 w-44 bg-white rounded shadow-md z-40">
-                      <ul className="py-1">
-                        {lineRangeOptions.map(opt => (
-                          <li key={opt.key}>
-                            <button
-                              className="w-full text-left px-3 py-2 text-sm text-[#5C4333] hover:bg-[#f3e6df]"
-                              onClick={() => { setLineRangeKey(opt.key); setLineOpen(false) }}
-                            >
-                              {opt.label}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
+                <span className="text-sm text-[#5C4333] border border-[#E9D8D0] px-3 py-1 rounded">
+                  This Week
+                </span>
               </div>
 
               <div className="h-64 bg-white rounded-lg p-4">
-                <svg className="w-full h-full" viewBox="0 0 600 260" preserveAspectRatio="none">
-                  <rect width="100%" height="100%" fill="#fff" rx="12" />
-                  <g transform="translate(40,20)">
-                    {(() => {
-                      // Show labels 0..N where N = max(5, scaleMaxHours)
-                      const maxLabel = Math.max(5, scaleMaxHours || 0)
-                      const display = Array.from({ length: maxLabel + 1 }, (_, i) => i)
-                      return display.map((hr) => {
-                        // Position labels evenly from bottom (0h) to top (Nh)
-                        const ratio = hr / (maxLabel || 1)
-                        const yPos = Math.round(padTop + (1 - ratio) * h)
-                        return (
-                          <g key={hr}>
-                            <line x1={0} x2={520} y1={yPos} y2={yPos} stroke="#f3e6df" strokeWidth="1" />
-                            <text x={-12} y={yPos + 4} fontSize="11" fill="#5C4333" textAnchor="end">{`${hr}h`}</text>
-                          </g>
-                        )
-                      })
-                    })()}
-                    <path d={linePath} fill="none" stroke="#E59C5C" strokeWidth="3" strokeLinecap="round" />
-                    {linePoints.map((p, i) => (
-                      <circle key={i} cx={p.x} cy={p.y} r="5" fill="#6F422B" stroke="#fff" strokeWidth="2" />
-                    ))}
-                  </g>
-                </svg>
+                {loading ? (
+                  <div className="flex items-center justify-center h-full">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6F422B]"></div>
+                  </div>
+                ) : (
+                  <svg className="w-full h-full" viewBox="0 0 600 260" preserveAspectRatio="none">
+                    <rect width="100%" height="100%" fill="#fff" rx="12" />
+                    <g transform="translate(40,20)">
+                      {(() => {
+                        // Show hour labels on Y-axis
+                        const labels = hourLabels || [0, 0.5, 1, 1.5, 2];
+                        const maxLabel = scaleMaxHours || 2;
+                        return labels.map((hrs, idx) => {
+                          // Position labels evenly from bottom (0h) to top (max)
+                          const ratio = hrs / maxLabel;
+                          const yPos = Math.round(padTop + (1 - ratio) * h);
+                          return (
+                            <g key={idx}>
+                              <line x1={0} x2={520} y1={yPos} y2={yPos} stroke="#f3e6df" strokeWidth="1" />
+                              <text x={-8} y={yPos + 4} fontSize="11" fill="#5C4333" textAnchor="end">{`${hrs}h`}</text>
+                            </g>
+                          );
+                        });
+                      })()}
+                      <path d={linePath} fill="none" stroke="#E59C5C" strokeWidth="3" strokeLinecap="round" />
+                      {linePoints.map((p, i) => (
+                        <g key={i}>
+                          <circle cx={p.x} cy={p.y} r="5" fill="#6F422B" stroke="#fff" strokeWidth="2" />
+                          {/* Show value tooltip on hover area */}
+                          <title>{`${p.v}h`}</title>
+                        </g>
+                      ))}
+                    </g>
+                  </svg>
+                )}
                 <div className="mt-3 text-xs text-[#5C4333] flex justify-between">
-                  {(() => {
-                    const labels = formatXAxisLabels()
-                    return labels.slice(0, lineValues.length).map((d, i) => (<span key={i}>{d}</span>))
-                  })()}
+                  {xAxisLabels.map((d, i) => (<span key={i}>{d}</span>))}
                 </div>
               </div>
             </section>
@@ -260,32 +264,9 @@ export default function Analytics() {
             <section className="bg-white rounded-2xl p-6 shadow-md">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-[#6F422B]">Time per Topic</h3>
-                <div className="relative" ref={donutBtnRef}>
-                  <button
-                    onClick={() => setDonutOpen(v => !v)}
-                    className="text-sm text-[#5C4333] border border-[#E9D8D0] px-3 py-1 rounded"
-                    aria-expanded={donutOpen}
-                  >
-                    {donutRangeLabel} ▾
-                  </button>
-
-                  {donutOpen && (
-                    <div className="absolute right-0 mt-2 w-44 bg-white rounded shadow-md z-40">
-                      <ul className="py-1">
-                        {donutRangeOptions.map(opt => (
-                          <li key={opt.key}>
-                            <button
-                              className="w-full text-left px-3 py-2 text-sm text-[#5C4333] hover:bg-[#f3e6df]"
-                              onClick={() => { setDonutRangeKey(opt.key); setDonutOpen(false) }}
-                            >
-                              {opt.label}
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
+                <span className="text-sm text-[#5C4333] border border-[#E9D8D0] px-3 py-1 rounded">
+                  Saved Study Sets
+                </span>
               </div>
 
               <div className="flex items-center gap-8">
@@ -326,4 +307,3 @@ export default function Analytics() {
     </div>
   )
 }
-

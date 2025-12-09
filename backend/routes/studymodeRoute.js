@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Quiz from '../models/Quiz.js';
 import { startSession, endSession, updateSessionMode, completeSession } from '../controllers/studymodeController.js'
 
@@ -7,16 +8,18 @@ const router = express.Router();
 // TEMP: dummy user id until auth is implemented
 const TEMP_USER_ID = '507f1f77bcf86cd799439011';
 
-// Save a quiz (title, mode, questions, score)
+// Save a quiz (title, mode, questions, score) and record analytics
 router.post('/save-quiz', async (req, res) => {
 	try {
-		const { title, mode, questions, score, total, userId } = req.body;
+		const { title, mode, questions, score, total, userId, durationMinutes } = req.body;
 		if (!title || !mode || !Array.isArray(questions)) {
 			return res.status(400).json({ error: 'title, mode and questions are required' });
 		}
 
+		const finalUserId = userId || TEMP_USER_ID;
+
 		const quiz = new Quiz({
-			userId: userId || TEMP_USER_ID,
+			userId: finalUserId,
 			title,
 			mode,
 			questions,
@@ -25,6 +28,23 @@ router.post('/save-quiz', async (req, res) => {
 		});
 
 		await quiz.save();
+
+		// Also record an analytics session for this topic (counts as topic covered)
+		try {
+			// Only record if we have a valid MongoDB ObjectId
+			if (mongoose.Types.ObjectId.isValid(finalUserId)) {
+				const session = new StudySession({
+					userId: new mongoose.Types.ObjectId(finalUserId),
+					topic: title,
+					durationMinutes: typeof durationMinutes === 'number' ? durationMinutes : 1,
+					occurredAt: new Date(),
+				});
+				await session.save();
+			}
+		} catch (analyticsErr) {
+			// Don't fail the quiz save if analytics fails
+			console.warn('Analytics recording failed:', analyticsErr.message);
+		}
 
 		res.status(201).json({ message: 'Quiz saved', quizId: quiz._id });
 	} catch (err) {
