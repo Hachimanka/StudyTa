@@ -17,7 +17,7 @@ import studymodeRoute from './routes/studymodeRoute.js';
 import calendarRoute from './routes/calendarRoute.js';
 import musicRoutes from './routes/musicRoute.js';
 import profileRoute from './routes/profileRoute.js';
-import analyticsRoutes from './routes/analyticsRoutes.js'
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -47,32 +47,16 @@ if (!process.env.BACKEND_BASE) {
 
 const app = express();
 
-// Configure CORS properly - allow multiple frontend origins
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:5173',
-  process.env.FRONTEND_URL
-].filter(Boolean);
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, etc.)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    // In development, allow all localhost origins
-    if (origin.includes('localhost') || origin.includes('127.0.0.1')) {
-      return callback(null, true);
-    }
-    return callback(new Error('Not allowed by CORS'), false);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Configure CORS properly for localhost and Vercel deployment
+app.use(
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'https://study-ta-blond.vercel.app'
+    ],
+    credentials: true
+  })
+);
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -93,6 +77,8 @@ app.use('/api/summarize', summarizeRoutes);
 app.use('/api/studymode', studymodeRoute);
 // Calendar routes
 app.use('/api/calendar', calendarRoute);
+// Analytics routes (based on StudyMode sessions)
+app.use('/api/analytics', analyticsRoutes);
 
 // Music routes (upload, list, update, delete)
 app.use('/api/music', musicRoutes);

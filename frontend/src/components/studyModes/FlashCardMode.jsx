@@ -3,10 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSettings } from '../../context/SettingsContext';
 import Sidebar from '../Sidebar';
 import ConfirmSaveModal from '../ConfirmSaveModal';
+import { useAuth } from '../../context/AuthContext';
 
 export default function FlashCardMode() {
   const { darkMode } = useSettings();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const startedAtRef = useRef(Date.now());
   const [isFlipped, setIsFlipped] = useState(false);
   const { state } = useLocation();
   // Fallback to sessionStorage if navigation state doesn't include questions
@@ -25,6 +28,7 @@ export default function FlashCardMode() {
     }
   }
   const [qIndex, setQIndex] = useState(0);
+  const [finished, setFinished] = useState(false);
 
   // Function to record study sessions
   const recordStudySession = async (topic, durationMinutes) => {
@@ -359,7 +363,30 @@ export default function FlashCardMode() {
 
   const current = questions[qIndex];
   const prev = () => setQIndex(i => Math.max(0, i - 1));
-  const next = () => setQIndex(i => Math.min(i + 1, Math.max(0, questions.length - 1)));
+  const next = () => setQIndex(i => {
+    const nextIndex = Math.min(i + 1, Math.max(0, questions.length - 1));
+    if (questions.length && i + 1 >= questions.length) {
+      setFinished(true);
+    }
+    return nextIndex;
+  });
+
+  // Record a completed session when user reaches the end
+  useEffect(() => {
+    if (!finished) return;
+    (async () => {
+      try {
+        if (!user?._id) return;
+        const durationSeconds = Math.max(0, Math.floor((Date.now() - (startedAtRef.current || Date.now()))/1000));
+        await fetch(`/api/studymode/sessions/complete`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user._id, mode: 'flashcards', startedAt: startedAtRef.current, endedAt: Date.now(), durationSeconds })
+        });
+      } catch (e) {
+        console.warn('Failed to record completed flashcards session', e);
+      }
+    })();
+  }, [finished, user?._id]);
 
   return (
     <div className={`flex min-h-screen transition-colors duration-500 ${darkMode ? 'bg-[#1f1b16] text-[#f5e9df]' : 'bg-[var(--bg)] text-[#4A2C1E]'}`}>

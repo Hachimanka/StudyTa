@@ -1,7 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Quiz from '../models/Quiz.js';
-import StudySession from '../models/analyticsModel.js';
+import { startSession, endSession, updateSessionMode, completeSession } from '../controllers/studymodeController.js'
 
 const router = express.Router();
 
@@ -67,3 +67,9 @@ router.get('/quizzes/:userId', async (req, res) => {
 });
 
 export default router;
+
+// Study sessions
+router.post('/sessions/start', startSession)
+router.post('/sessions/end', endSession)
+router.post('/sessions/update-mode', updateSessionMode)
+router.post('/sessions/complete', completeSession)

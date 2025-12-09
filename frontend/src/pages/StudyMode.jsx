@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { useSettings } from '../context/SettingsContext';
 import ChatWidget from '../components/ChatWidget';
+import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 export default function StudyMode() {
   const { darkMode } = useSettings();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [fileContent, setFileContent] = useState('');
   const [activeTab, setActiveTab] = useState('text'); // 'text' or 'file'
@@ -154,6 +157,8 @@ export default function StudyMode() {
     // clicks the Create button to avoid accidental navigation.
     setStudyMode(modeId);
   };
+
+  // Sessions are recorded only upon study set completion within mode-specific pages.
 
   const navigateToStudyMode = (modeId, state = {}) => {
     // Persist the session so other study methods can read it if navigation

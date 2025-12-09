@@ -3,10 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSettings } from '../../context/SettingsContext';
 import Sidebar from '../Sidebar';
 import ConfirmSaveModal from '../ConfirmSaveModal';
+import { useAuth } from '../../context/AuthContext';
 
 export default function MultipleChoiceMode() {
   const { darkMode } = useSettings();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const startedAtRef = useRef(null);
 
   // API base URL
   const API_BASE = import.meta.env.VITE_API_BASE || '';
@@ -115,6 +118,22 @@ export default function MultipleChoiceMode() {
   const [userAnswers, setUserAnswers] = useState(() => Array(questions.length).fill(null));
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
+  useEffect(() => {
+    if (!finished) return;
+    (async () => {
+      try {
+        if (!user?._id) return;
+        const startMs = startedAtRef.current || Date.now();
+        const durationSeconds = Math.max(0, Math.floor((Date.now() - startMs)/1000));
+        await fetch(`/api/studymode/sessions/complete`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user._id, mode: 'multipleChoice', startedAt: startMs, endedAt: Date.now(), durationSeconds })
+        });
+      } catch (e) {
+        console.warn('Failed to record completed session', e);
+      }
+    })();
+  }, [finished, user?._id])
   const [showFeedback, setShowFeedback] = useState(false);
   const [loading, setLoading] = useState(false);
   const [savedAlready, setSavedAlready] = useState(false);
@@ -183,6 +202,7 @@ export default function MultipleChoiceMode() {
     setFinished(false);
     setSelected(null);
     setShowFeedback(false);
+    startedAtRef.current = null;
   }, [questions]);
 
   useEffect(() => {
@@ -541,6 +561,7 @@ export default function MultipleChoiceMode() {
                           key={idx}
                           onClick={() => {
                             if (showFeedback || finished) return;
+                            if (!startedAtRef.current) startedAtRef.current = Date.now();
                             setSelected(idx);
                             setShowFeedback(true);
                             setUserAnswers(prev => {
@@ -611,3 +632,7 @@ export default function MultipleChoiceMode() {
     </div>
   );
 }
+
+// Record completed session when finished flips to true
+// Use effect at bottom to avoid interfering in render above
+ 
