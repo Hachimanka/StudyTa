@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-// Sends a password reset email. Uses FRONTEND_BASE if present, otherwise BACKEND_BASE.
+// Sends a password reset email. Uses FRONTEND_BASE if present, otherwise defaults to localhost:5173.
 export async function sendPasswordResetEmail(email, token) {
   const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -10,12 +10,9 @@ export async function sendPasswordResetEmail(email, token) {
     },
   });
 
-  const frontendBase = process.env.FRONTEND_BASE;
-  const backendBase = process.env.BACKEND_BASE || `http://localhost:${process.env.PORT || 5000}`;
-
-  const resetUrl = frontendBase
-    ? `${frontendBase.replace(/\/$/, '')}/reset-password?token=${token}`
-    : `${backendBase.replace(/\/$/, '')}/api/reset-password?token=${token}`;
+  // Always use the frontend URL for password reset (user needs to enter new password in UI)
+  const frontendBase = process.env.FRONTEND_BASE || 'http://localhost:5173';
+  const resetUrl = `${frontendBase.replace(/\/$/, '')}/reset-password?token=${token}`;
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
