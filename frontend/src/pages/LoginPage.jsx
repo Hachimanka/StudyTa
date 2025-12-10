@@ -109,7 +109,6 @@ export default function Login() {
             style={{
               fontSize: "30px",
               fontWeight: 500,
-              fontStyle: "italic",
               marginBottom: "12px",
             }}
           >
@@ -150,7 +149,6 @@ export default function Login() {
                 paddingLeft: "10px",
                 fontSize: "14px",
                 fontWeight: 200,
-                fontStyle: "italic",
                 color: "#796060",
                 backgroundColor: isDark ? "#3a2a20" : "white",
                 borderColor: "#d3b49b",
@@ -174,7 +172,6 @@ export default function Login() {
                   paddingLeft: "10px",
                   fontSize: "14px",
                   fontWeight: 200,
-                  fontStyle: "italic",
                   color: "#796060",
                   backgroundColor: isDark ? "#3a2a20" : "white",
                   borderColor: "#d3b49b",
@@ -258,54 +255,6 @@ export default function Login() {
               {loading ? "Logging in..." : "Sign In"}
             </button>
           </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mt-6">
-            <div className="flex-1 h-[1px] bg-[#6F422B]"></div>
-
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: 300,
-                color: "white",
-              }}
-            >
-              or register with
-            </span>
-
-            <div className="flex-1 h-[1px] bg-[#6F422B]"></div>
-          </div>
-
-          {/* Social Buttons */}
-          <div className="flex gap-4 mt-6">
-            <button
-              style={{
-                width: "140px",
-                height: "42px",
-                backgroundColor: "#6F422B",
-                color: "#F7F7F7",
-                fontSize: "13px",
-                fontWeight: 200,
-                borderRadius: "13px",
-              }}
-            >
-              Google
-            </button>
-
-            <button
-              style={{
-                width: "140px",
-                height: "42px",
-                backgroundColor: "#6F422B",
-                color: "#F7F7F7",
-                fontSize: "13px",
-                fontWeight: 200,
-                borderRadius: "13px",
-              }}
-            >
-              Facebook
-            </button>
-          </div>
         </div>
       </div>
     </div>
