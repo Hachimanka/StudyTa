@@ -47,17 +47,87 @@ export default function TopNav() {
   const location = useLocation();
   const isLanding = location && location.pathname === "/";
 
+  // State to hold the fetched profile image URL
+  const [fetchedAvatarUrl, setFetchedAvatarUrl] = useState(null);
+
+  // Fetch profile data on mount and when profile updates
+  useEffect(() => {
+    const fetchProfileAvatar = async () => {
+      try {
+        // First check localStorage for immediate update
+        const raw = localStorage.getItem("stuyta_user");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const localAvatar = parsed?.profile?.profileImageUrl || parsed?.avatarUrl || parsed?.profileImageUrl;
+          if (localAvatar) {
+            setFetchedAvatarUrl(localAvatar);
+          }
+        }
+        
+        // Then fetch from API for the most accurate data
+        const userId = user?._id;
+        if (userId) {
+          const API_BASE = import.meta.env.VITE_API_BASE || '';
+          const res = await fetch(`${API_BASE}/api/profile/${userId}`);
+          if (res.ok) {
+            const data = await res.json();
+            const avatarFromApi = data?.profile?.profileImageUrl || data?.user?.profileImageUrl;
+            if (avatarFromApi) {
+              setFetchedAvatarUrl(avatarFromApi);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch profile avatar:', e);
+      }
+    };
+    
+    fetchProfileAvatar();
+  }, [user?._id]);
+
   // Add a new effect to refresh avatar when profile updates
   useEffect(() => {
-    const handleProfileUpdate = () => {
+    const handleProfileUpdate = async () => {
       setForceUpdate((prev) => prev + 1);
+      
+      // Re-fetch avatar URL after profile update with a small delay to ensure DB is updated
+      setTimeout(async () => {
+        try {
+          // Check localStorage first (updated by profileSection.jsx)
+          const raw = localStorage.getItem("stuyta_user");
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const localAvatar = parsed?.profile?.profileImageUrl || parsed?.avatarUrl || parsed?.profileImageUrl;
+            if (localAvatar) {
+              setFetchedAvatarUrl(localAvatar);
+              return;
+            }
+          }
+          
+          // Fallback to API fetch
+          const userId = user?._id;
+          if (userId) {
+            const API_BASE = import.meta.env.VITE_API_BASE || '';
+            const res = await fetch(`${API_BASE}/api/profile/${userId}`);
+            if (res.ok) {
+              const data = await res.json();
+              const avatarFromApi = data?.profile?.profileImageUrl || data?.user?.profileImageUrl;
+              if (avatarFromApi) {
+                setFetchedAvatarUrl(avatarFromApi);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to refresh avatar:', e);
+        }
+      }, 100);
     };
     
     window.addEventListener('profileUpdated', handleProfileUpdate);
     return () => {
       window.removeEventListener('profileUpdated', handleProfileUpdate);
     };
-  }, []);
+  }, [user?._id]);
 
   // Update the useMemo to prioritize freshly updated data
   const { displayName, initial, avatarUrl } = useMemo(() => {
@@ -80,9 +150,15 @@ export default function TopNav() {
 
     let avatar = null;
     
-    // Check user object first (most recent)
-    if (user?.profile?.profileImageUrl) {
+    // FIRST: Check fetchedAvatarUrl (from API fetch, most reliable)
+    if (fetchedAvatarUrl) {
+      avatar = fetchedAvatarUrl;
+    }
+    // Check user object (from AuthContext)
+    else if (user?.profile?.profileImageUrl) {
       avatar = user.profile.profileImageUrl;
+    } else if (user?.profileImageUrl) {
+      avatar = user.profileImageUrl;
     } else if (user?.avatarUrl) {
       avatar = user.avatarUrl;
     } else if (user?.avatar) {
@@ -93,6 +169,8 @@ export default function TopNav() {
     if (!avatar && parsedStorage) {
       if (parsedStorage.profile?.profileImageUrl) {
         avatar = parsedStorage.profile.profileImageUrl;
+      } else if (parsedStorage.profileImageUrl) {
+        avatar = parsedStorage.profileImageUrl;
       } else if (parsedStorage.avatarUrl) {
         avatar = parsedStorage.avatarUrl;
       } else if (parsedStorage.avatar) {
@@ -112,7 +190,7 @@ export default function TopNav() {
     }
     
     return { displayName: name, initial: init, avatarUrl: avatar };
-  }, [user, forceUpdate]);
+  }, [user, forceUpdate, fetchedAvatarUrl]);
 
   // Dropdown state
   const [open, setOpen] = useState(false);

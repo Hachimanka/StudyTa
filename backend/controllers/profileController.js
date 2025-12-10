@@ -54,6 +54,10 @@ export async function getProfile(req, res) {
 export async function updateProfile(req, res) {
   try {
     const { userId } = req.params;
+    console.log('[updateProfile] Starting update for userId:', userId);
+    console.log('[updateProfile] req.file:', req.file);
+    console.log('[updateProfile] req.body:', req.body);
+    
     if (!userId) return res.status(400).json({ message: 'Missing userId' });
 
     const user = await User.findById(userId);
@@ -68,6 +72,9 @@ export async function updateProfile(req, res) {
       // Convert to absolute URL
       const baseUrl = process.env.BACKEND_BASE || `${req.protocol}://${req.get('host')}`;
       profileImageUrl = baseUrl + uploadRel;
+      console.log('[updateProfile] New profileImageUrl:', profileImageUrl);
+    } else {
+      console.log('[updateProfile] No file uploaded');
     }
 
     let profile = await Profile.findOne({ userId });
@@ -105,10 +112,13 @@ export async function updateProfile(req, res) {
       }
 
       profile.profileImageUrl = profileImageUrl;
+      console.log('[updateProfile] Setting profile.profileImageUrl to:', profileImageUrl);
     }
     profile.updatedAt = new Date();
 
+    console.log('[updateProfile] About to save profile:', JSON.stringify(profile.toObject(), null, 2));
     await profile.save();
+    console.log('[updateProfile] Profile saved successfully');
 
     // Update main User fields (sync username and profileImageUrl to User model as well)
     let userChanged = false;
