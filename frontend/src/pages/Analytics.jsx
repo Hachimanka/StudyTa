@@ -8,6 +8,9 @@ export default function Analytics() {
   const { user } = useAuth()
   const [summary, setSummary] = useState({ totalSessions: 0, totalDurationSeconds: 0, byMode: [] })
   const [weekly, setWeekly] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [lineRangeKey, setLineRangeKey] = useState('7') // '7' | '30' | '365'
   const formatHMS = (secs) => {
     const s = Math.max(0, Math.floor(secs || 0))
     const h = Math.floor(s / 3600)
@@ -131,6 +134,7 @@ export default function Analytics() {
   }
   
   const { path: linePath, points: linePoints, padTop, h, scaleMaxHours, hourLabels } = buildLineChart(lineValues)
+  const xAxisLabels = formatXAxisLabels()
 
   // helper to format x-axis labels
   function formatXAxisLabels() {
@@ -149,15 +153,20 @@ export default function Analytics() {
     async function load() {
       if (!user?._id) return
       try {
-        const base = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+        setLoading(true)
+        setError('')
+        const base = import.meta.env.VITE_API_BASE || import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
         const [sRes, wRes] = await Promise.all([
           axios.get(`${base}/api/analytics/summary`, { params: { userId: user._id } }),
           axios.get(`${base}/api/analytics/weekly`, { params: { userId: user._id, weeks: 12 } })
         ])
         setSummary(sRes.data || { totalSessions: 0, totalDurationSeconds: 0, byMode: [] })
         setWeekly((wRes.data?.weeks || []).map(x => ({ label: x.label, duration: x.duration, sessions: x.sessions })))
+        setLoading(false)
       } catch (err) {
         console.error('Load analytics failed', err)
+        setError(err?.response?.data?.error || err?.message || 'Failed to load analytics')
+        setLoading(false)
       }
     }
     load()

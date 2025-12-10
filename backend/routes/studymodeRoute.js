@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import Quiz from '../models/Quiz.js';
+import SavedStudySet from '../models/SavedStudySet.js';
 import { startSession, endSession, updateSessionMode, completeSession } from '../controllers/studymodeController.js'
 
 const router = express.Router();
@@ -73,3 +74,41 @@ router.post('/sessions/start', startSession)
 router.post('/sessions/end', endSession)
 router.post('/sessions/update-mode', updateSessionMode)
 router.post('/sessions/complete', completeSession)
+
+// Saved Study Sets (no scores)
+router.post('/saved-sets/save', async (req, res) => {
+	try {
+		const { title, mode, questions, userId, durationMinutes } = req.body;
+		if (!title || !mode || !Array.isArray(questions)) {
+			return res.status(400).json({ error: 'title, mode and questions are required' });
+		}
+
+		const finalUserId = mongoose.Types.ObjectId.isValid(userId) ? userId : TEMP_USER_ID;
+
+		const saved = new SavedStudySet({
+			userId: finalUserId,
+			title,
+			mode,
+			questions,
+			durationMinutes: typeof durationMinutes === 'number' ? durationMinutes : undefined,
+		});
+
+		await saved.save();
+		res.status(201).json({ message: 'Study set saved', savedSetId: saved._id });
+	} catch (err) {
+		console.error('Save study set error:', err);
+		res.status(500).json({ error: 'Failed to save study set', details: err.message });
+	}
+});
+
+router.get('/saved-sets/:userId', async (req, res) => {
+	try {
+		const { userId } = req.params;
+		const id = mongoose.Types.ObjectId.isValid(userId) ? userId : TEMP_USER_ID;
+		const sets = await SavedStudySet.find({ userId: id }).sort({ createdAt: -1 }).limit(100);
+		res.json({ sets });
+	} catch (err) {
+		console.error('Get saved study sets error:', err);
+		res.status(500).json({ error: 'Failed to fetch saved study sets', details: err.message });
+	}
+});

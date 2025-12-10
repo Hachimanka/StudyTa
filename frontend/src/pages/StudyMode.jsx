@@ -48,6 +48,9 @@ export default function StudyMode() {
     return [];
   });
   const [savedFilter, setSavedFilter] = useState('all'); // 'all' | 'multipleChoice' | 'trueFalse' | 'flashcards'
+  // Modal state for confirming opening a saved set
+  const [confirmOpenSaved, setConfirmOpenSaved] = useState(false)
+  const [selectedSavedSet, setSelectedSavedSet] = useState(null)
 
   const handleCreate = async () => {
     if (!studyMode) {
@@ -359,17 +362,18 @@ export default function StudyMode() {
     }
   };
 
-  // Handle history item click: select the study mode but DO NOT navigate.
-  // User must click the Create button to actually navigate into the study mode.
-  const handleSavedSetClick = (title) => {
-    // Find the saved set by title (titles are not guaranteed unique so prefer the first match)
-    const entry = savedSets.find(h => h.title === title);
-    if (!entry) {
-      alert('History item not found.');
-      return;
-    }
-    setStudyMode(entry.mode || 'flashcards');
-    // Restore session and navigate directly to saved materials
+  // When clicking a saved set, ask for confirmation in a modal
+  const handleSavedSetClick = (entry) => {
+    if (!entry) return
+    setSelectedSavedSet(entry)
+    setConfirmOpenSaved(true)
+  }
+
+  const proceedOpenSavedSet = () => {
+    const entry = selectedSavedSet
+    if (!entry) return
+    setStudyMode(entry.mode || 'flashcards')
+    // Restore session and navigate to saved materials
     try {
       const sess = {
         questions: entry.questions || null,
@@ -377,13 +381,14 @@ export default function StudyMode() {
         title: entry.title || null,
         mode: entry.mode || null,
         createdAt: Date.now(),
-      };
-      sessionStorage.setItem('studyta_session', JSON.stringify(sess));
+      }
+      sessionStorage.setItem('studyta_session', JSON.stringify(sess))
     } catch (e) {
-      console.warn('Failed to restore session to sessionStorage', e);
+      console.warn('Failed to restore session to sessionStorage', e)
     }
-    navigateToStudyMode(entry.mode, { questions: entry.questions, sourceText: entry.sourceText, title: entry.title });
-  };
+    setConfirmOpenSaved(false)
+    navigateToStudyMode(entry.mode, { questions: entry.questions, sourceText: entry.sourceText, title: entry.title })
+  }
 
   return (
     <div
@@ -617,7 +622,7 @@ export default function StudyMode() {
                       {filteredSets.map((item, index) => (
                         <div 
                           key={index}
-                          onClick={() => handleSavedSetClick(item.title)}
+                          onClick={() => handleSavedSetClick(item)}
                           className={`p-3 rounded-lg border cursor-pointer hover:shadow-md transition-all duration-200 ${darkMode ? 'border-gray-600 bg-[#3a2a20] text-white hover:bg-[#4a3528]' : 'border-[#D9D9D9] bg-white text-[#8D5A3F] hover:bg-gray-50'}`}
                         >
                           <div className="flex items-center justify-between">
@@ -648,7 +653,54 @@ export default function StudyMode() {
         </div>
 
         {/* Note: The explicit "Generated Study Materials" preview panel was removed per request. */}
+      {/* Confirm Open Saved Set Modal */}
+      {confirmOpenSaved && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => { setConfirmOpenSaved(false); setSelectedSavedSet(null); }}
+        >
+          <div
+            className={`${darkMode ? 'bg-[#2e2119] text-white' : 'bg-white text-[#4A2C1E]'} w-full max-w-md rounded-2xl shadow-xl p-6 border ${darkMode ? 'border-gray-700' : 'border-[#E9D8D0]'} mx-4`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className={`text-2xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>Open saved study set?</h3>
+            <p className={`${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'} mb-4`}>You are about to open this saved set.</p>
+            {selectedSavedSet && (
+              <div className={`mb-4 p-3 rounded-lg ${darkMode ? 'bg-[#3a2a20] border border-gray-700' : 'bg-[#F6E6DA] border border-[#E9D8D0]'}`}>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold">{selectedSavedSet.title || 'Untitled Set'}</div>
+                    <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-[#B77A57]'}`}>
+                      Mode: {selectedSavedSet.mode || 'unknown'}
+                    </div>
+                  </div>
+                  {selectedSavedSet.date && (
+                    <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-[#B77A57]'}`}>{selectedSavedSet.date}</span>
+                  )}
+                </div>
+              </div>
+            )}
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => { setConfirmOpenSaved(false); setSelectedSavedSet(null); }}
+                className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#3a2a20] text-white hover:bg-[#4a3528]' : 'bg-white text-[#8D5A3F] border border-[#E9D8D0] hover:bg-[#F6E6DA]'}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={proceedOpenSavedSet}
+                className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white' : 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white'}`}
+              >
+                Open Set
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       </main>
     </div>
   );
 }
+
+// Modal UI injected inside the component render (confirmation to open saved set)

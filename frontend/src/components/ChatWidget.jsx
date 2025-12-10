@@ -8,7 +8,7 @@ export default function ChatWidget() {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState('')
   const [messages, setMessages] = useState([
-    { from: 'bot', text: 'Hi! I can help summarize text, create flashcards, or answer questions about Lemivon. Try asking me anything.' }
+    { from: 'bot', text: 'Hi! I can help summarize text, create flashcards, or answer questions about StudyTa. Try asking me anything.' }
   ])
   const [loading, setLoading] = useState(false)
   const listRef = useRef(null)
@@ -310,7 +310,10 @@ export default function ChatWidget() {
   }, [])
 
   return (
-    <div className={`chat-widget ${open ? 'chat-open' : ''}`}>
+    <div
+      className={`chat-widget ${open ? 'chat-open' : ''}`}
+      style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 50 }}
+    >
       <div
         className="chat-panel"
         role="dialog"
@@ -318,14 +321,7 @@ export default function ChatWidget() {
         style={{ display: open ? 'flex' : 'none' }}
       >
         <div className="chat-header">
-          <strong>Study AI</strong>
-          <button
-            aria-label="Close chat"
-            className="chat-close"
-            onClick={() => setOpen(false)}
-          >
-            ✕
-          </button>
+          <strong>StudyTa AI</strong>
         </div>
         <div className="chat-list" ref={listRef}>
           {messages.map((m, i) => (
@@ -384,15 +380,29 @@ export default function ChatWidget() {
 
       <button
         className="chat-toggle-button"
-        aria-label="Open chat"
-        onClick={() => setOpen(o => !o)}
+        aria-label={open ? 'Close chat' : 'Open chat'}
+        onClick={(e) => { e.stopPropagation(); setOpen(o => !o) }}
+        style={{
+          width: 64,
+          height: 64,
+          borderRadius: '50%',
+          background: '#6F422B',
+          color: '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 6px 14px rgba(0,0,0,0.24)'
+        }}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-          xmlns="http://www.w3.org/2000/svg">
-          <path d="M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z"
-            stroke="currentColor" strokeWidth="1.2"
-            strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        {open ? (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 15a2 2 0 01-2 2H8l-5 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        )}
       </button>
     </div>
   )

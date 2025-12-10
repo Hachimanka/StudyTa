@@ -335,13 +335,13 @@ export default function MultipleChoiceMode() {
       const s = JSON.parse(raw);
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       const payload = {
-        title: s.title || 'Untitled Quiz',
+        title: s.title || state?.title || title || 'Study Session',
         mode: s.mode || 'multipleChoice',
         questions: s.questions || [],
         score: score || 0,
         total: (s.questions || []).length,
         userId: user?._id,
-        durationMinutes: 1
+        durationMinutes: Math.max(0.5, Math.round(((Date.now() - (startedAtRef.current || Date.now())) / 60000) * 10) / 10)
       };
       const res = await fetch(`${API_BASE}/api/studymode/save-quiz`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
       const data = await res.json().catch(()=>({}));
