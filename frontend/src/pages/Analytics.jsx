@@ -8,6 +8,12 @@ export default function Analytics() {
   const { user } = useAuth()
   const [summary, setSummary] = useState({ totalSessions: 0, totalDurationSeconds: 0, byMode: [] })
   const [weekly, setWeekly] = useState([])
+  const [daily, setDaily] = useState([])
+  const [analyticsStats, setAnalyticsStats] = useState({ totalHours: 0, topicsFinished: 0, streak: 0 })
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [lineRangeKey, setLineRangeKey] = useState('7')
+  
   const formatHMS = (secs) => {
     const s = Math.max(0, Math.floor(secs || 0))
     const h = Math.floor(s / 3600)
@@ -16,10 +22,12 @@ export default function Analytics() {
     const pad = (n) => String(n).padStart(2, '0')
     return `${h}:${pad(m)}:${pad(ss)}`
   }
+  
+  // Stats cards - now using analyticsStats from API
   const stats = [
-    { label: 'Time Studied', value: formatHMS(summary.totalDurationSeconds || 0) },
-    { label: 'Total Sessions', value: summary.totalSessions || 0 },
-    { label: 'Active Modes', value: (summary.byMode || []).length },
+    { label: 'Hours Studied', value: analyticsStats.totalHours || 0 },
+    { label: 'Topics Covered', value: analyticsStats.topicsFinished || 0 },
+    { label: 'Study Streak', value: `${analyticsStats.streak || 0} days` },
   ]
 
   // Saved study sets for Time per Topic (from localStorage)
@@ -39,13 +47,6 @@ export default function Analytics() {
       console.warn('Failed to load saved study sets', e)
     }
   }, [])
-
-  // Mock datasets fallback for offline/dev
-  const mockData = useMemo(() => ({
-    '7': weekly.slice(-7).map(w => Math.round((w.duration || 0) / 60)),
-    '4': weekly.slice(-4).map(w => Math.round((w.duration || 0) / 60)),
-    '12': weekly.slice(-12).map(w => Math.round((w.duration || 0) / 60)),
-  }), [weekly])
 
   // No server-side chart endpoints used here; derive chart data from weekly summary
 
@@ -110,14 +111,18 @@ export default function Analytics() {
     return { path, points, padTop, h, scaleMaxHours, hourLabels };
   }
 
-  // prefer server-provided line values, fallback to mock data
-  // prefer server-provided line values, fallback to zeros (no fake activity)
-  // For 7-day view, map dates to Monday..Sunday so chart always starts on Monday
+  // Build line values from daily or weekly data based on selected range
+  // For 7-day view, use daily data (seconds to minutes)
   let lineValues = []
   if (lineRangeKey === '7') {
-    // last 7 entries from weekly; convert seconds to minutes
-    const last7 = weekly.slice(-7)
-    lineValues = last7.map(w => Math.round((w.duration || 0) / 60))
+    // Use daily data for accurate 7-day chart
+    if (daily.length > 0) {
+      lineValues = daily.map(d => Math.round((d.duration || 0) / 60))
+    } else {
+      // Fallback to weekly if daily not available
+      const last7 = weekly.slice(-7)
+      lineValues = last7.map(w => Math.round((w.duration || 0) / 60))
+    }
   } else if (lineRangeKey === '30') {
     const last30 = weekly.slice(-30)
     lineValues = last30.map(w => Math.round((w.duration || 0) / 60))
@@ -145,19 +150,36 @@ export default function Analytics() {
     })
   }
 
+  // Generate x-axis labels based on daily data
+  const xAxisLabels = useMemo(() => {
+    if (lineRangeKey === '7' && daily.length > 0) {
+      return daily.map(d => d.label)
+    }
+    return formatXAxisLabels()
+  }, [daily, weekly, lineRangeKey])
+
   useEffect(() => {
     async function load() {
       if (!user?._id) return
+      setLoading(true)
+      setError(null)
       try {
-        const base = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
-        const [sRes, wRes] = await Promise.all([
+        const base = import.meta.env.VITE_API_BASE || import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
+        const [sRes, wRes, statsRes, dailyRes] = await Promise.all([
           axios.get(`${base}/api/analytics/summary`, { params: { userId: user._id } }),
-          axios.get(`${base}/api/analytics/weekly`, { params: { userId: user._id, weeks: 12 } })
+          axios.get(`${base}/api/analytics/weekly`, { params: { userId: user._id, weeks: 12 } }),
+          axios.get(`${base}/api/analytics/stats`, { params: { userId: user._id } }),
+          axios.get(`${base}/api/analytics/daily`, { params: { userId: user._id, days: 7 } })
         ])
         setSummary(sRes.data || { totalSessions: 0, totalDurationSeconds: 0, byMode: [] })
         setWeekly((wRes.data?.weeks || []).map(x => ({ label: x.label, duration: x.duration, sessions: x.sessions })))
+        setAnalyticsStats(statsRes.data || { totalHours: 0, topicsFinished: 0, streak: 0 })
+        setDaily(dailyRes.data?.days || [])
       } catch (err) {
         console.error('Load analytics failed', err)
+        setError(err.message || 'Failed to load analytics data')
+      } finally {
+        setLoading(false)
       }
     }
     load()
@@ -273,10 +295,20 @@ export default function Analytics() {
                 <svg width="260" height="180" viewBox="0 0 260 180" className="flex-shrink-0">
                   <circle cx="130" cy="90" r="56" fill="#fff" />
                   {(() => {
-                    const total = (summary.byMode || []).reduce((a,b)=> a + (b.duration||0), 0)
+                    // Filter to only modes with actual duration
+                    const modesWithData = (summary.byMode || []).filter(m => (m.duration || 0) > 0)
+                    const total = modesWithData.reduce((a,b)=> a + (b.duration||0), 0)
                     const colors = ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D']
+                    
+                    // If no data, show gray donut
+                    if (total === 0 || modesWithData.length === 0) {
+                      return (
+                        <circle cx="130" cy="90" r="56" stroke="#E0E0E0" strokeWidth="26" fill="none" />
+                      )
+                    }
+                    
                     let acc = 0
-                    return (summary.byMode || []).map((m, idx) => {
+                    return modesWithData.map((m, idx) => {
                       const frac = total > 0 ? (m.duration || 0) / total : 0
                       const dash = Math.max(0, Math.round(frac * 2 * Math.PI * 56))
                       const gap = Math.round((2 * Math.PI * 56) - dash)
@@ -291,13 +323,13 @@ export default function Analytics() {
                 </svg>
 
                 <ul className="text-sm text-[#5C4333] space-y-3">
-                  {(summary.byMode || []).map((m, idx) => (
+                  {(summary.byMode || []).filter(m => (m.duration || 0) > 0).map((m, idx) => (
                     <li key={m.mode} className="flex items-center">
                       <span className="inline-block w-3 h-3 mr-3 rounded-sm" style={{ backgroundColor: ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D'][idx%6] }}></span>
                       {m.mode} — {Math.round((m.duration||0)/3600)}h
                     </li>
                   ))}
-                  {(summary.byMode || []).length === 0 && <li className="text-[#5C4333]">No study sessions yet.</li>}
+                  {(summary.byMode || []).filter(m => (m.duration || 0) > 0).length === 0 && <li className="text-[#5C4333]">No study sessions yet.</li>}
                 </ul>
               </div>
             </section>
