@@ -44,7 +44,8 @@ export default function FlashCardMode() {
         body: JSON.stringify({ 
           userId, 
           topic, 
-          durationMinutes: Math.max(0.5, Math.round(durationMinutes * 10) / 10)
+          durationMinutes: Math.max(0.5, Math.round(durationMinutes * 10) / 10),
+          mode: 'flashcards'
         }),
       });
     } catch (err) {
@@ -78,7 +79,8 @@ export default function FlashCardMode() {
         body: JSON.stringify({ 
           userId, 
           topic: 'Daily Study Start', 
-          durationMinutes: 0.1 // Minimal to just trigger streak
+          durationMinutes: 0.1, // Minimal to just trigger streak
+          mode: 'flashcards'
         }),
       });
     } catch (err) {
@@ -101,7 +103,8 @@ export default function FlashCardMode() {
         body: JSON.stringify({ 
           userId, 
           topic, 
-          durationMinutes: 1 // Minimum to count as studied
+          durationMinutes: 1, // Minimum to count as studied
+          mode: 'flashcards'
         }),
       });
     } catch (err) {
@@ -120,28 +123,35 @@ export default function FlashCardMode() {
   const [loading, setLoading] = useState(false);
   const [savedAlready, setSavedAlready] = useState(false);
 
-  // Study time tracking states
-  const [startTime, setStartTime] = useState(null);
-  const [totalStudyTime, setTotalStudyTime] = useState(0);
+  // Study time tracking - use ref to persist across re-renders for cleanup
+  const studyStartTimeRef = useRef(Date.now());
+  const titleRef = useRef(title);
+
+  // Keep titleRef in sync with title state
+  useEffect(() => {
+    titleRef.current = title;
+  }, [title]);
 
   useEffect(() => {
     if (editingTitle) inputRef.current?.focus();
   }, [editingTitle]);
 
   // Start timer when component mounts and trigger daily study start
+  // Record session when user leaves the page (component unmounts)
   useEffect(() => {
-    setStartTime(Date.now());
+    // Set start time when component mounts
+    studyStartTimeRef.current = Date.now();
     
     // Trigger daily study start (streak) only once per day
     triggerDailyStudyStart();
     
+    // Cleanup function - runs when user leaves the page
     return () => {
-      if (startTime) {
-        const endTime = Date.now();
-        const minutes = (endTime - startTime) / (1000 * 60);
-        if (minutes > 0) {
-          recordStudySession(title || 'Flashcards', minutes);
-        }
+      const endTime = Date.now();
+      const minutes = (endTime - studyStartTimeRef.current) / (1000 * 60);
+      // Only record if user spent at least 5 seconds studying
+      if (minutes >= 0.083) { // ~5 seconds minimum
+        recordStudySession(titleRef.current || 'Flashcards', minutes);
       }
     };
   }, []);

@@ -27,7 +27,8 @@ export default function MultipleChoiceMode() {
         body: JSON.stringify({ 
           userId, 
           topic, 
-          durationMinutes: Math.max(0.5, Math.round(durationMinutes * 10) / 10)
+          durationMinutes: Math.max(0.5, Math.round(durationMinutes * 10) / 10),
+          mode: 'quiz'
         }),
       });
     } catch (err) {
@@ -60,7 +61,8 @@ export default function MultipleChoiceMode() {
         body: JSON.stringify({ 
           userId, 
           topic: 'Daily Study Start', 
-          durationMinutes: 0.1 // Minimal to just trigger streak
+          durationMinutes: 0.1, // Minimal to just trigger streak
+          mode: 'quiz'
         }),
       });
     } catch (err) {
@@ -82,7 +84,8 @@ export default function MultipleChoiceMode() {
         body: JSON.stringify({ 
           userId, 
           topic, 
-          durationMinutes: 1 // Minimum to count as studied
+          durationMinutes: 1, // Minimum to count as studied
+          mode: 'quiz'
         }),
       });
     } catch (err) {
@@ -95,6 +98,15 @@ export default function MultipleChoiceMode() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [tempTitle, setTempTitle] = useState(title);
   const inputRef = useRef(null);
+
+  // Study time tracking - use ref to persist across re-renders for cleanup
+  const studyStartTimeRef = useRef(Date.now());
+  const titleRef = useRef(title);
+
+  // Keep titleRef in sync with title state
+  useEffect(() => {
+    titleRef.current = title;
+  }, [title]);
 
   const { state } = useLocation();
   // Prefer questions passed via navigation state; otherwise fall back to sessionStorage
@@ -138,44 +150,25 @@ export default function MultipleChoiceMode() {
   const [loading, setLoading] = useState(false);
   const [savedAlready, setSavedAlready] = useState(false);
 
-  // Study time tracking states
-  const [startTime, setStartTime] = useState(null);
-  const [totalStudyTime, setTotalStudyTime] = useState(0);
-
-  // Start tracking when component mounts or when quiz starts
+  // Start timer when component mounts and trigger daily study start
+  // Record session when user leaves the page (component unmounts)
   useEffect(() => {
-    if (questions.length > 0 && !finished) {
-      setStartTime(Date.now());
-      // Trigger daily study start (streak) only once per day
-      triggerDailyStudyStart();
-    }
-  }, [questions, finished]);
-
-  // Track time when user answers questions
-  useEffect(() => {
-    if (selected !== null && startTime) {
-      const endTime = Date.now();
-      const minutes = (endTime - startTime) / (1000 * 60);
-      setTotalStudyTime(prev => prev + minutes);
-      setStartTime(Date.now()); // Reset for next question
-    }
-  }, [selected, startTime]);
-
-  // Record session when component unmounts or quiz finishes
-  useEffect(() => {
+    // Set start time when component mounts
+    studyStartTimeRef.current = Date.now();
+    
+    // Trigger daily study start (streak) only once per day
+    triggerDailyStudyStart();
+    
+    // Cleanup function - runs when user leaves the page
     return () => {
-      if (totalStudyTime > 0) {
-        recordStudySession(title || 'Multiple Choice Quiz', totalStudyTime);
+      const endTime = Date.now();
+      const minutes = (endTime - studyStartTimeRef.current) / (1000 * 60);
+      // Only record if user spent at least 5 seconds studying
+      if (minutes >= 0.083) { // ~5 seconds minimum
+        recordStudySession(titleRef.current || 'Multiple Choice Quiz', minutes);
       }
     };
-  }, [totalStudyTime, title]);
-
-  // Also record when quiz finishes
-  useEffect(() => {
-    if (finished && totalStudyTime > 0) {
-      recordStudySession(title || 'Multiple Choice Quiz', totalStudyTime);
-    }
-  }, [finished, totalStudyTime, title]);
+  }, []);
 
   // Derive title from navigation state (title or sourceText)
   useEffect(() => {
