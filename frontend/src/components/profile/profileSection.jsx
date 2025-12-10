@@ -2,6 +2,24 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion'; 
 import { useAuth } from '../../context/AuthContext';
 
+// Helper function to convert File to Base64
+const fileToBase64 = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      // Result is like "data:image/png;base64,XXXX"
+      // We need to extract the base64 part and mime type
+      const result = reader.result;
+      const [header, base64Data] = result.split(',');
+      const mimeMatch = header.match(/data:([^;]+);/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+      resolve({ base64Data, mimeType });
+    };
+    reader.onerror = (error) => reject(error);
+  });
+};
+
 /* ProfileSection Component */
 export const ProfileSection = ({ onOpenPasswordModal }) => {
   const { user } = useAuth();
@@ -60,7 +78,10 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
 
   useEffect(() => {
     return () => {
-      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+      // Only revoke blob: URLs, not data: URIs
+      if (avatarPreview && avatarPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(avatarPreview);
+      }
     };
   }, [avatarPreview]);
 
@@ -74,12 +95,14 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
         if (!res.ok) return;
         const data = await res.json();
         const p = data.profile || {};
+        // Use avatarUrl (which now can be a data: URI from MongoDB) or profileImageUrl
+        const avatarUrl = p.avatarUrl || p.profileImageUrl || '';
         setFormData({
           fullName: p.fullName || data.user?.name || '',
           bio: p.bio || '',
           username: p.username || '',
           email: data.user?.email || '',
-          avatar: p.profileImageUrl || ''
+          avatar: avatarUrl
         });
         // Save the loaded profile snapshot for change-detection
         setOriginalData({
@@ -87,9 +110,9 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
           bio: p.bio || '',
           username: p.username || '',
           email: data.user?.email || '',
-          avatar: p.profileImageUrl || ''
+          avatar: avatarUrl
         });
-        if (p.profileImageUrl) setAvatarPreview(p.profileImageUrl);
+        if (avatarUrl) setAvatarPreview(avatarUrl);
       } catch (err) {
         console.warn('Failed to load profile', err);
       }
@@ -101,16 +124,33 @@ const saveProfile = async () => {
   try {
     if (!user || !user._id) return alert('Not authenticated');
     const API_BASE = import.meta.env.VITE_API_BASE || '';
-    const form = new FormData();
-    form.append('fullName', formData.fullName || '');
-    form.append('username', formData.username || '');
-    form.append('bio', formData.bio || '');
-    form.append('email', formData.email || '');
-    if (avatarFile) form.append('profileImage', avatarFile);
+    
+    // Prepare the data to send
+    const profileData = {
+      fullName: formData.fullName || '',
+      username: formData.username || '',
+      bio: formData.bio || '',
+      email: formData.email || ''
+    };
+
+    // If there's a new avatar file, convert to Base64 and include in JSON
+    if (avatarFile) {
+      try {
+        const { base64Data, mimeType } = await fileToBase64(avatarFile);
+        profileData.avatarBase64 = base64Data;
+        profileData.avatarMimeType = mimeType;
+      } catch (err) {
+        console.error('Failed to convert avatar to Base64:', err);
+        return alert('Failed to process avatar image');
+      }
+    }
 
     const res = await fetch(`${API_BASE}/api/profile/${user._id}`, {
       method: 'PUT',
-      body: form
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(profileData)
     });
     const data = await res.json();
     if (!res.ok) return alert(data.message || 'Failed to save');
@@ -126,10 +166,11 @@ const saveProfile = async () => {
       stored.profile = data.profile || stored.profile;
       
       // Ensure avatarUrl is set in multiple places for compatibility
-      if (data.profile?.profileImageUrl) {
-        stored.avatarUrl = data.profile.profileImageUrl;
-        stored.avatar = data.profile.profileImageUrl;
-        stored.profileImageUrl = data.profile.profileImageUrl;
+      if (data.profile?.avatarUrl || data.profile?.profileImageUrl) {
+        const avatarUrl = data.profile.avatarUrl || data.profile.profileImageUrl;
+        stored.avatarUrl = avatarUrl;
+        stored.avatar = avatarUrl;
+        stored.profileImageUrl = avatarUrl;
       }
       
       // Also update any stored user profile data
@@ -149,8 +190,9 @@ const saveProfile = async () => {
     }
 
     // Update local state preview with new image URL
-    if (data.profile?.profileImageUrl) {
-      setAvatarPreview(data.profile.profileImageUrl);
+    const newAvatarUrl = data.profile?.avatarUrl || data.profile?.profileImageUrl;
+    if (newAvatarUrl) {
+      setAvatarPreview(newAvatarUrl);
     }
 
     // Update original snapshot so Save button becomes disabled again
@@ -159,7 +201,7 @@ const saveProfile = async () => {
       bio: data.profile?.bio || formData.bio || '',
       username: data.profile?.username || formData.username || '',
       email: data.user?.email || formData.email || '',
-      avatar: data.profile?.profileImageUrl || formData.avatar || ''
+      avatar: newAvatarUrl || formData.avatar || ''
     };
     setOriginalData(newSnapshot);
     setFormData(prev => ({ ...prev, ...newSnapshot }));

@@ -52,9 +52,21 @@ export function AuthProvider({ children }) {
         if (!res.ok) return;
         const payload = await res.json();
         const profile = payload.profile || null;
-        setUser((prev) => ({ ...prev, profile, username: profile?.username || prev?.username, bio: profile?.bio || prev?.bio }));
+        // Get avatar URL (supports data: URIs from MongoDB)
+        const avatarUrl = profile?.avatarUrl || profile?.profileImageUrl || null;
+        setUser((prev) => ({ 
+          ...prev, 
+          profile, 
+          username: profile?.username || prev?.username, 
+          bio: profile?.bio || prev?.bio,
+          avatarUrl: avatarUrl || prev?.avatarUrl
+        }));
         // persist the merged user
-        try { localStorage.setItem('stuyta_user', JSON.stringify({ ...(JSON.parse(localStorage.getItem('stuyta_user') || '{}')), profile })); } catch (_) {}
+        try { 
+          const stored = { ...(JSON.parse(localStorage.getItem('stuyta_user') || '{}')), profile };
+          if (avatarUrl) stored.avatarUrl = avatarUrl;
+          localStorage.setItem('stuyta_user', JSON.stringify(stored)); 
+        } catch (_) {}
       } catch (err) {
         // ignore
       }
@@ -85,8 +97,16 @@ export function AuthProvider({ children }) {
           if (profileRes.ok) {
             const profilePayload = await profileRes.json();
             const profile = profilePayload.profile || null;
-            // Attach profile under `profile` and also copy username for convenience
-            setUser((prev) => ({ ...prev, profile, username: profile?.username || prev?.username, bio: profile?.bio || prev?.bio }));
+            // Get avatar URL (supports data: URIs from MongoDB)
+            const avatarUrl = profile?.avatarUrl || profile?.profileImageUrl || null;
+            // Attach profile under `profile` and also copy username/avatar for convenience
+            setUser((prev) => ({ 
+              ...prev, 
+              profile, 
+              username: profile?.username || prev?.username, 
+              bio: profile?.bio || prev?.bio,
+              avatarUrl: avatarUrl || prev?.avatarUrl
+            }));
           }
         } catch (infoErr) {
           console.warn('Failed to fetch profile:', infoErr);

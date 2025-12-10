@@ -11,6 +11,10 @@ const profileSchema = new mongoose.Schema({
   username: { type: String, default: '' },
   bio: { type: String, default: '' },
   profileImageUrl: { type: String, default: '' },
+  // Store avatar image directly in MongoDB as Base64 encoded string
+  avatarData: { type: String, default: '' },
+  // Store the MIME type of the avatar (e.g., 'image/png', 'image/jpeg')
+  avatarMimeType: { type: String, default: '' },
   updatedAt: { type: Date, default: Date.now },
 });
 

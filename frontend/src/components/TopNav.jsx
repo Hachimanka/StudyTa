@@ -79,7 +79,10 @@ export default function TopNav() {
     let avatar = null;
     
     // Check user object first (most recent)
-    if (user?.profile?.profileImageUrl) {
+    // avatarUrl now may contain data: URIs from MongoDB
+    if (user?.profile?.avatarUrl) {
+      avatar = user.profile.avatarUrl;
+    } else if (user?.profile?.profileImageUrl) {
       avatar = user.profile.profileImageUrl;
     } else if (user?.avatarUrl) {
       avatar = user.avatarUrl;
@@ -89,7 +92,9 @@ export default function TopNav() {
     
     // Then check localStorage
     if (!avatar && parsedStorage) {
-      if (parsedStorage.profile?.profileImageUrl) {
+      if (parsedStorage.profile?.avatarUrl) {
+        avatar = parsedStorage.profile.avatarUrl;
+      } else if (parsedStorage.profile?.profileImageUrl) {
         avatar = parsedStorage.profile.profileImageUrl;
       } else if (parsedStorage.avatarUrl) {
         avatar = parsedStorage.avatarUrl;
@@ -98,10 +103,10 @@ export default function TopNav() {
       }
     }
     
-    // If avatar is a relative path (doesn't start with http or /), resolve it against API base
+    // If avatar is a relative path (doesn't start with http, data:, or /), resolve it against API base
     try {
       const API_BASE = import.meta.env.VITE_API_BASE || '';
-      if (avatar && !avatar.startsWith('http') && !avatar.startsWith('/')) {
+      if (avatar && !avatar.startsWith('http') && !avatar.startsWith('data:') && !avatar.startsWith('/')) {
         const cleaned = avatar.replace(/^\.\//, '').replace(/^\//, '');
         avatar = API_BASE ? `${API_BASE.replace(/\/$/, '')}/${cleaned}` : `/${cleaned}`;
       }
