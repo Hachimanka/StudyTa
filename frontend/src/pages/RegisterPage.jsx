@@ -139,11 +139,11 @@ export default function Signup() {
                 Dev verify link: <a href={verifyInfo.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline', color: 'white' }}>{verifyInfo.url}</a>
               </div>
             )}
-            {/* Name and Last Name - Side by Side */}
+            {/* First Name and Last Name - Side by Side */}
             <div style={{ display: "flex", gap: "14px" }}>
               <input
                 type="text"
-                placeholder="Full name"
+                placeholder="First name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="rounded-md border"
@@ -342,54 +342,6 @@ export default function Signup() {
               {loading ? "Creating Account..." : "Create account"}
             </button>
           </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mt-6">
-            <div className="flex-1 h-[1px] bg-[#6F422B]"></div>
-
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: 300,
-                color: "white",
-              }}
-            >
-              or register with
-            </span>
-
-            <div className="flex-1 h-[1px] bg-[#6F422B]"></div>
-          </div>
-
-          {/* Social Buttons */}
-          <div className="flex gap-4 mt-6">
-            <button
-              style={{
-                width: "140px",
-                height: "42px",
-                backgroundColor: "#6F422B",
-                color: "#F7F7F7",
-                fontSize: "13px",
-                fontWeight: 200,
-                borderRadius: "13px",
-              }}
-            >
-              Google
-            </button>
-
-            <button
-              style={{
-                width: "140px",
-                height: "42px",
-                backgroundColor: "#6F422B",
-                color: "#F7F7F7",
-                fontSize: "13px",
-                fontWeight: 200,
-                borderRadius: "13px",
-              }}
-            >
-              Facebook
-            </button>
-          </div>
         </div>
       </div>
     </div>

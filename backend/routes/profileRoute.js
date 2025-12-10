@@ -1,29 +1,22 @@
 import express from 'express';
 import multer from 'multer';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { getProfile, updateProfile } from '../controllers/profileController.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Use memory storage - images will be stored as Base64 in MongoDB, not on disk
+const storage = multer.memoryStorage();
 
-const avatarsDir = path.join(__dirname, '..', 'uploads', 'avatars');
-// Ensure directory exists
-import fs from 'fs';
-if (!fs.existsSync(avatarsDir)) fs.mkdirSync(avatarsDir, { recursive: true });
-
-const storage = multer.diskStorage({
-	destination: function (req, file, cb) {
-		cb(null, avatarsDir);
-	},
-	filename: function (req, file, cb) {
-		const ext = path.extname(file.originalname) || '';
-		const name = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}${ext}`;
-		cb(null, name);
+const upload = multer({ 
+	storage, 
+	limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+	fileFilter: (req, file, cb) => {
+		// Only allow image files
+		if (file.mimetype.startsWith('image/')) {
+			cb(null, true);
+		} else {
+			cb(new Error('Only image files are allowed'), false);
+		}
 	}
 });
-
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } }); // 5MB
 
 const router = express.Router();
 
