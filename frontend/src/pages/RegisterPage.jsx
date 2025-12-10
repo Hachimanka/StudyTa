@@ -106,8 +106,7 @@ export default function Signup() {
             style={{
               fontSize: "30px",
               fontWeight: 500,
-              fontStyle: "italic",
-              marginBottom: "12px",
+              marginBottom: "16px",
             }}
           >
             Create an account
@@ -153,7 +152,6 @@ export default function Signup() {
                   paddingLeft: "10px",
                   fontSize: "14px",
                   fontWeight: 200,
-                  fontStyle: "italic",
                   color: "#796060",
                   backgroundColor: isDark ? "#3a2a20" : "white",
                   borderColor: "#d3b49b",
@@ -173,7 +171,6 @@ export default function Signup() {
                   paddingLeft: "10px",
                   fontSize: "14px",
                   fontWeight: 200,
-                  fontStyle: "italic",
                   color: "#796060",
                   backgroundColor: isDark ? "#3a2a20" : "white",
                   borderColor: "#d3b49b",
@@ -197,7 +194,6 @@ export default function Signup() {
                 paddingLeft: "10px",
                 fontSize: "14px",
                 fontWeight: 200,
-                fontStyle: "italic",
                 color: "#796060",
                 backgroundColor: isDark ? "#3a2a20" : "white",
                 borderColor: "#d3b49b",
@@ -221,7 +217,6 @@ export default function Signup() {
                   paddingLeft: "10px",
                   fontSize: "14px",
                   fontWeight: 200,
-                  fontStyle: "italic",
                   color: "#796060",
                   backgroundColor: isDark ? "#3a2a20" : "white",
                   borderColor: "#d3b49b",
