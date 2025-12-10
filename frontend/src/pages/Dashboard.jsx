@@ -14,7 +14,7 @@ import AnalyticsWidget from "../components/dashboard/AnalyticsWidget";
 export default function Home() {
   const { user } = useAuth();
   const { darkMode, studyStats, profileName, getThemeColors } = useSettings();
-  const [fullName, setFullName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [analyticsStats, setAnalyticsStats] = useState({
     hoursStudied: 0,
     topicsCovered: 0,
@@ -169,17 +169,17 @@ export default function Home() {
             const payload = await res.json();
             const p = payload.profile || {};
             const u = payload.user || {};
-            // Prioritize: registered user name > profile fullName > profile username > settings profileName
-            setFullName(u.name || p.fullName || p.username || profileName);
+            // Prioritize: profile username > user username > settings profileName
+            setDisplayName(p.username || u.username || profileName || u.name || '');
           } else {
             // Fallback to user object from auth context
-            setFullName(user?.name || user?.profile?.fullName || profileName);
+            setDisplayName(user?.profile?.username || user?.username || profileName || '');
           }
         } catch {
-          setFullName(user?.name || profileName);
+          setDisplayName(user?.username || profileName || '');
         }
       } else {
-        setFullName(profileName);
+        setDisplayName(profileName || '');
       }
     }
 
@@ -256,8 +256,22 @@ const avatarUrl = (() => {
   };
 
   const getInitial = () => {
-    if (!fullName) return "?";
-    return fullName.trim().charAt(0).toUpperCase();
+    // For avatar placeholder, use the first letter of email
+    let email = user?.email;
+    if (!email) {
+      try {
+        const stored = localStorage.getItem('stuyta_user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          email = parsed?.email;
+        }
+      } catch (e) {
+        // ignore parse errors
+      }
+    }
+    if (email) return email.charAt(0).toUpperCase();
+    if (!displayName) return "?";
+    return displayName.trim().charAt(0).toUpperCase();
   };
 
   return (
@@ -302,7 +316,7 @@ const avatarUrl = (() => {
                     darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                   }`}
                 >
-                  {fullName ? `Welcome back, ${fullName}!` : "Welcome back!"}
+                  {displayName ? `Welcome back, ${displayName}!` : "Welcome back!"}
                 </h1>
                 <p className="mt-1 text-xl transition-colors duration-300 dashboard-subtitle">
                   Ready to continue your learning journey?

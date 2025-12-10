@@ -37,6 +37,8 @@ export async function getProfile(req, res) {
         _id: user._id,
         email: user.email,
         name: user.name,
+        username: user.username || profile.username || '',
+        profileImageUrl: user.profileImageUrl || profile.profileImageUrl || '',
       },
       profile: {
         ...profile.toObject(),
@@ -108,7 +110,7 @@ export async function updateProfile(req, res) {
 
     await profile.save();
 
-    // Update main User fields
+    // Update main User fields (sync username and profileImageUrl to User model as well)
     let userChanged = false;
     if (email && user.email !== email) {
       user.email = email;
@@ -116,6 +118,16 @@ export async function updateProfile(req, res) {
     }
     if (fullName && user.name !== fullName) {
       user.name = fullName;
+      userChanged = true;
+    }
+    if (typeof username === 'string' && user.username !== username) {
+      user.username = username;
+      userChanged = true;
+    }
+    // Also store profileImageUrl in User model for easy access
+    const finalProfileImageUrl = profileImageUrl || profile.profileImageUrl;
+    if (finalProfileImageUrl && user.profileImageUrl !== finalProfileImageUrl) {
+      user.profileImageUrl = finalProfileImageUrl;
       userChanged = true;
     }
     if (userChanged) await user.save();
@@ -133,6 +145,8 @@ export async function updateProfile(req, res) {
         _id: user._id, 
         email: user.email, 
         name: user.name,
+        username: user.username || profile.username || '',
+        profileImageUrl: user.profileImageUrl || profile.profileImageUrl || '',
         // Include profile fields for easy access
         profile: responseProfile
       } 

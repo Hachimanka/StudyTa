@@ -74,7 +74,9 @@ export default function TopNav() {
     const usernameCandidate = user?.profile?.username || user?.username || parsedStorage?.profile?.username || parsedStorage?.username || null;
     
     const name = usernameCandidate || nameFromUser || nameFromStorage || user?.email || "Account";
-    const init = (name?.trim?.()?.[0] || user?.email?.[0] || "U").toUpperCase();
+    // Use email's first letter for the avatar placeholder (consistent across the app)
+    const email = user?.email || parsedStorage?.email || null;
+    const init = email ? email.charAt(0).toUpperCase() : (name?.trim?.()?.[0] || "U").toUpperCase();
 
     let avatar = null;
     
