@@ -25,11 +25,18 @@ export async function getProfile(req, res) {
       await profile.save();
     }
 
-    // Convert relative path to absolute URL if needed
-    let profileImageUrl = profile.profileImageUrl;
-    if (profileImageUrl && !profileImageUrl.startsWith('http')) {
-      const baseUrl = process.env.BACKEND_BASE || `${req.protocol}://${req.get('host')}`;
-      profileImageUrl = baseUrl + profileImageUrl;
+    // Build avatar URL: if avatarData exists, return as data URI, otherwise use profileImageUrl
+    let avatarUrl = '';
+    if (profile.avatarData && profile.avatarMimeType) {
+      avatarUrl = `data:${profile.avatarMimeType};base64,${profile.avatarData}`;
+    } else if (profile.profileImageUrl) {
+      // Legacy: Convert relative path to absolute URL if needed
+      let profileImageUrl = profile.profileImageUrl;
+      if (!profileImageUrl.startsWith('http') && !profileImageUrl.startsWith('data:')) {
+        const baseUrl = process.env.BACKEND_BASE || `${req.protocol}://${req.get('host')}`;
+        profileImageUrl = baseUrl + profileImageUrl;
+      }
+      avatarUrl = profileImageUrl;
     }
 
     return res.json({
@@ -40,7 +47,8 @@ export async function getProfile(req, res) {
       },
       profile: {
         ...profile.toObject(),
-        profileImageUrl
+        profileImageUrl: avatarUrl,
+        avatarUrl: avatarUrl
       },
     });
   } catch (err) {
@@ -57,16 +65,7 @@ export async function updateProfile(req, res) {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
-    const { fullName, username, bio, email } = req.body || {};
-
-    // Handle uploaded file
-    let profileImageUrl = null;
-    if (req.file) {
-      const uploadRel = `/uploads/avatars/${req.file.filename}`;
-      // Convert to absolute URL
-      const baseUrl = process.env.BACKEND_BASE || `${req.protocol}://${req.get('host')}`;
-      profileImageUrl = baseUrl + uploadRel;
-    }
+    const { fullName, username, bio, email, avatarBase64, avatarMimeType } = req.body || {};
 
     let profile = await Profile.findOne({ userId });
     if (!profile) {
@@ -76,36 +75,27 @@ export async function updateProfile(req, res) {
     if (typeof username === 'string') profile.username = username;
     if (typeof bio === 'string') profile.bio = bio;
 
-    // If a new file was uploaded, attempt to remove the previous avatar file from disk
-    if (profileImageUrl) {
-      try {
-        const oldUrl = profile.profileImageUrl;
-        if (oldUrl && typeof oldUrl === 'string') {
-          const marker = '/uploads/avatars/';
-          const idx = oldUrl.indexOf(marker);
-          if (idx !== -1) {
-            const rel = oldUrl.slice(idx); // /uploads/avatars/filename
-            const relPath = rel.replace(/^\//, '');
-            const oldPath = path.join(__dirname, '..', relPath);
-            // Ensure file exists and then remove
-            if (fs.existsSync(oldPath)) {
-              try {
-                fs.unlinkSync(oldPath);
-                console.log('Deleted old avatar:', oldPath);
-              } catch (delErr) {
-                console.warn('Failed to delete old avatar:', oldPath, delErr.message);
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('Error while attempting to remove old avatar:', e.message);
-      }
-
-      profile.profileImageUrl = profileImageUrl;
+    // Handle avatar image - store directly in MongoDB as Base64
+    // Check if avatarBase64 is provided in the request body (JSON)
+    if (avatarBase64 && typeof avatarBase64 === 'string') {
+      // Store the Base64 data directly in MongoDB
+      profile.avatarData = avatarBase64;
+      profile.avatarMimeType = avatarMimeType || 'image/png';
+      // Clear legacy file-based URL
+      profile.profileImageUrl = '';
     }
-    profile.updatedAt = new Date();
+    
+    // Also support file upload via multer (for backward compatibility)
+    if (req.file) {
+      // Convert uploaded file to Base64 and store in MongoDB
+      const base64Data = req.file.buffer.toString('base64');
+      profile.avatarData = base64Data;
+      profile.avatarMimeType = req.file.mimetype || 'image/png';
+      // Clear legacy file-based URL
+      profile.profileImageUrl = '';
+    }
 
+    profile.updatedAt = new Date();
     await profile.save();
 
     // Update main User fields
@@ -120,10 +110,22 @@ export async function updateProfile(req, res) {
     }
     if (userChanged) await user.save();
 
+    // Build avatar URL for response
+    let avatarUrl = '';
+    if (profile.avatarData && profile.avatarMimeType) {
+      avatarUrl = `data:${profile.avatarMimeType};base64,${profile.avatarData}`;
+    }
+
     // Return profile with consistent format
     const responseProfile = {
-      ...profile.toObject(),
-      profileImageUrl: profileImageUrl || profile.profileImageUrl
+      _id: profile._id,
+      userId: profile.userId,
+      fullName: profile.fullName,
+      username: profile.username,
+      bio: profile.bio,
+      profileImageUrl: avatarUrl,
+      avatarUrl: avatarUrl,
+      updatedAt: profile.updatedAt
     };
 
     return res.json({ 

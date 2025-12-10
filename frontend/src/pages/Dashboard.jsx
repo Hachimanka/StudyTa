@@ -205,11 +205,12 @@ export default function Home() {
 
   const themeColors = getThemeColors();
 
-  // Derive avatar URL: prefer profile.profileImageUrl, then user.avatarUrl, then localStorage
+  // Derive avatar URL: prefer profile.avatarUrl, then profile.profileImageUrl, then user.avatarUrl, then localStorage
 const avatarUrl = (() => {
   try {
     // First check user object from auth context
-    const fromUser = user?.profile?.profileImageUrl || user?.avatarUrl || null;
+    // avatarUrl now may contain data: URIs from MongoDB
+    const fromUser = user?.profile?.avatarUrl || user?.profile?.profileImageUrl || user?.avatarUrl || null;
     if (fromUser) return fromUser;
     
     // Then check localStorage
@@ -218,7 +219,7 @@ const avatarUrl = (() => {
     const parsed = JSON.parse(raw);
     
     // Check multiple possible locations in localStorage
-    const fromStorage = parsed?.profile?.profileImageUrl || parsed?.avatarUrl || parsed?.avatar || null;
+    const fromStorage = parsed?.profile?.avatarUrl || parsed?.profile?.profileImageUrl || parsed?.avatarUrl || parsed?.avatar || null;
     
     return fromStorage;
   } catch (e) {
