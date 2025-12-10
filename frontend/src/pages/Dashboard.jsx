@@ -168,13 +168,15 @@ export default function Home() {
           if (res.ok) {
             const payload = await res.json();
             const p = payload.profile || {};
-            // Show username primarily; fall back to fullName or profileName
-            setFullName(p.username || p.fullName || profileName);
+            const u = payload.user || {};
+            // Show the user's actual name (fullName from profile, or name from user, or profileName)
+            setFullName(p.fullName || u.name || user?.name || profileName);
           } else {
-            setFullName(profileName);
+            // Fallback to user.name from auth context
+            setFullName(user?.name || profileName);
           }
         } catch {
-          setFullName(profileName);
+          setFullName(user?.name || profileName);
         }
       } else {
         setFullName(profileName);
