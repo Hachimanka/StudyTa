@@ -4,6 +4,14 @@ import Leftpic from "../assets/Leftpic.svg";
 
 export default function ForgotPassword(){
   const [email, setEmail] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [cooldownUntil, setCooldownUntil] = useState(() => {
+    try {
+      const v = localStorage.getItem('studyta_fp_cooldown_until')
+      return v ? Number(v) : 0
+    } catch { return 0 }
+  })
+  const [now, setNow] = useState(Date.now())
   const [isDark, setIsDark] = useState(() => {
     try {
       return localStorage.getItem("theme") === "dark";
@@ -24,9 +32,12 @@ export default function ForgotPassword(){
     window.addEventListener("themeChanged", onThemeChanged);
     window.addEventListener("storage", onThemeChanged);
 
+    const t = setInterval(() => setNow(Date.now()), 1000)
+
     return () => {
       window.removeEventListener("themeChanged", onThemeChanged);
       window.removeEventListener("storage", onThemeChanged);
+      clearInterval(t)
     };
   }, []);
 
@@ -36,7 +47,11 @@ export default function ForgotPassword(){
       alert('Please enter your email');
       return;
     }
+    if (cooldownUntil && Date.now() < cooldownUntil) {
+      return; // still in cooldown, do nothing
+    }
     try {
+      setSubmitting(true)
       const API_BASE = import.meta.env.VITE_API_BASE || '';
       const res = await fetch(`${API_BASE}/api/forgot-password`, {
         method: 'POST',
@@ -46,12 +61,18 @@ export default function ForgotPassword(){
       const data = await res.json();
       if (res.ok) {
         alert(data.message || 'Reset link sent to your email');
+        // set 5 minutes cooldown
+        const until = Date.now() + 5 * 60 * 1000;
+        setCooldownUntil(until)
+        try { localStorage.setItem('studyta_fp_cooldown_until', String(until)) } catch {}
       } else {
         alert(data.message || 'Failed to send reset link');
       }
     } catch (err) {
       console.error(err);
       alert('Error sending reset link');
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -148,10 +169,11 @@ export default function ForgotPassword(){
             {/* Send Code Button */}
             <button
               type="submit"
+              disabled={submitting || (cooldownUntil && now < cooldownUntil)}
               style={{
                 width: "300px",
                 height: "42px",
-                backgroundColor: "#6F422B",
+                backgroundColor: submitting || (cooldownUntil && now < cooldownUntil) ? "#8b6b59" : "#6F422B",
                 color: "white",
                 borderRadius: "13px",
                 fontSize: "14px",
@@ -159,7 +181,7 @@ export default function ForgotPassword(){
                 marginTop: "12px",
               }}
             >
-              Send Code
+              {submitting ? 'Sending...' : (cooldownUntil && now < cooldownUntil ? `Resend in ${Math.ceil((cooldownUntil - now)/1000)}s` : 'Send Code')}
             </button>
           </form>
         </div>

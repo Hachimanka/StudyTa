@@ -262,9 +262,9 @@ export default function FlashCardMode() {
       try {
         if (!user?._id) return;
         const durationSeconds = Math.max(0, Math.floor((Date.now() - (startedAtRef.current || Date.now()))/1000));
-        await fetch(`/api/studymode/sessions/complete`, {
+        await fetch(`${API_BASE}/api/studymode/sessions/complete`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user._id, mode: 'flashcards', startedAt: startedAtRef.current, endedAt: Date.now(), durationSeconds })
+          body: JSON.stringify({ userId: user._id, mode: 'flashcards', topic: title, startedAt: startedAtRef.current, endedAt: Date.now(), durationSeconds })
         });
       } catch (e) {
         console.warn('Failed to record completed flashcards session', e);

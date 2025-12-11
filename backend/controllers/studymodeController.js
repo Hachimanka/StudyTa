@@ -67,13 +67,14 @@ export async function updateSessionMode(req, res) {
 
 export async function completeSession(req, res) {
 	try {
-		const { userId, mode, startedAt, endedAt, durationSeconds } = req.body
+		const { userId, mode, startedAt, endedAt, durationSeconds, topic } = req.body
 		if (!userId || !mode) return res.status(400).json({ error: 'userId and mode required' })
 		const start = startedAt ? new Date(startedAt) : new Date()
 		const end = endedAt ? new Date(endedAt) : new Date()
 		const doc = await StudySession.create({
 			userId: new mongoose.Types.ObjectId(userId),
 			mode,
+			topic: topic || 'Untitled Session',
 			startedAt: start,
 			endedAt: end,
 			durationSeconds: typeof durationSeconds === 'number' ? Math.max(0, Math.floor(durationSeconds)) : Math.max(0, Math.floor((end - start)/1000))

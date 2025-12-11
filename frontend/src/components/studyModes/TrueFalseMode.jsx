@@ -204,9 +204,9 @@ export default function TrueFalseMode() {
         if (!user?._id) return;
         const startMs = startedAtRef.current || Date.now();
         const durationSeconds = Math.max(0, Math.floor((Date.now() - startMs)/1000));
-        await fetch(`/api/studymode/sessions/complete`, {
+        await fetch(`${API_BASE}/api/studymode/sessions/complete`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user._id, mode: 'trueFalse', startedAt: startMs, endedAt: Date.now(), durationSeconds })
+          body: JSON.stringify({ userId: user._id, mode: 'trueFalse', topic: title, startedAt: startMs, endedAt: Date.now(), durationSeconds })
         });
       } catch (e) {
         console.warn('Failed to record completed session', e);

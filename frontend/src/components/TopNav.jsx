@@ -2,10 +2,28 @@ import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+const STUDY_QUOTES = [
+  "The expert in anything was once a beginner.",
+  "It’s not about having time. It’s about making time.",
+  "Motivation is what gets you started. Habit is what keeps you going.",
+  "Don't watch the clock; do what it does. Keep going.",
+  "Success is the sum of small efforts, repeated day in and day out.",
+  "The future belongs to those who believe in the beauty of their dreams.",
+  "Focus on being productive instead of busy.",
+  "There are no shortcuts to any place worth going.",
+  "Believe you can and you're halfway there.",
+  "Work hard in silence, let your success be your noise."
+];
+
 export default function TopNav() {
   const { isAuthenticated, user, logout } = useAuth();
   const [forceUpdate, setForceUpdate] = useState(0);
   const navigate = useNavigate();
+  const [quote, setQuote] = useState("");
+
+  useEffect(() => {
+    setQuote(STUDY_QUOTES[Math.floor(Math.random() * STUDY_QUOTES.length)]);
+  }, []);
 
   // Listen for auth and localStorage changes
   useEffect(() => {
@@ -260,6 +278,11 @@ export default function TopNav() {
             </div>
             <span className="text-[#E9D8D0] font-semibold text-xl tracking-wide group-hover:opacity-90 transition-opacity">StudyTa</span>
           </button>
+
+          {/* Center: Random Quote */}
+          <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 text-[#E9D8D0] text-sm italic opacity-90 text-center max-w-md truncate px-4 pointer-events-none">
+            "{quote}"
+          </div>
 
           {/* Right: User name + avatar initial */}
           <div className="relative flex items-center gap-3 select-none">

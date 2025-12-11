@@ -55,6 +55,10 @@ export default function StudyMode() {
   // Modal state for confirming opening a saved set
   const [confirmOpenSaved, setConfirmOpenSaved] = useState(false)
   const [selectedSavedSet, setSelectedSavedSet] = useState(null)
+  
+  // Modal state for question quantity
+  const [showQuantityModal, setShowQuantityModal] = useState(false);
+  const [questionCount, setQuestionCount] = useState(5);
 
   const handleCreate = async () => {
     if (!studyMode) {
@@ -66,7 +70,13 @@ export default function StudyMode() {
       alert('Please enter some text or upload a file to create study materials.');
       return;
     }
-    
+
+    // Open the quantity modal instead of proceeding immediately
+    setShowQuantityModal(true);
+  };
+
+  const proceedWithGeneration = async () => {
+    setShowQuantityModal(false);
     setLoading(true);
 
     try {
@@ -85,13 +95,14 @@ export default function StudyMode() {
           }
           try {
             // Attempt to download the PDF binary
-            const pdfRes = await fetch(`${API_BASE}/api/library/file/${selectedFile.id}`);
+            const userIdParam = (user && user._id) ? `?userId=${encodeURIComponent(user._id)}` : '';
+            const pdfRes = await fetch(`${API_BASE}/api/library/download/${selectedFile.id}${userIdParam}`);
             if (pdfRes.ok) {
               const rawBlob = await pdfRes.blob();
               const blob = rawBlob.type ? rawBlob : new Blob([await rawBlob.arrayBuffer()], { type: 'application/pdf' });
               const form = new FormData();
-              // Use 'file' field name for compatibility with common backends
-              form.append('file', blob, selectedFile.name || 'library.pdf');
+              // Use 'pdf' field name to match backend extractor expectations
+              form.append('pdf', blob, selectedFile.name || 'library.pdf');
               const resp = await axios.post(`${API_BASE}/api/pdf/extract-text`, form, {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 withCredentials: true
@@ -121,8 +132,8 @@ export default function StudyMode() {
           textToUse = data?.textContent || data?.content || '';
         } else if (isPDF) {
           const form = new FormData();
-          // Use 'file' field name for compatibility
-          form.append('file', selectedFile, selectedFile.name || 'upload.pdf');
+          // Use 'pdf' field name to match backend extractor expectations
+          form.append('pdf', selectedFile, selectedFile.name || 'upload.pdf');
 
           const API_BASE = import.meta.env.VITE_API_BASE;
           if (!API_BASE) {
@@ -156,7 +167,7 @@ export default function StudyMode() {
         const resp = await fetch('/api/ai/generate-questions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text: textToUse, mode: studyMode })
+          body: JSON.stringify({ text: textToUse, mode: studyMode, count: questionCount })
         });
 
         if (resp.ok) {
@@ -180,6 +191,15 @@ export default function StudyMode() {
 
       // Derive a title for this generated session (do NOT auto-save to saved sets)
       const deriveTitleFromText = (txt) => {
+        // If a file was selected, use its name as the title
+        if (selectedFile) {
+           const name = selectedFile.name || selectedFile.originalName || selectedFile.filename;
+           if (name) {
+             // Remove extension if present
+             return name.replace(/\.[^/.]+$/, "");
+           }
+        }
+
         try {
           const s = String(txt || '').trim();
           if (!s) return 'Study Session';
@@ -192,7 +212,7 @@ export default function StudyMode() {
       const title = (questions && questions.title) || deriveTitleFromText(textToUse) || 'Study Session';
 
       // Navigate to the selected study mode and pass generated questions in state
-      navigateToStudyMode(studyMode, { questions, sourceText: textToUse, title: (questions && questions.title) });
+      navigateToStudyMode(studyMode, { questions, sourceText: textToUse, title: title });
     } catch (err) {
       console.error(err);
       alert(err.message || 'Failed to create study materials.');
@@ -250,7 +270,7 @@ export default function StudyMode() {
 
     const splitSentences = (txt) => txt.split(/(?<=[.?!])\s+/).map(s => s.trim()).filter(s => s.length > 20);
     const rawSentences = splitSentences(text);
-    const max = 12;
+    const max = questionCount || 5;
     const sentences = rawSentences.slice(0, max);
 
     const pickKey = (sentence) => {
@@ -861,6 +881,59 @@ export default function StudyMode() {
                 className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white' : 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white'}`}
               >
                 Open Set
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Choose File Source Modal */}
+      {showQuantityModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowQuantityModal(false)}
+        >
+          <div
+            className={`${darkMode ? 'bg-[#2e2119] text-white' : 'bg-white text-[#4A2C1E]'} w-full max-w-md rounded-2xl shadow-xl p-6 border ${darkMode ? 'border-gray-700' : 'border-[#E9D8D0]'} mx-4`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className={`text-2xl font-semibold mb-4 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>
+              How many questions?
+            </h3>
+            <p className={`${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'} mb-6`}>
+              Select the number of {studyModes.find(m => m.id === studyMode)?.name || 'questions'} to generate.
+            </p>
+            
+            <div className="mb-8 flex items-center justify-center gap-4">
+              <button 
+                onClick={() => setQuestionCount(Math.max(1, questionCount - 1))}
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${darkMode ? 'bg-[#3a2a20] hover:bg-[#4a3528]' : 'bg-[#F6E6DA] hover:bg-[#E9D8D0] text-[#8D5A3F]'}`}
+              >
+                -
+              </button>
+              <div className={`text-3xl font-bold w-16 text-center ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>
+                {questionCount}
+              </div>
+              <button 
+                onClick={() => setQuestionCount(Math.min(20, questionCount + 1))}
+                className={`w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold ${darkMode ? 'bg-[#3a2a20] hover:bg-[#4a3528]' : 'bg-[#F6E6DA] hover:bg-[#E9D8D0] text-[#8D5A3F]'}`}
+              >
+                +
+              </button>
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowQuantityModal(false)}
+                className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#3a2a20] text-white hover:bg-[#4a3528]' : 'bg-white text-[#8D5A3F] border border-[#E9D8D0] hover:bg-[#F6E6DA]'}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={proceedWithGeneration}
+                className={`px-6 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white' : 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white'}`}
+              >
+                Proceed
               </button>
             </div>
           </div>
