@@ -401,8 +401,6 @@ export default function Landing() {
             <h4 className="font-semibold mb-3">Follow Us</h4>
             <ul className="space-y-1 text-sm">
               <li><a href="https://web.facebook.com/profile.php?id=61584961109707" target="_blank" rel="noopener noreferrer" className="hover:underline">Facebook</a></li>
-              <li>Youtube</li>
-              <li>Instagram</li>
             </ul>
           </div>
         </div>
