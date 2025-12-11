@@ -143,7 +143,7 @@ export default function Signup() {
             <div style={{ display: "flex", gap: "14px" }}>
               <input
                 type="text"
-                placeholder="Full name"
+                placeholder="First name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="rounded-md border"
