@@ -3,10 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSettings } from '../../context/SettingsContext';
 import Sidebar from '../Sidebar';
 import ConfirmSaveModal from '../ConfirmSaveModal';
+import { useAuth } from '../../context/AuthContext';
 
 export default function FlashCardMode() {
   const { darkMode } = useSettings();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const startedAtRef = useRef(Date.now());
+  const API_BASE = import.meta.env.VITE_API_BASE || '';
   const [isFlipped, setIsFlipped] = useState(false);
   const { state } = useLocation();
   // Fallback to sessionStorage if navigation state doesn't include questions
@@ -25,6 +29,7 @@ export default function FlashCardMode() {
     }
   }
   const [qIndex, setQIndex] = useState(0);
+  const [finished, setFinished] = useState(false);
 
   // Editable title state
   const [title, setTitle] = useState('Title III');
@@ -156,8 +161,17 @@ export default function FlashCardMode() {
       const raw = sessionStorage.getItem('studyta_session');
       if (!raw) return;
       const s = JSON.parse(raw);
-      const payload = { title: s.title || 'Untitled', mode: s.mode || 'flashcards', questions: s.questions || [], score: 0, total: (s.questions||[]).length };
-      const res = await fetch('/api/studymode/save-quiz', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const payload = {
+        title: s.title || state?.title || title || 'Study Session',
+        mode: s.mode || 'flashcards',
+        questions: s.questions || [],
+        score: 0,
+        total: (s.questions||[]).length,
+        userId: userData?._id,
+        durationMinutes: Math.max(0.5, Math.round(((Date.now() - (startedAtRef.current || Date.now())) / 60000) * 10) / 10)
+      };
+      const res = await fetch(`${API_BASE}/api/studymode/save-quiz`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
       const data = await res.json().catch(()=>({}));
       if (!res.ok) throw new Error(data?.error || 'Save failed');
       // Persist locally to saved sets
@@ -233,7 +247,30 @@ export default function FlashCardMode() {
 
   const current = questions[qIndex];
   const prev = () => setQIndex(i => Math.max(0, i - 1));
-  const next = () => setQIndex(i => Math.min(i + 1, Math.max(0, questions.length - 1)));
+  const next = () => setQIndex(i => {
+    const nextIndex = Math.min(i + 1, Math.max(0, questions.length - 1));
+    if (questions.length && i + 1 >= questions.length) {
+      setFinished(true);
+    }
+    return nextIndex;
+  });
+
+  // Record a completed session when user reaches the end
+  useEffect(() => {
+    if (!finished) return;
+    (async () => {
+      try {
+        if (!user?._id) return;
+        const durationSeconds = Math.max(0, Math.floor((Date.now() - (startedAtRef.current || Date.now()))/1000));
+        await fetch(`/api/studymode/sessions/complete`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user._id, mode: 'flashcards', startedAt: startedAtRef.current, endedAt: Date.now(), durationSeconds })
+        });
+      } catch (e) {
+        console.warn('Failed to record completed flashcards session', e);
+      }
+    })();
+  }, [finished, user?._id]);
 
   return (
     <div className={`flex min-h-screen transition-colors duration-500 ${darkMode ? 'bg-[#1f1b16] text-[#f5e9df]' : 'bg-[var(--bg)] text-[#4A2C1E]'}`}>

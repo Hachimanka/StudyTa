@@ -47,7 +47,19 @@ export default function TopNav() {
   const location = useLocation();
   const isLanding = location && location.pathname === "/";
 
-  // Derive user's display name, initial (uppercase), and potential avatar image
+  // Add a new effect to refresh avatar when profile updates
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setForceUpdate((prev) => prev + 1);
+    };
+    
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('profileUpdated', handleProfileUpdate);
+    };
+  }, []);
+
+  // Update the useMemo to prioritize freshly updated data
   const { displayName, initial, avatarUrl } = useMemo(() => {
     let parsedStorage = null;
     try {
@@ -57,39 +69,46 @@ export default function TopNav() {
       parsedStorage = null;
     }
 
-    const nameFromUser =
-      user?.name ||
-      [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-      user?.fullName || null;
-    const nameFromStorage = parsedStorage
-      ? parsedStorage?.name ||
-        parsedStorage?.fullName ||
-        [parsedStorage?.firstName, parsedStorage?.lastName].filter(Boolean).join(" ")
-      : null;
-
-    // Prefer username (from user.profile or user.username or storage) over full name
-    const usernameCandidate =
-      user?.profile?.username || user?.username || parsedStorage?.profile?.username || parsedStorage?.username || null;
-
+    const nameFromUser = user?.name || user?.fullName || null;
+    const nameFromStorage = parsedStorage?.name || parsedStorage?.fullName || null;
+    const usernameCandidate = user?.profile?.username || user?.username || parsedStorage?.profile?.username || parsedStorage?.username || null;
+    
     const name = usernameCandidate || nameFromUser || nameFromStorage || user?.email || "Account";
     const init = (name?.trim?.()?.[0] || user?.email?.[0] || "U").toUpperCase();
 
-    // Common possible avatar fields (also check profile fields)
-    const avatarCandidates = [
-      user?.avatar,
-      user?.avatarUrl,
-      user?.profile?.profileImageUrl,
-      user?.profilePicture,
-      user?.photo,
-      user?.image,
-      parsedStorage?.avatar,
-      parsedStorage?.avatarUrl,
-      parsedStorage?.profile?.profileImageUrl,
-      parsedStorage?.profilePicture,
-      parsedStorage?.photo,
-      parsedStorage?.image
-    ].filter(Boolean);
-    const avatar = avatarCandidates.find((v) => typeof v === "string" && v.length > 3) || null;
+    let avatar = null;
+    
+    // Check user object first (most recent)
+    if (user?.profile?.profileImageUrl) {
+      avatar = user.profile.profileImageUrl;
+    } else if (user?.avatarUrl) {
+      avatar = user.avatarUrl;
+    } else if (user?.avatar) {
+      avatar = user.avatar;
+    }
+    
+    // Then check localStorage
+    if (!avatar && parsedStorage) {
+      if (parsedStorage.profile?.profileImageUrl) {
+        avatar = parsedStorage.profile.profileImageUrl;
+      } else if (parsedStorage.avatarUrl) {
+        avatar = parsedStorage.avatarUrl;
+      } else if (parsedStorage.avatar) {
+        avatar = parsedStorage.avatar;
+      }
+    }
+    
+    // If avatar is a relative path (doesn't start with http or /), resolve it against API base
+    try {
+      const API_BASE = import.meta.env.VITE_API_BASE || '';
+      if (avatar && !avatar.startsWith('http') && !avatar.startsWith('/')) {
+        const cleaned = avatar.replace(/^\.\//, '').replace(/^\//, '');
+        avatar = API_BASE ? `${API_BASE.replace(/\/$/, '')}/${cleaned}` : `/${cleaned}`;
+      }
+    } catch (e) {
+      // If import.meta is not available for some reason, just keep avatar as-is
+    }
+    
     return { displayName: name, initial: init, avatarUrl: avatar };
   }, [user, forceUpdate]);
 
@@ -138,7 +157,7 @@ export default function TopNav() {
     })();
 
   // Authenticated Topbar UI (after login)
-  if (isAuthenticated && !isLanding) {
+  if (isAuthenticated) {
     return (
       <nav className="sticky top-0 w-full h-15 bg-[#845845] shadow-sm z-50">
         <div className="mx-auto flex items-center justify-between px-6 py-3">
@@ -173,6 +192,7 @@ export default function TopNav() {
             >
               {avatarUrl ? (
                 <img
+                  key={avatarUrl}
                   src={avatarUrl}
                   alt={`${displayName} avatar`}
                   className="w-full h-full object-cover"
@@ -196,6 +216,7 @@ export default function TopNav() {
                   <div className="w-28 h-28 rounded-full bg-[#FFFFFF] border-3 border-[#6F422B] flex items-center justify-center text-5xl font-semibold mb-4 overflow-hidden">
                     {avatarUrl ? (
                       <img
+                        key={avatarUrl}
                         src={avatarUrl}
                         alt={`${displayName} avatar large`}
                         className="w-full h-full object-cover"
@@ -248,11 +269,7 @@ export default function TopNav() {
     );
   }
 
-  // Hide nav entirely on non-landing pages when not authenticated
-  if (!isAuthenticated && !isLanding) {
-    return null;
-  }
-
+  // NOT authenticated - show simple nav with logo and theme toggle for ALL pages
   return (
     <nav
       className={`shadow-md transition-all duration-500 ${
@@ -282,58 +299,62 @@ export default function TopNav() {
           </span>
         </div>
 
-        {/* Nav Links */}
-        <div className="hidden md:flex space-x-8 mx-auto justify-center w-full">
-          {[
-            { label: "Home", hash: "home" },
-            { label: "How it Works", hash: "how-it-works" },
-            { label: "Features", hash: "features" },
-            { label: "About", hash: "about" }
-          ].map((item) => (
-            <a
-              key={item.label}
-              href={`#${item.hash}`}
-              className={`transition-all duration-300 font-regular ${
-                isDark
-                  ? "text-[#f5e9df] hover:text-[#e6b97d]"
-                  : "text-[#FDF3EA] hover:text-[#E59C5C]"
-              }`}
-              onClick={e => {
-                e.preventDefault();
-                const el = document.getElementById(item.hash);
-                if (el) {
-                  el.scrollIntoView({ behavior: "smooth" });
-                }
-              }}
-            >
-              {item.label}
-            </a>
-          ))}
-        </div>
+        {/* Nav Links - only show on landing page */}
+        {isLanding && (
+          <div className="hidden md:flex space-x-8 mx-auto justify-center w-full">
+            {[
+              { label: "Home", hash: "home" },
+              { label: "How it Works", hash: "how-it-works" },
+              { label: "Features", hash: "features" },
+              { label: "About", hash: "about" }
+            ].map((item) => (
+              <a
+                key={item.label}
+                href={`#${item.hash}`}
+                className={`transition-all duration-300 font-regular ${
+                  isDark
+                    ? "text-[#f5e9df] hover:text-[#e6b97d]"
+                    : "text-[#FDF3EA] hover:text-[#E59C5C]"
+                }`}
+                onClick={e => {
+                  e.preventDefault();
+                  const el = document.getElementById(item.hash);
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth" });
+                  }
+                }}
+              >
+                {item.label}
+              </a>
+            ))}
+          </div>
+        )}
 
-        {/* Right Side */}
-        <div className="absolute right-0 flex items-center space-x-2 pr-3 md:pr-4 lg:pr-5 h-full">
-          <Link
-            to="/register"
-            className={`px-8 py-2 rounded-full font-medium border transition-all duration-300 ${
-              isDark
-                ? "border-[#f5e9df] text-[#f5e9df] hover:bg-[#3a2a20]"
-                : "border-[#FDF3EA] text-[#FDF3EA] hover:bg-[#A4714D]/40"
-            }`}
-          >
-            Sign up
-          </Link>
-          <Link
-            to="/login"
-            className={`px-8 py-2 rounded-full font-medium transition-all duration-300 ${
-              isDark
-                ? "bg-[#E59C5C] text-[#1f1b16] hover:bg-[#e6b97d]"
-                : "bg-[#E59C5C] text-white hover:bg-[#d68a47]"
-            }`}
-          >
-            Sign in
-          </Link>
-        </div>
+        {/* Right Side - only show on landing page */}
+        {isLanding && (
+          <div className="absolute right-0 flex items-center space-x-2 pr-3 md:pr-4 lg:pr-5 h-full">
+            <Link
+              to="/register"
+              className={`px-8 py-2 rounded-full font-medium border transition-all duration-300 ${
+                isDark
+                  ? "border-[#f5e9df] text-[#f5e9df] hover:bg-[#3a2a20]"
+                  : "border-[#FDF3EA] text-[#FDF3EA] hover:bg-[#A4714D]/40"
+              }`}
+            >
+              Sign up
+            </Link>
+            <Link
+              to="/login"
+              className={`px-8 py-2 rounded-full font-medium transition-all duration-300 ${
+                isDark
+                  ? "bg-[#E59C5C] text-[#1f1b16] hover:bg-[#e6b97d]"
+                  : "bg-[#E59C5C] text-white hover:bg-[#d68a47]"
+              }`}
+            >
+              Sign in
+            </Link>
+          </div>
+        )}
       </div>
     </nav>
   );

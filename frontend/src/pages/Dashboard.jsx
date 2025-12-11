@@ -15,6 +15,11 @@ export default function Home() {
   const { user } = useAuth();
   const { darkMode, studyStats, profileName, getThemeColors } = useSettings();
   const [fullName, setFullName] = useState("");
+  const [analyticsStats, setAnalyticsStats] = useState({
+    hoursStudied: 0,
+    topicsCovered: 0,
+    streak: 0
+  }); // Stats from analytics API
   const [libraryStats, setLibraryStats] = useState({
     totalFiles: 0,
     totalFolders: 0,
@@ -24,6 +29,31 @@ export default function Home() {
   const [recentActivities, setRecentActivities] = useState([]);
   const [weeklyProgress, setWeeklyProgress] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Fetch analytics stats from API (shared with Analytics page)
+  const fetchAnalyticsStats = async () => {
+    try {
+      const API_BASE = import.meta.env.VITE_API_BASE || '';
+      let userId = user?._id;
+      if (!userId) {
+        const userData = JSON.parse(localStorage.getItem('user') || '{}');
+        userId = userData?._id;
+      }
+      if (!userId) return;
+
+      const res = await fetch(`${API_BASE}/api/analytics/stats?userId=${userId}&range=all`);
+      if (res.ok) {
+        const data = await res.json();
+        setAnalyticsStats({
+          hoursStudied: data.totalHours || 0,
+          topicsCovered: data.topicsFinished || 0,
+          streak: data.streak || 0
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch analytics stats:', err);
+    }
+  };
 
   // Fetch library statistics
   const fetchLibraryStats = async () => {
@@ -138,13 +168,15 @@ export default function Home() {
           if (res.ok) {
             const payload = await res.json();
             const p = payload.profile || {};
-            // Show username primarily; fall back to fullName or profileName
-            setFullName(p.username || p.fullName || profileName);
+            const u = payload.user || {};
+            // Prioritize: registered user name > profile fullName > profile username > settings profileName
+            setFullName(u.name || p.fullName || p.username || profileName);
           } else {
-            setFullName(profileName);
+            // Fallback to user object from auth context
+            setFullName(user?.name || user?.profile?.fullName || profileName);
           }
         } catch {
-          setFullName(profileName);
+          setFullName(user?.name || profileName);
         }
       } else {
         setFullName(profileName);
@@ -155,7 +187,8 @@ export default function Home() {
       setLoading(true);
       await Promise.all([
         fetchUserInfo(),
-        fetchLibraryStats()
+        fetchLibraryStats(),
+        fetchAnalyticsStats()
       ]);
       generateRecentActivities();
       generateWeeklyProgress();
@@ -175,18 +208,26 @@ export default function Home() {
   const themeColors = getThemeColors();
 
   // Derive avatar URL: prefer profile.profileImageUrl, then user.avatarUrl, then localStorage
-  const avatarUrl = (() => {
-    try {
-      const fromUser = user?.profile?.profileImageUrl || user?.avatarUrl || null;
-      if (fromUser) return fromUser;
-      const raw = localStorage.getItem('stuyta_user') || localStorage.getItem('studytA_user') || localStorage.getItem('user');
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      return parsed?.profile?.profileImageUrl || parsed?.avatarUrl || null;
-    } catch (e) {
-      return user?.profile?.profileImageUrl || user?.avatarUrl || null;
-    }
-  })();
+const avatarUrl = (() => {
+  try {
+    // First check user object from auth context
+    const fromUser = user?.profile?.profileImageUrl || user?.avatarUrl || null;
+    if (fromUser) return fromUser;
+    
+    // Then check localStorage
+    const raw = localStorage.getItem('stuyta_user') || localStorage.getItem('studytA_user') || localStorage.getItem('user');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    
+    // Check multiple possible locations in localStorage
+    const fromStorage = parsed?.profile?.profileImageUrl || parsed?.avatarUrl || parsed?.avatar || null;
+    
+    return fromStorage;
+  } catch (e) {
+    console.warn('Error getting avatar URL:', e);
+    return null;
+  }
+})();
 
   // Utility function to format file size
   const formatFileSize = (bytes) => {
@@ -287,7 +328,7 @@ export default function Home() {
                         darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                       }`}
                     >
-                      {studyStats.streak}
+                      {analyticsStats.streak}
                     </p>
                   </div>
                   
@@ -384,7 +425,7 @@ export default function Home() {
               </h3>
 
               {/* This Week Analytics */}
-              <AnalyticsWidget darkMode={darkMode} themeColors={themeColors} studyStats={studyStats} /> 
+              <AnalyticsWidget darkMode={darkMode} themeColors={themeColors} studyStats={studyStats} analyticsStats={analyticsStats} /> 
             </div>
           </div>
         </div>

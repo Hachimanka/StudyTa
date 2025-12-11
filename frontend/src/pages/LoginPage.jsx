@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
-import { useNavigate, Link } from "react-router-dom";
-import EyeIcon from "../components/EyeIcon";
-import TopNav from "../components/TopNav";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import Leftpic from "../assets/Leftpic.svg";
 
 export default function Login() {
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [verifiedMsg, setVerifiedMsg] = useState("");
 
   const [isDark, setIsDark] = useState(() => {
     try {
@@ -33,6 +34,14 @@ export default function Login() {
     };
   }, []);
 
+  // Show a friendly message if redirected after email verification
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("verified") === "1") {
+      setVerifiedMsg("Your email is verified. Please sign in.");
+    }
+  }, [location.search]);
+
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
@@ -48,8 +57,6 @@ export default function Login() {
   };
 
   return (
-  <>
-
     <div
       className={`min-h-screen w-full flex items-center justify-center px-4 transition-colors duration-500 ${
         isDark ? "bg-[#1f1b16]" : "bg-[#F5E9DF]"
@@ -64,23 +71,47 @@ export default function Login() {
       >
         {/* LEFT IMAGE BOX */}
         <div
-          className={`rounded-xl ${
+          className={`rounded-xl overflow-hidden ${
             isDark ? "bg-[#3a2a20]" : "bg-[#D9D9D9]"
           }`}
-          style={{ width: "300px", height: "500px" }}
-        ></div>
+          style={{ width: "300px", height: "556px" }}
+        >
+          <img 
+            src={Leftpic}
+            alt="Decoration" 
+            style={{ 
+              width: "100%", 
+              height: "100%", 
+              objectFit: "cover" 
+            }}
+          />
+        </div>
 
         {/* RIGHT FORM SECTION */}
         <div className="flex flex-col justify-center" style={{ marginTop: "-20px" }}>
+          {verifiedMsg && (
+            <div
+              style={{
+                backgroundColor: "#3F2BC6",
+                color: "white",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                fontSize: "12px",
+                marginBottom: "10px",
+              }}
+            >
+              {verifiedMsg}
+            </div>
+          )}
           {/* Title */}
           <h2
             className={`${isDark ? "text-[#f5e9df]" : "text-white"}`}
-              style={{
-                fontSize: "30px",
-                fontWeight: 500,
-                fontStyle: "italic",
-                marginBottom: "12px",
-              }}
+            style={{
+              fontSize: "30px",
+              fontWeight: 500,
+              fontStyle: "italic",
+              marginBottom: "12px",
+            }}
           >
             Welcome Back!
           </h2>
@@ -88,13 +119,13 @@ export default function Login() {
           {/* Subtext */}
           <p
             className={`${isDark ? "text-[#f5e9df]/70" : "text-white/90"}`}
-                style={{ fontSize: "14px", fontWeight: 300 }}
+            style={{ fontSize: "14px", fontWeight: 300 }}
           >
             Don't have an account?{" "}
             <Link
               to="/register"
               style={{
-                fontSize: "20px",
+                fontSize: "14px",
                 fontWeight: 300,
                 fontStyle: "italic",
                 color: "#3F2BC6",
@@ -113,7 +144,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="rounded-md border"
-                style={{
+              style={{
                 width: "300px",
                 height: "42px",
                 paddingLeft: "10px",
@@ -150,9 +181,9 @@ export default function Login() {
                   outline: "none",
                 }}
                 onFocus={(e) => e.target.style.borderColor = "#6F422B"}
-              onBlur={(e) => e.target.style.borderColor = "#d3b49b"}
+                onBlur={(e) => e.target.style.borderColor = "#d3b49b"}
               />
-{/* SHOW PASSWORD BOX - Below input, aligned with Forgot Password */}
+              {/* SHOW PASSWORD BOX - Below input, aligned with Forgot Password */}
               <div 
                 style={{
                   display: "flex",
@@ -178,7 +209,7 @@ export default function Login() {
                     }}
                   >
                     {showPassword && (
-                      <span style={{ color: "#6F422B", fontSize: "14px", fontWeight: "bold" }}>
+                      <span style={{ color: "#6F422B", fontSize: "11px", fontWeight: "bold" }}>
                         ✓
                       </span>
                     )}
@@ -187,7 +218,7 @@ export default function Login() {
                   <span
                     style={{
                       color: "white",
-                      fontSize: "15px",
+                      fontSize: "11px",
                       fontWeight: 300,
                       cursor: "pointer",
                     }}
@@ -200,7 +231,7 @@ export default function Login() {
                 <Link
                   to="/forgot-password"
                   style={{
-                    fontSize: "15px",
+                    fontSize: "11px",
                     color: "#3F2BC6",
                     fontWeight: 300,
                   }}
@@ -214,7 +245,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-                style={{
+              style={{
                 width: "300px",
                 height: "42px",
                 backgroundColor: "#6F422B",
@@ -278,6 +309,5 @@ export default function Login() {
         </div>
       </div>
     </div>
-  </>
-);
+  );
 }

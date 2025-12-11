@@ -3,10 +3,92 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSettings } from '../../context/SettingsContext';
 import Sidebar from '../Sidebar';
 import ConfirmSaveModal from '../ConfirmSaveModal';
+import { useAuth } from '../../context/AuthContext';
 
 export default function MultipleChoiceMode() {
   const { darkMode } = useSettings();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const startedAtRef = useRef(null);
+
+  // API base URL
+  const API_BASE = import.meta.env.VITE_API_BASE || '';
+
+  // Function to record study sessions
+  const recordStudySession = async (topic, durationMinutes) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user?._id;
+      if (!userId) return;
+      
+      await fetch(`${API_BASE}/api/analytics/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId, 
+          topic, 
+          durationMinutes: Math.max(0.5, Math.round(durationMinutes * 10) / 10)
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to record study session', err);
+    }
+  };
+
+  // Function to trigger daily study start - only triggers streak once per day
+  const triggerDailyStudyStart = async () => {
+    try {
+      const today = new Date().toDateString();
+      const lastStudyDate = localStorage.getItem('studyta_last_study_date');
+      
+      // Only trigger if we haven't studied today yet
+      if (lastStudyDate === today) {
+        return; // Already triggered today
+      }
+      
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user?._id;
+      if (!userId) return;
+      
+      // Mark today as studied
+      localStorage.setItem('studyta_last_study_date', today);
+      
+      // Record a minimal session to trigger the streak
+      await fetch(`${API_BASE}/api/analytics/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId, 
+          topic: 'Daily Study Start', 
+          durationMinutes: 0.1 // Minimal to just trigger streak
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to trigger daily study start', err);
+    }
+  };
+
+  // Function to record topic completion
+  const recordTopicCompletion = async (topic) => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = user?._id;
+      if (!userId) return;
+      
+      // Record a minimal study session to mark topic as completed
+      await fetch(`${API_BASE}/api/analytics/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userId, 
+          topic, 
+          durationMinutes: 1 // Minimum to count as studied
+        }),
+      });
+    } catch (err) {
+      console.error('Failed to record topic completion', err);
+    }
+  };
 
   // Editable title state
   const [title, setTitle] = useState('Title11111');
@@ -36,9 +118,64 @@ export default function MultipleChoiceMode() {
   const [userAnswers, setUserAnswers] = useState(() => Array(questions.length).fill(null));
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
+  useEffect(() => {
+    if (!finished) return;
+    (async () => {
+      try {
+        if (!user?._id) return;
+        const startMs = startedAtRef.current || Date.now();
+        const durationSeconds = Math.max(0, Math.floor((Date.now() - startMs)/1000));
+        await fetch(`/api/studymode/sessions/complete`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user._id, mode: 'multipleChoice', startedAt: startMs, endedAt: Date.now(), durationSeconds })
+        });
+      } catch (e) {
+        console.warn('Failed to record completed session', e);
+      }
+    })();
+  }, [finished, user?._id])
   const [showFeedback, setShowFeedback] = useState(false);
   const [loading, setLoading] = useState(false);
   const [savedAlready, setSavedAlready] = useState(false);
+
+  // Study time tracking states
+  const [startTime, setStartTime] = useState(null);
+  const [totalStudyTime, setTotalStudyTime] = useState(0);
+
+  // Start tracking when component mounts or when quiz starts
+  useEffect(() => {
+    if (questions.length > 0 && !finished) {
+      setStartTime(Date.now());
+      // Trigger daily study start (streak) only once per day
+      triggerDailyStudyStart();
+    }
+  }, [questions, finished]);
+
+  // Track time when user answers questions
+  useEffect(() => {
+    if (selected !== null && startTime) {
+      const endTime = Date.now();
+      const minutes = (endTime - startTime) / (1000 * 60);
+      setTotalStudyTime(prev => prev + minutes);
+      setStartTime(Date.now()); // Reset for next question
+    }
+  }, [selected, startTime]);
+
+  // Record session when component unmounts or quiz finishes
+  useEffect(() => {
+    return () => {
+      if (totalStudyTime > 0) {
+        recordStudySession(title || 'Multiple Choice Quiz', totalStudyTime);
+      }
+    };
+  }, [totalStudyTime, title]);
+
+  // Also record when quiz finishes
+  useEffect(() => {
+    if (finished && totalStudyTime > 0) {
+      recordStudySession(title || 'Multiple Choice Quiz', totalStudyTime);
+    }
+  }, [finished, totalStudyTime, title]);
 
   // Derive title from navigation state (title or sourceText)
   useEffect(() => {
@@ -65,6 +202,7 @@ export default function MultipleChoiceMode() {
     setFinished(false);
     setSelected(null);
     setShowFeedback(false);
+    startedAtRef.current = null;
   }, [questions]);
 
   useEffect(() => {
@@ -195,16 +333,22 @@ export default function MultipleChoiceMode() {
       const raw = sessionStorage.getItem('studyta_session');
       if (!raw) return;
       const s = JSON.parse(raw);
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
       const payload = {
-        title: s.title || 'Untitled Quiz',
+        title: s.title || state?.title || title || 'Study Session',
         mode: s.mode || 'multipleChoice',
         questions: s.questions || [],
         score: score || 0,
         total: (s.questions || []).length,
+        userId: user?._id,
+        durationMinutes: Math.max(0.5, Math.round(((Date.now() - (startedAtRef.current || Date.now())) / 60000) * 10) / 10)
       };
-      const res = await fetch('/api/studymode/save-quiz', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const res = await fetch(`${API_BASE}/api/studymode/save-quiz`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
       const data = await res.json().catch(()=>({}));
       if (!res.ok) throw new Error(data?.error || 'Save failed');
+
+      // Record topic completion
+      await recordTopicCompletion(payload.title || 'Study Session');
 
       // Persist locally to saved sets to prevent duplicate saves
       try {
@@ -417,6 +561,7 @@ export default function MultipleChoiceMode() {
                           key={idx}
                           onClick={() => {
                             if (showFeedback || finished) return;
+                            if (!startedAtRef.current) startedAtRef.current = Date.now();
                             setSelected(idx);
                             setShowFeedback(true);
                             setUserAnswers(prev => {
@@ -487,3 +632,7 @@ export default function MultipleChoiceMode() {
     </div>
   );
 }
+
+// Record completed session when finished flips to true
+// Use effect at bottom to avoid interfering in render above
+ 

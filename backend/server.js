@@ -17,6 +17,7 @@ import studymodeRoute from './routes/studymodeRoute.js';
 import calendarRoute from './routes/calendarRoute.js';
 import musicRoutes from './routes/musicRoute.js';
 import profileRoute from './routes/profileRoute.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -37,8 +38,26 @@ const upload = multer({
 
 dotenv.config();
 connectDB();
+
+// Set BACKEND_BASE environment variable if not set
+if (!process.env.BACKEND_BASE) {
+  const PORT = process.env.PORT || 5000;
+  process.env.BACKEND_BASE = `http://localhost:${PORT}`;
+}
+
 const app = express();
-app.use(cors());
+
+// Configure CORS properly for localhost and Vercel deployment
+app.use(
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'https://study-ta-blond.vercel.app'
+    ],
+    credentials: true
+  })
+);
+
 app.use(express.json({ limit: '10mb' }));
 
 // Register OCR and Word extraction routes
@@ -58,11 +77,16 @@ app.use('/api/summarize', summarizeRoutes);
 app.use('/api/studymode', studymodeRoute);
 // Calendar routes
 app.use('/api/calendar', calendarRoute);
+// Analytics routes (based on StudyMode sessions)
+app.use('/api/analytics', analyticsRoutes);
 
 // Music routes (upload, list, update, delete)
 app.use('/api/music', musicRoutes);
 
-// Serve uploaded files statically
+// Analytics routes
+app.use('/api/analytics', analyticsRoutes);
+
+// Serve uploaded files statically - FIXED PATH
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const PORT = process.env.PORT || 5000;
@@ -171,7 +195,7 @@ const extractTextFromPDF = (buffer) => {
       try {
         // Extract text from all pages
         let extractedText = '';
-  if (pdfData.Pages && pdfData.Pages.length > 0) {
+        if (pdfData.Pages && pdfData.Pages.length > 0) {
           pdfData.Pages.forEach((page) => {
             if (page.Texts && page.Texts.length > 0) {
               page.Texts.forEach((textItem) => {
@@ -262,6 +286,10 @@ app.post('/api/pdf/extract-text', upload.single('pdf'), async (req, res) => {
       return res.status(400).json({ error: 'File too large. Maximum size is 10MB' });
     }
     
+    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({ error: 'Only PDF files are allowed' });
+    }
+    
     res.status(500).json({ 
       error: 'Internal server error during PDF processing',
       details: error.message 
@@ -269,7 +297,6 @@ app.post('/api/pdf/extract-text', upload.single('pdf'), async (req, res) => {
   }
 });
 
-// --- OCR endpoint ---
 // --- AI Summarizer endpoint ---
 app.post("/api/ai/summarize", async (req, res) => {
   try {
@@ -317,6 +344,38 @@ app.get("/test-pdf", (req, res) => {
   res.send("PDF extraction endpoint available at POST /api/pdf/extract-text");
 });
 
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({
+    status: "OK",
+    backendBase: process.env.BACKEND_BASE,
+    port: PORT,
+    uploadsPath: path.join(__dirname, 'uploads')
+  });
+});
+
+// Static file test endpoint
+app.get("/test-static", (req, res) => {
+  const uploadsDir = path.join(__dirname, 'uploads');
+  const avatarsDir = path.join(uploadsDir, 'avatars');
+  
+  let files = [];
+  try {
+    if (fs.existsSync(avatarsDir)) {
+      files = fs.readdirSync(avatarsDir);
+    }
+  } catch (e) {
+    console.error("Error reading avatars directory:", e);
+  }
+  
+  res.json({
+    uploadsDir,
+    avatarsDir,
+    exists: fs.existsSync(avatarsDir),
+    files: files.slice(0, 10) // Show first 10 files
+  });
+});
+
 // Error handling middleware
 app.use((error, req, res, next) => {
   console.error('Middleware error:', error);
@@ -337,9 +396,27 @@ app.use((error, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, 'uploads');
+const avatarsDir = path.join(uploadsDir, 'avatars');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log(`Created uploads directory: ${uploadsDir}`);
+}
+
+if (!fs.existsSync(avatarsDir)) {
+  fs.mkdirSync(avatarsDir, { recursive: true });
+  console.log(`Created avatars directory: ${avatarsDir}`);
+}
+
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`PDF extraction endpoint: ${BACKEND_BASE.replace(/\/$/, '')}/api/pdf/extract-text`);
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`📁 Backend base URL: ${BACKEND_BASE}`);
+  console.log(`📁 Static files served from: ${path.join(__dirname, 'uploads')}`);
+  console.log(`📁 Profile images at: ${BACKEND_BASE}/uploads/avatars/`);
+  console.log(`📄 PDF extraction endpoint: ${BACKEND_BASE}/api/pdf/extract-text`);
+  console.log(`👤 Profile endpoint: ${BACKEND_BASE}/api/profile/:userId`);
 });
 
 // --- AI generate questions endpoint ---
@@ -395,5 +472,3 @@ app.post('/api/ai/generate-questions', async (req, res) => {
     res.status(500).json({ error: 'Server error', details: err.message });
   }
 });
-
-// (Music upload/management moved to router at ./routes/musicRoute.js)

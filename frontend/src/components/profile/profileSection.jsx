@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion'; 
 import { useAuth } from '../../context/AuthContext';
 
@@ -16,16 +16,26 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
 
   const [formData, setFormData] = useState(initialData);
 
+  // Keep a snapshot of the original loaded profile so we can compare for changes
+  const [originalData, setOriginalData] = useState(initialData);
+
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [avatarFile, setAvatarFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  const hasChanges = 
-    formData.fullName !== initialData.fullName ||
-    formData.bio !== initialData.bio ||
-    formData.username !== initialData.username ||
-    formData.avatar !== initialData.avatar ||
-    !!avatarFile;
+  const hasChanges = useMemo(() => {
+    // If a new avatar file has been selected that's a change
+    if (avatarFile) return true;
+
+    // Compare each visible field against the original loaded snapshot
+    if (!originalData) return false;
+    return (
+      (formData.fullName || '') !== (originalData.fullName || '') ||
+      (formData.bio || '') !== (originalData.bio || '') ||
+      (formData.username || '') !== (originalData.username || '') ||
+      (formData.avatar || '') !== (originalData.avatar || '')
+    );
+  }, [formData, originalData, avatarFile]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -71,6 +81,14 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
           email: data.user?.email || '',
           avatar: p.profileImageUrl || ''
         });
+        // Save the loaded profile snapshot for change-detection
+        setOriginalData({
+          fullName: p.fullName || data.user?.name || '',
+          bio: p.bio || '',
+          username: p.username || '',
+          email: data.user?.email || '',
+          avatar: p.profileImageUrl || ''
+        });
         if (p.profileImageUrl) setAvatarPreview(p.profileImageUrl);
       } catch (err) {
         console.warn('Failed to load profile', err);
@@ -79,47 +97,80 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
     fetchProfile();
   }, [user]);
 
-  const saveProfile = async () => {
+const saveProfile = async () => {
+  try {
+    if (!user || !user._id) return alert('Not authenticated');
+    const API_BASE = import.meta.env.VITE_API_BASE || '';
+    const form = new FormData();
+    form.append('fullName', formData.fullName || '');
+    form.append('username', formData.username || '');
+    form.append('bio', formData.bio || '');
+    form.append('email', formData.email || '');
+    if (avatarFile) form.append('profileImage', avatarFile);
+
+    const res = await fetch(`${API_BASE}/api/profile/${user._id}`, {
+      method: 'PUT',
+      body: form
+    });
+    const data = await res.json();
+    if (!res.ok) return alert(data.message || 'Failed to save');
+
+    // Update localStorage user snapshot to keep UI in sync
     try {
-      if (!user || !user._id) return alert('Not authenticated');
-      const API_BASE = import.meta.env.VITE_API_BASE || '';
-      const form = new FormData();
-      form.append('fullName', formData.fullName || '');
-      form.append('username', formData.username || '');
-      form.append('bio', formData.bio || '');
-      form.append('email', formData.email || '');
-      if (avatarFile) form.append('profileImage', avatarFile);
-
-      const res = await fetch(`${API_BASE}/api/profile/${user._id}`, {
-        method: 'PUT',
-        body: form
-      });
-      const data = await res.json();
-      if (!res.ok) return alert(data.message || 'Failed to save');
-
-      // Update localStorage user snapshot to keep UI in sync
-      try {
-        const storedRaw = localStorage.getItem('stuyta_user');
-        let stored = storedRaw ? JSON.parse(storedRaw) : {};
-        stored.name = data.user?.name || stored.name;
-        // Attach profile fields
-        stored.profile = data.profile || stored.profile;
-        if (data.profile && data.profile.profileImageUrl) stored.avatarUrl = data.profile.profileImageUrl;
-        localStorage.setItem('stuyta_user', JSON.stringify(stored));
-        window.dispatchEvent(new Event('authChanged'));
-        // Let AuthContext and other components refresh their in-memory user/profile
-        window.dispatchEvent(new Event('profileUpdated'));
-      } catch (e) {
-        // ignore
+      const storedRaw = localStorage.getItem('stuyta_user');
+      let stored = storedRaw ? JSON.parse(storedRaw) : {};
+      
+      // Update all relevant fields
+      stored.name = data.user?.name || stored.name;
+      stored.email = data.user?.email || stored.email;
+      stored.profile = data.profile || stored.profile;
+      
+      // Ensure avatarUrl is set in multiple places for compatibility
+      if (data.profile?.profileImageUrl) {
+        stored.avatarUrl = data.profile.profileImageUrl;
+        stored.avatar = data.profile.profileImageUrl;
+        stored.profileImageUrl = data.profile.profileImageUrl;
       }
-
-      alert('Profile updated');
-      setAvatarFile(null);
-    } catch (err) {
-      console.error('saveProfile error', err);
-      alert('Save failed');
+      
+      // Also update any stored user profile data
+      stored.fullName = data.profile?.fullName || stored.fullName;
+      stored.username = data.profile?.username || stored.username;
+      stored.bio = data.profile?.bio || stored.bio;
+      
+      localStorage.setItem('stuyta_user', JSON.stringify(stored));
+      
+      // Dispatch multiple events to ensure all components update
+      window.dispatchEvent(new Event('authChanged'));
+      window.dispatchEvent(new Event('profileUpdated'));
+      window.dispatchEvent(new Event('storage'));
+      
+    } catch (e) {
+      console.warn('LocalStorage update failed:', e);
     }
-  };
+
+    // Update local state preview with new image URL
+    if (data.profile?.profileImageUrl) {
+      setAvatarPreview(data.profile.profileImageUrl);
+    }
+
+    // Update original snapshot so Save button becomes disabled again
+    const newSnapshot = {
+      fullName: data.profile?.fullName || formData.fullName || '',
+      bio: data.profile?.bio || formData.bio || '',
+      username: data.profile?.username || formData.username || '',
+      email: data.user?.email || formData.email || '',
+      avatar: data.profile?.profileImageUrl || formData.avatar || ''
+    };
+    setOriginalData(newSnapshot);
+    setFormData(prev => ({ ...prev, ...newSnapshot }));
+
+    alert('Profile updated');
+    setAvatarFile(null);
+  } catch (err) {
+    console.error('saveProfile error', err);
+    alert('Save failed');
+  }
+};
 
   return (
     <div className="bg-[#F5E6D3] rounded-2xl p-6 shadow-sm border border-[#E6D0B3] relative">

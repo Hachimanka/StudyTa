@@ -16,6 +16,7 @@ export default function Summarize() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [history, setHistory] = useState([]);
+  const [confirmModal, setConfirmModal] = useState({ open: false, type: null, item: null });
 
   const handleSummarize = async () => {
     if (!inputText.trim() && !selectedFile) return;
@@ -91,6 +92,29 @@ export default function Summarize() {
     } catch (err) {
       console.error('Failed to delete summary', err);
     }
+  };
+
+  const openLoadModal = (item) => {
+    setConfirmModal({ open: true, type: 'load', item });
+  };
+  const openDeleteModal = (item) => {
+    setConfirmModal({ open: true, type: 'delete', item });
+  };
+  const closeConfirmModal = () => setConfirmModal({ open: false, type: null, item: null });
+  const confirmAction = async () => {
+    const { type, item } = confirmModal;
+    if (!item) return closeConfirmModal();
+    if (type === 'load') {
+      setSummary(item.summaryText || '');
+      closeConfirmModal();
+      return;
+    }
+    if (type === 'delete') {
+      try { await handleDeleteHistory(item._id); } catch {}
+      closeConfirmModal();
+      return;
+    }
+    closeConfirmModal();
   };
 
   const handleFileUpload = async (event) => {
@@ -384,8 +408,8 @@ export default function Summarize() {
                           <div className="text-sm truncate" title={h.summaryText}>{generateTitle(h.summaryText)}</div>
                         </div>
                         <div className="ml-2 flex-shrink-0">
-                          <button onClick={() => setSummary(h.summaryText)} className="text-xs text-[#8D5A3F] hover:underline mr-2">Load</button>
-                          <button onClick={() => handleDeleteHistory(h._id)} className="text-xs text-red-500">Delete</button>
+                          <button onClick={() => openLoadModal(h)} className="text-xs text-[#8D5A3F] hover:underline mr-2">Load</button>
+                          <button onClick={() => openDeleteModal(h)} className="text-xs text-red-500">Delete</button>
                         </div>
                       </li>
                     ))}
@@ -398,6 +422,32 @@ export default function Summarize() {
           </div>
         </div>
       </main>
+      {confirmModal.open && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={closeConfirmModal}>
+          <div className={`${darkMode ? 'bg-[#2e2119] text-white' : 'bg-white text-[#4A2C1E]'} w-full max-w-md rounded-2xl shadow-xl p-6 border ${darkMode ? 'border-gray-700' : 'border-[#E9D8D0]'} mx-4`} onClick={(e) => e.stopPropagation()}>
+            <h3 className={`text-2xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>
+              {confirmModal.type === 'delete' ? 'Delete summary?' : 'Load this summary?'}
+            </h3>
+            <p className={`${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'} mb-4`}>
+              {confirmModal.type === 'delete' ? 'This action cannot be undone.' : 'This will replace the current summary content.'}
+            </p>
+            {confirmModal.item && (
+              <div className={`mb-4 p-3 rounded-lg ${darkMode ? 'bg-[#3a2a20] border border-gray-700' : 'bg-[#F6E6DA] border border-[#E9D8D0]'}`}>
+                <div className="text-xs mb-1">{new Date(confirmModal.item.createdAt).toLocaleString()}</div>
+                <div className="text-sm font-semibold truncate" title={generateTitle(confirmModal.item.summaryText)}>
+                  {generateTitle(confirmModal.item.summaryText)}
+                </div>
+              </div>
+            )}
+            <div className="flex gap-3 justify-end">
+              <button onClick={closeConfirmModal} className={`${darkMode ? 'bg-[#3a2a20] text-white hover:bg-[#4a3528]' : 'bg-white text-[#8D5A3F] border border-[#E9D8D0] hover:bg-[#F6E6DA]'} px-4 py-2 rounded-lg font-medium`}>Cancel</button>
+              <button onClick={confirmAction} className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white' : 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white'}`}>
+                {confirmModal.type === 'delete' ? 'Delete' : 'Load'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
