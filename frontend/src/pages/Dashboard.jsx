@@ -317,9 +317,6 @@ const avatarUrl = (() => {
       {/* Sidebar */}
       <Sidebar />
 
-      {/* Scoped styles to apply dashboard text color */}
-      <style>{`#dashboard-main, #dashboard-main * { color: #6F422B !important; } #dashboard-main .dashboard-subtitle { color: #FFFFFF !important; }`}</style>
-
       {/* Main Dashboard */}
       <main id="dashboard-main" className="p-12 flex-1 ml-20 md:ml-30 mr-7.5 transition-all duration-300">
         <ChatWidget />
@@ -347,33 +344,33 @@ const avatarUrl = (() => {
               <div className="flex-1 mx-8">
                 <h1
                   className={`text-5xl font-bold transition-colors duration-300 ${
-                    darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+                    darkMode ? "text-white" : "text-[#4A2C1E]"
                   }`}
                 >
                   {displayName ? `Welcome back, ${displayName}!` : "Welcome back!"}
                 </h1>
-                <p className="mt-1 text-xl transition-colors duration-300 dashboard-subtitle">
+                <p className={`mt-1 text-xl transition-colors duration-300 ${darkMode ? "text-white" : "text-white"}`}>
                   Ready to continue your learning journey?
                 </p>
               </div>
 
               {/* Right: Study Streak */}
               <div className={`p-2 rounded-xl shadow transition-colors duration-300 ${
-                darkMode ? "bg-[#2e2119]" : "bg-white"
+                darkMode ? "bg-[#463226]" : "bg-white"
               }`}>
                 <div className="flex items-center justify-between">
                   {/* Study Streak Text and Number */}
                   <div className="text-center">
                     <h2
                       className={`text-sm font-bold transition-colors duration-300 ${
-                        darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+                        darkMode ? "text-white" : "text-[#4A2C1E]"
                       }`}
                     >
                       Study Streak
                     </h2>
                     <p
                       className={`text-4xl font-bold transition-colors duration-300 ${
-                        darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+                        darkMode ? "text-white" : "text-[#4A2C1E]"
                       }`}
                     >
                       {analyticsStats.streak}
@@ -418,7 +415,7 @@ const avatarUrl = (() => {
             <div>
               <h3
                 className={`text-2xl font-semibold mb-4 transition-colors duration-300 ${
-                  darkMode ? "text-[#f5e9df]" : "text-[#6F422B]"
+                  darkMode ? "text-white" : "text-[#6F422B]"
                 }`}
               >
                 Quick Actions
@@ -435,7 +432,7 @@ const avatarUrl = (() => {
             <div>
               <h3
                 className={`text-2xl font-semibold mb-6 transition-colors duration-300 ${
-                  darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+                  darkMode ? "text-white" : "text-[#4A2C1E]"
                 }`}
               >
                 Recent Files
@@ -452,7 +449,7 @@ const avatarUrl = (() => {
             <div>
               <h3
                 className={`text-2xl font-semibold mb-4 transition-colors duration-300 ${
-                  darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+                  darkMode ? "text-white" : "text-[#4A2C1E]"
                 }`}
               >
                 Upcoming Events
@@ -466,7 +463,7 @@ const avatarUrl = (() => {
             <div>
               <h3
                 className={`text-2xl font-semibold mb-4 transition-colors duration-300 ${
-                  darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
+                  darkMode ? "text-white" : "text-[#4A2C1E]"
                 }`}
               >
                 This Week

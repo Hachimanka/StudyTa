@@ -5,9 +5,11 @@ import FileUploadButton from '../components/library/FileUploadButton'
 import FileListBox from '../components/library/FileListBox'
 import { listFiles, uploadFile, deleteFile as apiDeleteFile, renameFile as apiRenameFile } from '../services/LibraryService'
 import { useAuth } from '../context/AuthContext'
+import { useSettings } from '../context/SettingsContext'
 
 export default function Library() {
   const { user } = useAuth()
+  const { darkMode } = useSettings()
   // Track uploaded files list (newest first)
   const [files, setFiles] = useState([])
   // Controlled search input
@@ -213,20 +215,20 @@ export default function Library() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
   return (
-    <div className="flex min-h-screen">
+    <div className={`flex min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#1f1b16]' : 'bg-[#F2D9C7]'}`}>
       <Sidebar />
       <main className="flex-1 p-12 ml-20 md:ml-30 font-poppins">
         <div className="mb-8">
-          <h1 className="text-5xl font-bold transition-colors duration-300 text-[#6F422B]">Library</h1>
-          <p className="mt-1 text-xl transition-colors duration-300 text-[#5C4333]"> Keep all your notes and study files in one place.</p>
+          <h1 className={`text-6xl font-bold transition-colors duration-300 ${darkMode ? 'text-[#F5E9DF]' : 'text-[#6F422B]'}`}>Library</h1>
+          <p className={`mt-1 text-xl transition-colors duration-300 ${darkMode ? 'text-[#8D5A3F]' : 'text-[#8D5A3F]'}`}>Keep all your notes and study files in one place.</p>
         </div>
         {/*  card  */}
-        <div className="max-w-7xl min-h-[600px] bg-white rounded-xl shadow-lg p-6 flex flex-col">
+        <div className={`max-w-7xl min-h-[600px] rounded-xl shadow-lg p-6 flex flex-col transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`}>
           <div className="flex justify-end gap-2 mb-4 text-base font-semibold">
-            <FileSearchBox value={searchTerm} onChange={setSearchTerm} />
-            <FileUploadButton onFileSelected={handleFileSelected} />
+            <FileSearchBox value={searchTerm} onChange={setSearchTerm} darkMode={darkMode} />
+            <FileUploadButton onFileSelected={handleFileSelected} darkMode={darkMode} />
           </div>
-          {loading && <p className="text-sm text-gray-500">Loading files...</p>}
+          {loading && <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading files...</p>}
           {error && <p className="text-sm text-red-600">{error}</p>}
           {/* 8. Display area for the uploaded file */}
           <div className="mt-6 flex-1">
@@ -239,6 +241,7 @@ export default function Library() {
                 files={files.filter(f => f.name && f.name.toLowerCase().includes(searchTerm.trim().toLowerCase()))}
                 onItemClick={handleCardClick}
                 onItemContextMenu={handleContextMenu}
+                darkMode={darkMode}
               />
               </div>
             </div>
@@ -251,24 +254,24 @@ export default function Library() {
         {/* Context menu */}
         {menuOpen && (
           <div
-            className="fixed z-50 bg-white border border-gray-200 rounded-md shadow-lg text-sm"
+            className={`fixed z-50 border rounded-md shadow-lg text-sm transition-colors duration-300 ${darkMode ? 'bg-[#2e2119] border-[#3d2f24] text-[#f5e9df]' : 'bg-white border-gray-200'}`}
             style={{ left: menuPos.x, top: menuPos.y }}
             onMouseLeave={closeMenu}
           >
-            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100" onClick={actionUpload}>Upload File</button>
-            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100" onClick={actionDeleteFile} disabled={!menuTarget}>Delete File</button>
-            <button className="block w-full text-left px-4 py-2 hover:bg-gray-100" onClick={actionRenameFile} disabled={!menuTarget}>Rename File</button>
+            <button className={`block w-full text-left px-4 py-2 ${darkMode ? 'hover:bg-[#3d2f24]' : 'hover:bg-gray-100'}`} onClick={actionUpload}>Upload File</button>
+            <button className={`block w-full text-left px-4 py-2 ${darkMode ? 'hover:bg-[#3d2f24]' : 'hover:bg-gray-100'}`} onClick={actionDeleteFile} disabled={!menuTarget}>Delete File</button>
+            <button className={`block w-full text-left px-4 py-2 ${darkMode ? 'hover:bg-[#3d2f24]' : 'hover:bg-gray-100'}`} onClick={actionRenameFile} disabled={!menuTarget}>Rename File</button>
           </div>
         )}
 
         {/* Delete confirmation modal */}
         {confirmDeleteOpen && deleteTarget && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-xl p-6 w-[90%] max-w-md">
-              <h2 className="text-lg font-semibold text-[#5C4333] mb-2">Delete this file?</h2>
-              <p className="text-sm text-gray-600 mb-4">{deleteTarget.name}</p>
+            <div className={`rounded-xl shadow-xl p-6 w-[90%] max-w-md transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`}>
+              <h2 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-[#f5e9df]' : 'text-[#5C4333]'}`}>Delete this file?</h2>
+              <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{deleteTarget.name}</p>
               <div className="flex justify-end gap-2">
-                <button onClick={cancelDelete} className="px-4 py-2 rounded-md border border-gray-300 bg-white text-gray-700">Cancel</button>
+                <button onClick={cancelDelete} className={`px-4 py-2 rounded-md border ${darkMode ? 'border-gray-600 bg-[#3d2f24] text-[#f5e9df]' : 'border-gray-300 bg-white text-gray-700'}`}>Cancel</button>
                 <button onClick={confirmDelete} className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700">Delete</button>
               </div>
             </div>
@@ -277,11 +280,11 @@ export default function Library() {
 
         {confirmOpenModal && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-xl p-6 w-[90%] max-w-md">
-              <h2 className="text-lg font-semibold text-[#5C4333] mb-2">Open in browser?</h2>
-              <p className="text-sm text-gray-600 mb-4">This will open the file in a new browser tab.</p>
+            <div className={`rounded-xl shadow-xl p-6 w-[90%] max-w-md transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`}>
+              <h2 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-[#f5e9df]' : 'text-[#5C4333]'}`}>Open in browser?</h2>
+              <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>This will open the file in a new browser tab.</p>
               <div className="flex justify-end gap-2">
-                <button onClick={cancelOpen} className="px-4 py-2 rounded-md border border-gray-300 bg-white text-gray-700">Cancel</button>
+                <button onClick={cancelOpen} className={`px-4 py-2 rounded-md border ${darkMode ? 'border-gray-600 bg-[#3d2f24] text-[#f5e9df]' : 'border-gray-300 bg-white text-gray-700'}`}>Cancel</button>
                 <button onClick={confirmOpenInBrowser} className="px-4 py-2 rounded-md bg-[#8D5A3F] text-white hover:bg-[#a06b51]">Open</button>
               </div>
             </div>
@@ -290,12 +293,12 @@ export default function Library() {
 
         {imageViewerOpen && pendingOpenFile && (
           <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={closeImageViewer}>
-            <div className="relative bg-white rounded-xl shadow-xl p-3 max-w-5xl w-[95%]" onClick={(e) => e.stopPropagation()}>
+            <div className={`relative rounded-xl shadow-xl p-3 max-w-5xl w-[95%] transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`} onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-sm font-semibold text-[#5C4333] truncate">{pendingOpenFile.name}</h2>
-                <button className="px-3 py-1 rounded-md border text-[#5C4333]" onClick={closeImageViewer}>Close</button>
+                <h2 className={`text-sm font-semibold truncate ${darkMode ? 'text-[#f5e9df]' : 'text-[#5C4333]'}`}>{pendingOpenFile.name}</h2>
+                <button className={`px-3 py-1 rounded-md border ${darkMode ? 'border-gray-600 text-[#f5e9df]' : 'text-[#5C4333]'}`} onClick={closeImageViewer}>Close</button>
               </div>
-              <div className="max-h-[80vh] overflow-auto flex items-center justify-center bg-gray-50 rounded-lg">
+              <div className={`max-h-[80vh] overflow-auto flex items-center justify-center rounded-lg ${darkMode ? 'bg-[#1f1b16]' : 'bg-gray-50'}`}>
                 {/* Display image served by backend inline view endpoint */}
                 <img
                   src={`/api/library/view/${pendingOpenFile.id || pendingOpenFile._id}`}
@@ -310,17 +313,17 @@ export default function Library() {
         {/* Rename modal */}
         {renameOpen && renameTarget && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-xl p-6 w-[90%] max-w-md">
-              <h2 className="text-lg font-semibold text-[#5C4333] mb-2">Rename file</h2>
+            <div className={`rounded-xl shadow-xl p-6 w-[90%] max-w-md transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`}>
+              <h2 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-[#f5e9df]' : 'text-[#5C4333]'}`}>Rename file</h2>
               <input
                 type="text"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-[#8D5A3F]"
+                className={`w-full border rounded-md px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-[#8D5A3F] transition-colors duration-300 ${darkMode ? 'border-gray-600 bg-[#3d2f24] text-[#f5e9df]' : 'border-gray-300'}`}
                 value={renameValue}
                 onChange={(e) => setRenameValue(e.target.value)}
                 autoFocus
               />
               <div className="flex justify-end gap-2">
-                <button onClick={cancelRename} className="px-4 py-2 rounded-md border border-gray-300 bg-white text-gray-700">Cancel</button>
+                <button onClick={cancelRename} className={`px-4 py-2 rounded-md border ${darkMode ? 'border-gray-600 bg-[#3d2f24] text-[#f5e9df]' : 'border-gray-300 bg-white text-gray-700'}`}>Cancel</button>
                 <button onClick={confirmRename} className="px-4 py-2 rounded-md bg-[#8D5A3F] text-white hover:bg-[#a06b51]">Save</button>
               </div>
             </div>

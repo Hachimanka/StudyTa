@@ -50,7 +50,7 @@ const RecentFilesList = ({ darkMode, themeColors, recentFiles }) => {
                     backgroundColor: darkMode
                       ? `${themeColors.primary}20`
                       : `${themeColors.primary}15`,
-                    color: themeColors.primary
+                    color: darkMode ? '#FFFFFF' : themeColors.primary
                   }}
                 >
                   {file.type?.includes('pdf') || file.name?.includes('.pdf') ? (
@@ -68,7 +68,7 @@ const RecentFilesList = ({ darkMode, themeColors, recentFiles }) => {
                   )}
                 </div>
                 <div>
-                  <h4 className={`font-semibold ${darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"}`}>
+                  <h4 className={`font-semibold ${darkMode ? "text-white" : "text-[#4A2C1E]"}`}>
                     {file.name}
                   </h4>
                 </div>

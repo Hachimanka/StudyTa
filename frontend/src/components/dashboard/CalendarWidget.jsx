@@ -90,7 +90,7 @@ const CalendarWidget = ({ darkMode, themeColors }) => {
               className={`transition-colors duration-300 ${
                 month.isCurrent
                   ? `font-bold ${darkMode ? "text-[#E59C5C]" : "text-[#71412A]"}`
-                  : `font-normal ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`
+                  : `font-normal ${darkMode ? "text-white/70" : "text-[#5C4333]"}`
               }`}
             >
               {month.name}
@@ -115,7 +115,7 @@ const CalendarWidget = ({ darkMode, themeColors }) => {
 
       {/* Upcoming events list */}
       {upcoming.length === 0 ? (
-        <div className={`text-center py-4 ${darkMode ? "text-[#f5e9df]/70" : "text-[#5C4333]"}`}>
+        <div className={`text-center py-4 ${darkMode ? "text-white/70" : "text-[#5C4333]"}`}>
           <div className="flex justify-center mb-4">
             <svg width="72" height="80" viewBox="0 0 72 80" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M36 57.6L29.6 64C28.8667 64.7333 27.9333 65.1 26.8 65.1C25.6667 65.1 24.7333 64.7333 24 64C23.2667 63.2667 22.9 62.3333 22.9 61.2C22.9 60.0667 23.2667 59.1334 24 58.4L30.4 52L24 45.6C23.2667 44.8667 22.9 43.9333 22.9 42.8C22.9 41.6667 23.2667 40.7333 24 40C24.7333 39.2667 25.6667 38.9 26.8 38.9C27.9333 38.9 28.8667 39.2667 29.6 40L36 46.4L42.4 40C43.1333 39.2667 44.0667 38.9 45.2 38.9C46.3333 38.9 47.2667 39.2667 48 40C48.7333 40.7333 49.1 41.6667 49.1 42.8C49.1 43.9333 48.7333 44.8667 48 45.6L41.6 52L48 58.4C48.7333 59.1334 49.1 60.0667 49.1 61.2C49.1 62.3333 48.7333 63.2667 48 64C47.2667 64.7333 46.3333 65.1 45.2 65.1C44.0667 65.1 43.1333 64.7333 42.4 64L36 57.6ZM8 80C5.8 80 3.91733 79.2173 2.352 77.652C0.786667 76.0867 0.00266667 74.2027 0 72V16C0 13.8 0.784 11.9173 2.352 10.352C3.92 8.78668 5.80267 8.00268 8 8.00001H12V4.00001C12 2.86668 12.384 1.91735 13.152 1.15201C13.92 0.386681 14.8693 0.00268046 16 1.37931e-05C17.1307 -0.00265287 18.0813 0.381348 18.852 1.15201C19.6227 1.92268 20.0053 2.87201 20 4.00001V8.00001H52V4.00001C52 2.86668 52.384 1.91735 53.152 1.15201C53.92 0.386681 54.8693 0.00268046 56 1.37931e-05C57.1307 -0.00265287 58.0813 0.381348 58.852 1.15201C59.6227 1.92268 60.0053 2.87201 60 4.00001V8.00001H64C66.2 8.00001 68.084 8.78401 69.652 10.352C71.22 11.92 72.0027 13.8027 72 16V72C72 74.2 71.2173 76.084 69.652 77.652C68.0867 79.22 66.2027 80.0027 64 80H8ZM8 72H64V32H8V72Z" fill={darkMode ? "#E59C5C" : "#71412A"} />
@@ -128,12 +128,12 @@ const CalendarWidget = ({ darkMode, themeColors }) => {
           {upcoming.map(ev => (
             <Link to="/calendar" key={ev.id} className={`block p-3 rounded-xl ${darkMode ? 'bg-[#3a2a20] hover:bg-[#4a3528]' : 'bg-white hover:bg-gray-100'} shadow-sm transition-colors`}>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ backgroundColor: darkMode ? `${themeColors.primary}20` : `${themeColors.primary}15`, color: themeColors.primary }}>
+                <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ backgroundColor: darkMode ? `${themeColors.primary}20` : `${themeColors.primary}15`, color: darkMode ? '#FFFFFF' : themeColors.primary }}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 </div>
                 <div>
-                  <div className={`font-semibold ${darkMode ? 'text-[#f5e9df]' : 'text-[#4A2C1E]'}`}>{ev.title}</div>
-                  <div className={`text-sm ${darkMode ? 'text-[#f5e9df]/70' : 'text-[#5C4333]'}`}>{formatEvent(ev)}</div>
+                  <div className={`font-semibold ${darkMode ? 'text-white' : 'text-[#4A2C1E]'}`}>{ev.title}</div>
+                  <div className={`text-sm ${darkMode ? 'text-white/70' : 'text-[#5C4333]'}`}>{formatEvent(ev)}</div>
                 </div>
               </div>
             </Link>

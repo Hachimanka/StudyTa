@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useSettings } from "../context/SettingsContext";
 
 export default function Sidebar() {
+  const { darkMode } = useSettings();
   // UI state: sidebar open/closed (hamburger toggles)
   const [isOpen, setIsOpen] = useState(false);
   // Track hovered item for hover highlight without opening
@@ -10,13 +12,13 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Chocolate Brownie palette
+  // Chocolate Brownie palette - with dark mode support
   const COLORS = {
-    accent: "#D69055", // pill highlight
-    bg: "#F2D9C5", // sidebar background
-    bgAlt: "#E9D8CE", // subtle alt/hover
-    brown: "#8C5A41", // mid brown
-    dark: "#6F422B", // text/icons
+    accent: darkMode ? "#E59C5C" : "#D69055", // pill highlight
+    bg: darkMode ? "#2e2119" : "#F2D9C5", // sidebar background
+    bgAlt: darkMode ? "#3d2f24" : "#E9D8CE", // subtle alt/hover
+    brown: darkMode ? "#d4a88a" : "#8C5A41", // mid brown
+    dark: darkMode ? "#f5e9df" : "#6F422B", // text/icons
   };
 
   const handleLogout = () => {
@@ -56,7 +58,12 @@ export default function Sidebar() {
           className="h-9 w-9 flex items-center justify-center rounded-xl overflow-hidden"
           style={{ backgroundColor: isOpen ? `${COLORS.bgAlt}80` : "transparent" }}
         >
-          <img src="/SideBarIcons/Men.png" alt="Menu" className="w-7 h-7 object-contain" />
+          <img 
+            src="/SideBarIcons/Men.png" 
+            alt="Menu" 
+            className="w-7 h-7 object-contain"
+            style={darkMode ? { filter: 'brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(365%) hue-rotate(338deg) brightness(103%) contrast(91%)' } : {}}
+          />
         </button>
         {isOpen && (
           <span className="ml-3 text-2xl font-semibold tracking-wide" style={{ color: COLORS.dark }}>
@@ -86,7 +93,12 @@ export default function Sidebar() {
                   }}
                 >
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0" style={{ lineHeight: 0, marginLeft: "6px" }}>
-                    <img src={item.icon} alt={item.name} className="w-7 h-7 object-contain" />
+                    <img 
+                      src={item.icon} 
+                      alt={item.name} 
+                      className="w-7 h-7 object-contain"
+                      style={darkMode ? { filter: 'brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(365%) hue-rotate(338deg) brightness(103%) contrast(91%)' } : {}}
+                    />
                   </span>
                   <span className="text-base select-none">{item.name}</span>
                 </div>
@@ -101,7 +113,12 @@ export default function Sidebar() {
                       backgroundColor: active ? `${COLORS.accent}80` : hovered === i ? `${COLORS.accent}80` : "transparent",
                     }}
                   >
-                    <img src={item.icon} alt={item.name} className="w-7 h-7 object-contain" />
+                    <img 
+                      src={item.icon} 
+                      alt={item.name} 
+                      className="w-7 h-7 object-contain"
+                      style={darkMode ? { filter: 'brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(365%) hue-rotate(338deg) brightness(103%) contrast(91%)' } : {}}
+                    />
                   </span>
                 </div>
               )}

@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion'; 
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
+import { useSettings } from '../../context/SettingsContext';
 
 /* ProfileSection Component */
 export const ProfileSection = ({ onOpenPasswordModal }) => {
   const { user } = useAuth();
+  const { darkMode } = useSettings();
   const { showModal } = useModal();
 
   const initialData = {
@@ -192,8 +194,8 @@ const saveProfile = async () => {
 };
 
   return (
-    <div className="bg-[#F5E6D3] rounded-2xl p-6 shadow-sm border border-[#E6D0B3] relative">
-      <h3 className="font-bold text-[#6F422B] text-lg mb-4">Profile Settings</h3>
+    <div className={`${darkMode ? 'bg-[#2e2119] border-[#3d2f24]' : 'bg-[#F5E6D3] border-[#E6D0B3]'} rounded-2xl p-6 shadow-sm border relative`}>
+      <h3 className={`font-bold ${darkMode ? 'text-[#f5e9df]' : 'text-[#6F422B]'} text-lg mb-4`}>Profile Settings</h3>
       
       
       <div className="flex flex-col md:flex-row gap-8">
@@ -210,7 +212,7 @@ const saveProfile = async () => {
             role="button"
             tabIndex={0}
             onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleAvatarClick(); }}
-            className="w-32 h-32 rounded-full bg-white border-4 border-[#8B5E3C] flex items-center justify-center text-6xl text-[#6F422B] font-bold cursor-pointer select-none shadow-md overflow-hidden"
+            className={`w-32 h-32 rounded-full ${darkMode ? 'bg-[#3a2a20] border-[#E59C5C] text-[#f5e9df]' : 'bg-white border-[#8B5E3C] text-[#6F422B]'} border-4 flex items-center justify-center text-6xl font-bold cursor-pointer select-none shadow-md overflow-hidden`}
           >
             {avatarPreview ? (
               <img src={avatarPreview} alt="avatar preview" className="w-full h-full object-cover" />
@@ -223,46 +225,46 @@ const saveProfile = async () => {
         {/* Inputs Grid */}
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[#6F422B] ml-1">Full Name</label>
+            <label className={`text-xs font-bold ${darkMode ? 'text-[#f5e9df]' : 'text-[#6F422B]'} ml-1`}>Full Name</label>
             <input 
               type="text" 
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
-              className="w-full p-2 rounded-lg bg-white border-none outline-none text-[#6F422B] shadow-inner focus:ring-2 focus:ring-[#8B5E3C]/20 transition-all"
+              className={`w-full p-2 rounded-lg ${darkMode ? 'bg-[#3a2a20] text-[#f5e9df] focus:ring-[#E59C5C]/20' : 'bg-white text-[#6F422B] focus:ring-[#8B5E3C]/20'} border-none outline-none shadow-inner focus:ring-2 transition-all`}
             />
           </div>
           
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[#6F422B] ml-1">Bio</label>
+            <label className={`text-xs font-bold ${darkMode ? 'text-[#f5e9df]' : 'text-[#6F422B]'} ml-1`}>Bio</label>
             <input 
               type="text" 
               name="bio"
               value={formData.bio}
               onChange={handleChange}
-              className="w-full p-2 rounded-lg bg-white border-none outline-none text-[#6F422B] shadow-inner focus:ring-2 focus:ring-[#8B5E3C]/20 transition-all"
+              className={`w-full p-2 rounded-lg ${darkMode ? 'bg-[#3a2a20] text-[#f5e9df] focus:ring-[#E59C5C]/20' : 'bg-white text-[#6F422B] focus:ring-[#8B5E3C]/20'} border-none outline-none shadow-inner focus:ring-2 transition-all`}
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[#6F422B] ml-1">Username</label>
+            <label className={`text-xs font-bold ${darkMode ? 'text-[#f5e9df]' : 'text-[#6F422B]'} ml-1`}>Username</label>
             <input 
               type="text" 
               name="username"
               value={formData.username}
               onChange={handleChange}
-              className="w-full p-2 rounded-lg bg-white border-none outline-none text-[#6F422B] shadow-inner focus:ring-2 focus:ring-[#8B5E3C]/20 transition-all"
+              className={`w-full p-2 rounded-lg ${darkMode ? 'bg-[#3a2a20] text-[#f5e9df] focus:ring-[#E59C5C]/20' : 'bg-white text-[#6F422B] focus:ring-[#8B5E3C]/20'} border-none outline-none shadow-inner focus:ring-2 transition-all`}
             />
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-[#6F422B] ml-1">Email</label>
+            <label className={`text-xs font-bold ${darkMode ? 'text-[#f5e9df]' : 'text-[#6F422B]'} ml-1`}>Email</label>
             <input 
               type="email" 
               name="email"
               value={formData.email}
               disabled
-              className="w-full p-2 rounded-lg bg-gray-100 border-none outline-none text-gray-500 shadow-inner cursor-not-allowed"
+              className={`w-full p-2 rounded-lg ${darkMode ? 'bg-[#1f1b16] text-gray-400' : 'bg-gray-100 text-gray-500'} border-none outline-none shadow-inner cursor-not-allowed`}
             />
           </div>
         </div>
@@ -274,7 +276,7 @@ const saveProfile = async () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={onOpenPasswordModal}
-          className="px-4 py-2 bg-transparent border-2 border-[#8B5E3C] text-[#6F422B] rounded-lg text-sm font-bold hover:bg-[#8B5E3C] hover:text-white transition-colors"
+          className={`px-4 py-2 bg-transparent border-2 ${darkMode ? 'border-[#E59C5C] text-[#f5e9df] hover:bg-[#E59C5C]' : 'border-[#8B5E3C] text-[#6F422B] hover:bg-[#8B5E3C]'} hover:text-white rounded-lg text-sm font-bold transition-colors`}
         >
           Change Password
         </motion.button>
@@ -285,7 +287,7 @@ const saveProfile = async () => {
           disabled={!hasChanges}
           className={`px-6 py-2 rounded-lg text-sm font-bold transition-colors ${
             hasChanges 
-              ? "bg-[#8B5E3C] text-white hover:bg-[#70482E]" 
+              ? darkMode ? "bg-[#E59C5C] text-white hover:bg-[#d08a4a]" : "bg-[#8B5E3C] text-white hover:bg-[#70482E]" 
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
         >

@@ -8,7 +8,8 @@ const EventModal = ({
   onSave, 
   onAdd, 
   onDelete,
-  isDateEditable = false // New prop to control date editability
+  isDateEditable = false,
+  darkMode = false
 }) => {
   if (!isOpen) return null;
 
@@ -104,10 +105,10 @@ const EventModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 animate-in fade-in duration-200">
-      <div className="bg-[#EBCFB2] rounded-lg shadow-2xl w-[400px] overflow-hidden font-sans">
+      <div className={`rounded-lg shadow-2xl w-[400px] overflow-hidden font-sans transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-[#EBCFB2]'}`}>
 
         {/* Header */}
-        <div className="bg-[#8B5E3C] p-4 flex justify-between items-center text-white">
+        <div className={`p-4 flex justify-between items-center text-white transition-colors duration-300 ${darkMode ? 'bg-[#5a4535]' : 'bg-[#8B5E3C]'}`}>
           <h2 className="text-lg font-normal tracking-wide">
             {isEditMode ? 'Edit Event' : 'Add Event'}
           </h2>
@@ -126,26 +127,25 @@ const EventModal = ({
             placeholder="Add Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full p-3 rounded bg-white text-[#5D4037] placeholder-[#8D6E63] outline-none shadow-sm focus:ring-2 focus:ring-[#8B5E3C]/50"
+            className={`w-full p-3 rounded outline-none shadow-sm focus:ring-2 focus:ring-[#8B5E3C]/50 transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] text-[#f5e9df] placeholder-gray-400' : 'bg-white text-[#5D4037] placeholder-[#8D6E63]'}`}
             autoFocus
           />
 
           <div className="flex flex-col gap-2">
-            <label className="text-[#5D4037] text-sm">Set Time & Date</label>
+            <label className={`text-sm transition-colors duration-300 ${darkMode ? 'text-[#d4c4b5]' : 'text-[#5D4037]'}`}>Set Time & Date</label>
             <div className="flex flex-col gap-3">
               <div className="flex gap-3">
-                <div className="bg-white p-2 rounded text-[#5D4037] shadow-sm w-32 flex justify-center items-center">
+                <div className={`p-2 rounded shadow-sm w-32 flex justify-center items-center transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] text-[#f5e9df]' : 'bg-white text-[#5D4037]'}`}>
                   <input 
                     type="time" 
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
                     className="bg-transparent border-none outline-none w-full text-center"
-                    step="900" // 15 minute increments
+                    step="900"
                   />
                 </div>
                 {isDateEditable && !isEditMode ? (
-                  // Editable date (for + button)
-                  <div className="bg-white p-2 rounded text-[#5D4037] shadow-sm flex-1 flex justify-center items-center">
+                  <div className={`p-2 rounded shadow-sm flex-1 flex justify-center items-center transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] text-[#f5e9df]' : 'bg-white text-[#5D4037]'}`}>
                     <input 
                       type="date" 
                       value={formatDateForInput(selectedDate)}
@@ -156,8 +156,7 @@ const EventModal = ({
                     />
                   </div>
                 ) : (
-                  // Non-editable date (for date click)
-                  <div className="bg-white p-2 rounded text-[#5D4037] shadow-sm flex-1 text-center text-sm flex items-center justify-center">
+                  <div className={`p-2 rounded shadow-sm flex-1 text-center text-sm flex items-center justify-center transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] text-[#f5e9df]' : 'bg-white text-[#5D4037]'}`}>
                     {getDateString()}
                   </div>
                 )}
@@ -168,7 +167,7 @@ const EventModal = ({
             {/* Priority Selector */}
             <div className="flex flex-col gap-2">
             <div className="flex items-center gap-3">
-              <label className="text-[#5D4037] text-sm">Priority</label>
+              <label className={`text-sm transition-colors duration-300 ${darkMode ? 'text-[#d4c4b5]' : 'text-[#5D4037]'}`}>Priority</label>
 
               {/* Current priority icon */}
               <div aria-hidden className="flex items-center">
@@ -191,7 +190,7 @@ const EventModal = ({
             <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full mt-2 p-3 rounded bg-white text-[#5D4037] shadow-sm focus:ring-2 focus:ring-[#8B5E3C]/50"
+                className={`w-full mt-2 p-3 rounded shadow-sm focus:ring-2 focus:ring-[#8B5E3C]/50 transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] text-[#f5e9df]' : 'bg-white text-[#5D4037]'}`}
             >
                 <option value="low">Low Priority</option>
                 <option value="medium">Medium Priority</option>
@@ -204,13 +203,13 @@ const EventModal = ({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={5}
-            className="w-full p-3 rounded bg-white text-[#5D4037] placeholder-[#8D6E63] outline-none shadow-sm resize-none focus:ring-2 focus:ring-[#8B5E3C]/50"
+            className={`w-full p-3 rounded outline-none shadow-sm resize-none focus:ring-2 focus:ring-[#8B5E3C]/50 transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] text-[#f5e9df] placeholder-gray-400' : 'bg-white text-[#5D4037] placeholder-[#8D6E63]'}`}
           />
 
           <div className="flex gap-4 mt-2">
             <button 
               onClick={handleSubmit}
-              className="flex-1 bg-white text-[#5D4037] font-bold py-2 rounded shadow-sm border border-[#d4c4b5]"
+              className={`flex-1 font-bold py-2 rounded shadow-sm border transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] text-[#f5e9df] border-[#5a4535]' : 'bg-white text-[#5D4037] border-[#d4c4b5]'}`}
             >
               {isEditMode ? 'Save' : 'Add'}
             </button>
@@ -218,14 +217,14 @@ const EventModal = ({
             {isEditMode ? (
               <button 
                 onClick={handleDelete}
-                className="flex-1 bg-white text-[#5D4037] font-bold py-2 rounded shadow-sm border border-[#d4c4b5] hover:bg-red-50 hover:text-red-700"
+                className={`flex-1 font-bold py-2 rounded shadow-sm border hover:bg-red-50 hover:text-red-700 transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] text-[#f5e9df] border-[#5a4535]' : 'bg-white text-[#5D4037] border-[#d4c4b5]'}`}
               >
                 Delete Event
               </button>
             ) : (
               <button 
                 onClick={onClose}
-                className="flex-1 bg-white text-[#5D4037] font-bold py-2 rounded shadow-sm border border-[#d4c4b5]"
+                className={`flex-1 font-bold py-2 rounded shadow-sm border transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] text-[#f5e9df] border-[#5a4535]' : 'bg-white text-[#5D4037] border-[#d4c4b5]'}`}
               >
                 Cancel
               </button>
