@@ -97,6 +97,7 @@ export default function MultipleChoiceMode() {
   const inputRef = useRef(null);
 
   const { state } = useLocation();
+  const fromSavedSet = !!state?.fromSavedSet;
   // Prefer questions passed via navigation state; otherwise fall back to sessionStorage
   let questions = state?.questions || [];
   if ((!questions || questions.length === 0) && typeof window !== 'undefined') {
@@ -328,7 +329,7 @@ export default function MultipleChoiceMode() {
   }, []);
 
   const saveSession = async () => {
-    // Generic save that posts the current session to backend
+    // Save current session to SavedStudySet collection (no scores)
     try {
       const raw = sessionStorage.getItem('studyta_session');
       if (!raw) return;
@@ -338,12 +339,10 @@ export default function MultipleChoiceMode() {
         title: s.title || state?.title || title || 'Study Session',
         mode: s.mode || 'multipleChoice',
         questions: s.questions || [],
-        score: score || 0,
-        total: (s.questions || []).length,
         userId: user?._id,
         durationMinutes: Math.max(0.5, Math.round(((Date.now() - (startedAtRef.current || Date.now())) / 60000) * 10) / 10)
       };
-      const res = await fetch(`${API_BASE}/api/studymode/save-quiz`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      const res = await fetch(`${API_BASE}/api/studymode/saved-sets/save`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });
       const data = await res.json().catch(()=>({}));
       if (!res.ok) throw new Error(data?.error || 'Save failed');
 
@@ -360,7 +359,8 @@ export default function MultipleChoiceMode() {
           date: new Date().toLocaleDateString(),
           mode: payload.mode,
           questions: payload.questions,
-          sourceText: (sessionStorage.getItem('studyta_session') ? JSON.parse(sessionStorage.getItem('studyta_session')).sourceText : '') || ''
+          sourceText: (sessionStorage.getItem('studyta_session') ? JSON.parse(sessionStorage.getItem('studyta_session')).sourceText : '') || '',
+          savedSetId: data?.savedSetId
         };
         const exists = arr.find(a => a.title === entry.title && a.mode === entry.mode);
         if (!exists) {
@@ -492,21 +492,21 @@ export default function MultipleChoiceMode() {
               <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>Study methods</h3>
 
               <div className="space-y-4">
-                <button onClick={() => maybeConfirmSwitch('flashcards')} className={`w-full flex items-center space-x-4 p-3 rounded-lg border ${darkMode ? 'bg-[#2e2119] border-gray-600' : 'bg-[#F3DAC6] border-[#6F422B]'} shadow-sm`}>
+                <button disabled={fromSavedSet} onClick={() => !fromSavedSet && maybeConfirmSwitch('flashcards')} className={`w-full flex items-center space-x-4 p-3 rounded-lg border ${darkMode ? 'bg-[#2e2119] border-gray-600' : 'bg-[#F3DAC6] border-[#6F422B]'} shadow-sm ${fromSavedSet ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <svg className="w-8 h-8" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path fill="#845C47" fillRule="evenodd" d="M39 13a3 3 0 0 0-3 3v2h6v-2a3 3 0 0 0-3-3Zm3 7h-6v16.5l3 4.5l3-4.5V20ZM6 9v30a3 3 0 0 0 3 3h22a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3H9a3 3 0 0 0-3 3Zm14 6a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2h-8a1 1 0 0 1-1-1Zm1 3a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-8Zm-1 10a1 1 0 0 1 1-1h8a1 1 0 1 1 0 2h-8a1 1 0 0 1-1-1Zm1 3a1 1 0 1 0 0 2h8a1 1 0 1 0 0-2h-8Zm-9-3v3h3v-3h-3Zm-1-2h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-5a1 1 0 0 1 1-1Zm6.707-10.293a1 1 0 0 0-1.414-1.414L13 17.586l-1.293-1.293a1 1 0 0 0-1.414 1.414L13 20.414l4.707-4.707Z" clipRule="evenodd"/>
                   </svg>
                   <span className={`font-medium ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>Flashcards</span>
                 </button>
 
-                <button onClick={() => maybeConfirmSwitch('trueFalse')} className={`w-full flex items-center space-x-4 p-3 rounded-lg border ${darkMode ? 'bg-[#2e2119] border-gray-600' : 'bg-[#F3DAC6] border-[#6F422B]'} shadow-sm`}>
+                <button disabled={fromSavedSet} onClick={() => !fromSavedSet && maybeConfirmSwitch('trueFalse')} className={`w-full flex items-center space-x-4 p-3 rounded-lg border ${darkMode ? 'bg-[#2e2119] border-gray-600' : 'bg-[#F3DAC6] border-[#6F422B]'} shadow-sm ${fromSavedSet ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <svg className="w-8 h-8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path fill="#845C47" d="m21.47 4.35l-1.34-.56v9.03l2.43-5.86c.41-1.02-.06-2.19-1.09-2.61m-19.5 3.7L6.93 20a2.01 2.01 0 0 0 1.81 1.26c.26 0 .53-.05.79-.16l7.37-3.05c.75-.31 1.21-1.05 1.23-1.79c.01-.26-.04-.55-.13-.81L13 3.5a1.954 1.954 0 0 0-1.81-1.25c-.26 0-.52.06-.77.15L3.06 5.45a1.994 1.994 0 0 0-1.09 2.6m16.15-3.8a2 2 0 0 0-2-2h-1.45l3.45 8.34"/>
                   </svg>
                   <span className={`font-medium ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>True or False</span>
                 </button>
 
-                <button onClick={() => maybeConfirmSwitch('multipleChoice')} className={`w-full flex items-center space-x-4 p-3 rounded-lg border-2 ${darkMode ? 'bg-[#2e2119] border-[#8D5A3F]' : 'bg-[#F3DAC6] border-[#6F422B]'} shadow-lg`}>
+                <button disabled={fromSavedSet} onClick={() => !fromSavedSet && maybeConfirmSwitch('multipleChoice')} className={`w-full flex items-center space-x-4 p-3 rounded-lg border-2 ${darkMode ? 'bg-[#2e2119] border-[#8D5A3F]' : 'bg-[#F3DAC6] border-[#6F422B]'} shadow-lg ${fromSavedSet ? 'opacity-50 cursor-not-allowed' : ''}`}>
                   <svg className="w-8 h-8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <g fill="none">
                       <path fillRule="evenodd" clipRule="evenodd" d="M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12zm10-5a2 2 0 0 0-2 2a1 1 0 0 1-2 0a4 4 0 1 1 5.31 3.78a.674.674 0 0 0-.273.169a.177.177 0 0 0-.037.054v.497a1 1 0 1 1-2 0V13c0-1.152.924-1.856 1.655-2.11A2.001 2.001 0 0 0 12 7zm1 6.007v-.004v.004zM13 17a1 1 0 1 1-2 0a1 1 0 0 1 2 0z" fill="#845C47"/>

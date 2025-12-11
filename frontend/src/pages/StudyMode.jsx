@@ -16,6 +16,10 @@ export default function StudyMode() {
   const [studyMode, setStudyMode] = useState(''); // Empty by default
   const [loading, setLoading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [chooseSourceOpen, setChooseSourceOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [libraryItems, setLibraryItems] = useState([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
 
   const studyModes = [
     { id: '', name: 'Choose' }, // Placeholder option
@@ -68,25 +72,67 @@ export default function StudyMode() {
     try {
       let textToUse = fileContent;
 
-      // If a file was selected, try to extract text. PDFs use the backend endpoint.
+      // If a file was selected, try to extract text.
       if (selectedFile) {
-        const isPDF = selectedFile.type === 'application/pdf' || selectedFile.name.toLowerCase().endsWith('.pdf');
+        const isFromLibrary = selectedFile.source === 'library' && selectedFile.id;
+        const isPDF = (selectedFile.type || '').toLowerCase() === 'application/pdf' || (selectedFile.name || '').toLowerCase().endsWith('.pdf');
 
-        if (isPDF) {
-          const form = new FormData();
-          form.append('pdf', selectedFile);
-
-          const resp = await fetch('/api/pdf/extract-text', {
-            method: 'POST',
-            body: form
-          });
-
-          if (!resp.ok) {
-            const err = await resp.json().catch(() => ({}));
-            throw new Error(err?.error || 'Failed to extract text from PDF');
+        if (isFromLibrary && isPDF) {
+          // Prefer uploading the actual PDF blob to the existing extraction endpoint
+          const API_BASE = import.meta.env.VITE_API_BASE;
+          if (!API_BASE) {
+            throw new Error('API base URL is not configured. Set VITE_API_BASE to your backend (e.g., http://localhost:3000).');
           }
+          try {
+            // Attempt to download the PDF binary
+            const pdfRes = await fetch(`${API_BASE}/api/library/file/${selectedFile.id}`);
+            if (pdfRes.ok) {
+              const rawBlob = await pdfRes.blob();
+              const blob = rawBlob.type ? rawBlob : new Blob([await rawBlob.arrayBuffer()], { type: 'application/pdf' });
+              const form = new FormData();
+              // Use 'file' field name for compatibility with common backends
+              form.append('file', blob, selectedFile.name || 'library.pdf');
+              const resp = await axios.post(`${API_BASE}/api/pdf/extract-text`, form, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+                withCredentials: true
+              });
+              const data = resp.data || {};
+              textToUse = data.text || '';
+            } else {
+              // Fallback to id-based extraction if supported
+              const resp = await axios.post(`${API_BASE}/api/pdf/extract-text`, { id: selectedFile.id }, { withCredentials: true });
+              const data = resp.data || {};
+              textToUse = data.text || '';
+            }
+          } catch (e) {
+            throw e;
+          }
+        } else if (isFromLibrary) {
+          // Fetch text content from backend by file id (non-PDF)
+          const API_BASE = import.meta.env.VITE_API_BASE;
+          if (!API_BASE) {
+            throw new Error('API base URL is not configured. Set VITE_API_BASE to your backend (e.g., http://localhost:3000).');
+          }
+          const res = await fetch(`${API_BASE}/api/library/view/${selectedFile.id}`);
+          if (!res.ok) {
+            throw new Error('Failed to load library file content');
+          }
+          const data = await res.json();
+          textToUse = data?.textContent || data?.content || '';
+        } else if (isPDF) {
+          const form = new FormData();
+          // Use 'file' field name for compatibility
+          form.append('file', selectedFile, selectedFile.name || 'upload.pdf');
 
-          const data = await resp.json();
+          const API_BASE = import.meta.env.VITE_API_BASE;
+          if (!API_BASE) {
+            throw new Error('API base URL is not configured. Set VITE_API_BASE to your backend (e.g., http://localhost:3000).');
+          }
+          const resp = await axios.post(`${API_BASE}/api/pdf/extract-text`, form, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            withCredentials: true
+          });
+          const data = resp.data || {};
           textToUse = data.text || '';
         } else {
           // Try to read plain text files client-side
@@ -350,15 +396,109 @@ export default function StudyMode() {
     setFileContent('');
   };
 
+  // Fetch library items for the current user
+  const fetchLibraryItems = async () => {
+    try {
+      setLibraryLoading(true);
+      const API_BASE = import.meta.env.VITE_API_BASE || '';
+      // Always use the authenticated user's id from context
+      const userId = user?._id;
+      if (!userId) {
+        console.warn('No authenticated user; cannot load user library');
+        setLibraryItems([]);
+        return;
+      }
+      // Fetch only the current user's library items
+      const res = await fetch(`${API_BASE}/api/library/library/${userId}`);
+      const data = await res.json();
+      const flat = [
+        ...(Array.isArray(data?.files) ? data.files : []),
+        ...((Array.isArray(data?.folders) ? data.folders.flatMap(f => Array.isArray(f.files) ? f.files : []) : []))
+      ];
+      // Ensure items are scoped to the current user if backend includes owner fields
+      const scoped = flat.filter(it => {
+        const owner = it.owner || it.userId || it.user || it.uid;
+        return !owner || String(owner) === String(userId);
+      });
+      setLibraryItems(scoped);
+    } catch (e) {
+      console.warn('Failed to fetch library items', e);
+      setLibraryItems([]);
+    } finally {
+      setLibraryLoading(false);
+    }
+  };
+
+  // When user clicks a library file, load its text content into the editor
+  const handleSelectLibraryFile = async (item) => {
+    const API_BASE = import.meta.env.VITE_API_BASE || '';
+    try {
+      console.debug('Selecting library item', item);
+      // Immediately reflect selection in UI (optimistic), close modal, and load content asynchronously
+      const fileId = item?._id || item?.id;
+      const optimisticSelected = {
+        name: item.originalName || item.filename || item.name || 'library-file',
+        type: item.mimetype || item.type || 'application/octet-stream',
+        id: fileId,
+        size: item.size || 0,
+        source: 'library'
+      };
+      setSelectedFile(optimisticSelected);
+      if (!studyMode) setStudyMode('multipleChoice');
+      setActiveTab('file');
+      setLibraryOpen(false);
+
+      // If we already have text, use it; else fetch from backend
+      if (item?.textContent) {
+        setFileContent(item.textContent || '');
+        console.debug('Library file selected (inline text), ready to create');
+        return;
+      }
+
+      if (!fileId) {
+        console.warn('No file id on selected library item');
+        return;
+      }
+
+      // Try to fetch textual content
+      const res = await fetch(`${API_BASE}/api/library/view/${fileId}`);
+      if (res.ok) {
+        const data = await res.json();
+        const text = data?.textContent || data?.content || '';
+        setFileContent(text);
+        console.debug('Library file content loaded');
+      } else {
+        console.warn('Failed to load library file content');
+      }
+    } catch (err) {
+      console.warn('Failed to select library file', err);
+    }
+  };
+
+  // Clear all saved sets via modal confirmation
+  const [clearAllOpen, setClearAllOpen] = useState(false);
+  const [clearingAll, setClearingAll] = useState(false);
   const clearSavedSets = () => {
     if (savedSets.length > 0) {
-      if (window.confirm('Are you sure you want to clear all saved study sets?')) {
-        try {
-          localStorage.removeItem('studyta_saved_sets');
-        } catch (e) { console.warn('Failed to clear saved sets', e); }
-        setSavedSets([]);
-        alert('Saved study sets cleared!');
-      }
+      setClearAllOpen(true);
+    }
+  };
+
+  const confirmClearAll = async () => {
+    try {
+      setClearingAll(true);
+      const API_BASE = import.meta.env.VITE_API_BASE || '';
+      // Attempt backend deletion for each set that has a DB id
+      const ids = (savedSets || []).map(s => s.savedSetId || s._id).filter(Boolean);
+      await Promise.all(ids.map(id => {
+        return fetch(`${API_BASE}/api/studymode/saved-sets/${id}`, { method: 'DELETE' }).catch(() => {});
+      }));
+      // Clear local storage and state
+      try { localStorage.removeItem('studyta_saved_sets'); } catch {}
+      setSavedSets([]);
+    } finally {
+      setClearingAll(false);
+      setClearAllOpen(false);
     }
   };
 
@@ -387,7 +527,26 @@ export default function StudyMode() {
       console.warn('Failed to restore session to sessionStorage', e)
     }
     setConfirmOpenSaved(false)
-    navigateToStudyMode(entry.mode, { questions: entry.questions, sourceText: entry.sourceText, title: entry.title })
+    navigateToStudyMode(entry.mode, { questions: entry.questions, sourceText: entry.sourceText, title: entry.title, fromSavedSet: true })
+  }
+
+  // Delete a saved study set (local + backend)
+  const deleteSavedSet = async (entry) => {
+    try {
+      // Remove locally
+      const next = (savedSets || []).filter(s => s !== entry);
+      setSavedSets(next);
+      try { localStorage.setItem('studyta_saved_sets', JSON.stringify(next)); } catch {}
+
+      // Attempt backend deletion if id exists
+      const API_BASE = import.meta.env.VITE_API_BASE || '';
+      const id = entry?.savedSetId || entry?._id || entry?.id; // prefer DB id if present
+      if (id) {
+        await fetch(`${API_BASE}/api/studymode/saved-sets/${id}`, { method: 'DELETE' });
+      }
+    } catch (e) {
+      console.warn('Failed to delete saved set', e);
+    }
   }
 
   return (
@@ -517,18 +676,22 @@ export default function StudyMode() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                             </svg>
                           </div>
-                          <p className={`mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Upload a file to create study materials</p>
-                          <label className="cursor-pointer">
-                            <input
-                              type="file"
-                              accept=".pdf,.txt,.doc,.docx,.csv,.json,.md,.html,.htm"
-                              onChange={handleFileUpload}
-                              className="hidden"
-                            />
-                            <span className={`inline-flex items-center px-4 py-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-[#BE8E78] hover:bg-[#A36B4E]'} text-white rounded-lg text-sm font-medium transition-colors`}>
-                              Choose File
-                            </span>
-                          </label>
+                          <p className={`mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Create study materials from a file</p>
+                          <div className="flex gap-3">
+                            <button
+                              onClick={() => setChooseSourceOpen(true)}
+                              className={`inline-flex items-center px-4 py-2 ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-[#BE8E78] hover:bg-[#A36B4E]'} text-white rounded-lg text-sm font-medium transition-colors`}
+                            >
+                              Choose Source
+                            </button>
+                          </div>
+                          <input
+                            id="studyta-file-input"
+                            type="file"
+                            accept=".pdf,.txt,.doc,.docx,.csv,.json,.md,.html,.htm"
+                            onChange={handleFileUpload}
+                            className="hidden"
+                          />
                         </div>
                       ) : (
                         <div className={`flex items-center justify-between p-4 border ${darkMode ? 'border-gray-600 bg-[#3a2a20]' : 'border-gray-300 bg-gray-50'} rounded-lg h-64`}>
@@ -663,8 +826,8 @@ export default function StudyMode() {
             className={`${darkMode ? 'bg-[#2e2119] text-white' : 'bg-white text-[#4A2C1E]'} w-full max-w-md rounded-2xl shadow-xl p-6 border ${darkMode ? 'border-gray-700' : 'border-[#E9D8D0]'} mx-4`}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className={`text-2xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>Open saved study set?</h3>
-            <p className={`${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'} mb-4`}>You are about to open this saved set.</p>
+            <h3 className={`text-2xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>Open or delete saved set?</h3>
+            <p className={`${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'} mb-4`}>You can open or delete this saved set.</p>
             {selectedSavedSet && (
               <div className={`mb-4 p-3 rounded-lg ${darkMode ? 'bg-[#3a2a20] border border-gray-700' : 'bg-[#F6E6DA] border border-[#E9D8D0]'}`}>
                 <div className="flex items-center justify-between">
@@ -688,10 +851,135 @@ export default function StudyMode() {
                 Cancel
               </button>
               <button
+                onClick={() => { if (selectedSavedSet) deleteSavedSet(selectedSavedSet); setConfirmOpenSaved(false); setSelectedSavedSet(null); }}
+                className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'}`}
+              >
+                Delete
+              </button>
+              <button
                 onClick={proceedOpenSavedSet}
                 className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white' : 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white'}`}
               >
                 Open Set
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Choose File Source Modal */}
+      {chooseSourceOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setChooseSourceOpen(false)}
+        >
+          <div
+            className={`${darkMode ? 'bg-[#2e2119] text-white' : 'bg-white text-[#4A2C1E]'} w-full max-w-md rounded-2xl shadow-xl p-6 border ${darkMode ? 'border-gray-700' : 'border-[#E9D8D0]'} mx-4`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className={`text-2xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>Select file source</h3>
+            <p className={`${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'} mb-4`}>Upload from your device or pick from the app library.</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setChooseSourceOpen(false)}
+                className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#3a2a20] text-white hover:bg-[#4a3528]' : 'bg-white text-[#8D5A3F] border border-[#E9D8D0] hover:bg-[#F6E6DA]'}`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { setChooseSourceOpen(false); setLibraryOpen(true); fetchLibraryItems(); }}
+                className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white' : 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white'}`}
+              >
+                From Library
+              </button>
+              <button
+                onClick={() => { setChooseSourceOpen(false); const input = document.getElementById('studyta-file-input'); if (input) input.click(); }}
+                className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white' : 'bg-[#8D5A3F] hover:bg-[#6F422B] text-white'}`}
+              >
+                Upload from Device
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pick From Library Modal */}
+      {libraryOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setLibraryOpen(false)}
+        >
+          <div
+            className={`${darkMode ? 'bg-[#2e2119] text-white' : 'bg-white text-[#4A2C1E]'} w-full max-w-2xl rounded-2xl shadow-xl p-6 border ${darkMode ? 'border-gray-700' : 'border-[#E9D8D0]'} mx-4`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className={`text-2xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>Choose from Library</h3>
+            <p className={`${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'} mb-4`}>Select a text-based file to use as source content.</p>
+            <div className={`max-h-96 overflow-y-auto rounded-lg ${darkMode ? 'bg-[#3a2a20] border border-gray-700' : 'bg-[#F6E6DA] border border-[#E9D8D0]'} p-3`}>
+              {libraryLoading ? (
+                <div className="py-10 text-center">Loading library…</div>
+              ) : libraryItems.length === 0 ? (
+                <div className="py-10 text-center">No files found.</div>
+              ) : (
+                <div className="space-y-2">
+                  {libraryItems.map((item) => (
+                    <button
+                      key={item._id || item.id}
+                      onClick={() => handleSelectLibraryFile(item)}
+                      className={`w-full text-left p-3 rounded-md flex items-center justify-between ${darkMode ? 'bg-[#2e2119] hover:bg-[#4a3528] border border-gray-700' : 'bg-white hover:bg-gray-50 border border-[#E9D8D0]'} transition`}
+                    >
+                      <div>
+                        <div className="font-semibold text-sm">{item.originalName || item.filename || item.name}</div>
+                        <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-[#B77A57]'}`}>
+                          {(item.type || item.mimetype || 'file')} {typeof item.size === 'number' ? `• ${(item.size / (1024*1024)).toFixed(2)} MB` : ''}
+                        </div>
+                      </div>
+                      <div className={`text-xs ${item.textContent || item.content ? 'text-green-600' : 'text-gray-400'}`}>
+                        {item.textContent || item.content ? 'Text available' : 'Open to fetch'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex gap-3 justify-end mt-4">
+              <button
+                onClick={() => setLibraryOpen(false)}
+                className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#3a2a20] text-white hover:bg-[#4a3528]' : 'bg-white text-[#8D5A3F] border border-[#E9D8D0] hover:bg-[#F6E6DA]'}`}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All Saved Sets Modal */}
+      {clearAllOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => { if (!clearingAll) setClearAllOpen(false); }}
+        >
+          <div
+            className={`${darkMode ? 'bg-[#2e2119] text-white' : 'bg-white text-[#4A2C1E]'} w-full max-w-md rounded-2xl shadow-xl p-6 border ${darkMode ? 'border-gray-700' : 'border-[#E9D8D0]'} mx-4`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className={`text-2xl font-semibold mb-2 ${darkMode ? 'text-white' : 'text-[#6F422B]'}`}>Clear all saved sets?</h3>
+            <p className={`${darkMode ? 'text-gray-300' : 'text-[#8D5A3F]'} mb-4`}>This will remove all saved study sets locally and from the database.</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => { if (!clearingAll) setClearAllOpen(false); }}
+                className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-[#3a2a20] text-white hover:bg-[#4a3528]' : 'bg-white text-[#8D5A3F] border border-[#E9D8D0] hover:bg-[#F6E6DA]'}`}
+                disabled={clearingAll}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmClearAll}
+                className={`px-4 py-2 rounded-lg font-medium ${darkMode ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white'}`}
+                disabled={clearingAll}
+              >
+                {clearingAll ? 'Clearing…' : 'Delete All'}
               </button>
             </div>
           </div>

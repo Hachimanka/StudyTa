@@ -112,3 +112,21 @@ router.get('/saved-sets/:userId', async (req, res) => {
 		res.status(500).json({ error: 'Failed to fetch saved study sets', details: err.message });
 	}
 });
+
+// Delete a saved study set by id
+router.delete('/saved-sets/:id', async (req, res) => {
+	try {
+		const { id } = req.params;
+		if (!mongoose.Types.ObjectId.isValid(id)) {
+			return res.status(400).json({ error: 'Invalid saved set id' });
+		}
+		const result = await SavedStudySet.findByIdAndDelete(id);
+		if (!result) {
+			return res.status(404).json({ error: 'Saved set not found' });
+		}
+		res.json({ message: 'Saved set deleted', id });
+	} catch (err) {
+		console.error('Delete saved study set error:', err);
+		res.status(500).json({ error: 'Failed to delete saved study set', details: err.message });
+	}
+});
