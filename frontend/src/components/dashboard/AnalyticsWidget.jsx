@@ -4,9 +4,21 @@ import { useNavigate } from 'react-router-dom';
 const AnalyticsWidget = ({ darkMode, themeColors, studyStats, analyticsStats }) => {
   const navigate = useNavigate();
   
+  const formatHMS = (secs) => {
+    const s = Math.max(0, Math.floor(secs || 0));
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const ss = s % 60;
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${h}:${pad(m)}:${pad(ss)}`;
+  };
+
   // Use analyticsStats from API if available, fallback to studyStats from localStorage
-  const hoursStudied = analyticsStats?.hoursStudied ?? Math.floor((studyStats?.totalTime || 0) / 60);
-  const topicsCovered = analyticsStats?.topicsCovered ?? (studyStats?.topics || 0);
+  const timeStudied = analyticsStats?.totalDurationSeconds !== undefined 
+    ? formatHMS(analyticsStats.totalDurationSeconds) 
+    : formatHMS((studyStats?.totalTime || 0) * 60);
+
+  const totalSessions = analyticsStats?.totalSessions ?? (studyStats?.dailySessions || 0);
 
   const handleNavigateToAnalytics = () => {
     navigate('/analytics');
@@ -15,7 +27,7 @@ const AnalyticsWidget = ({ darkMode, themeColors, studyStats, analyticsStats }) 
   return (
     <div>
       <div className="grid grid-cols-2 gap-4">
-        {/* Hours Studied Box - Clickable */}
+        {/* Time Studied Box - Clickable */}
         <button
           onClick={handleNavigateToAnalytics}
           className={`p-2 rounded-xl shadow transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-lg ${
@@ -23,21 +35,21 @@ const AnalyticsWidget = ({ darkMode, themeColors, studyStats, analyticsStats }) 
           }`}
         >
           <div className="flex items-center justify-between">
-            {/* Hours Studied Text and Number */}
+            {/* Time Studied Text and Number */}
             <div className="text-center">
               <h2
                 className={`pl-2 text-xs font-medium transition-colors duration-300 ${
                   darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                 }`}
               >
-                Hours Studied
+                Time Studied
               </h2>
               <p
-                className={`text-4xl font-bold transition-colors duration-300 ${
+                className={`text-2xl font-bold transition-colors duration-300 ${
                   darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                 }`}
               >
-                {hoursStudied}
+                {timeStudied}
               </p>
             </div>
             
@@ -53,7 +65,7 @@ const AnalyticsWidget = ({ darkMode, themeColors, studyStats, analyticsStats }) 
           </div>
         </button>
 
-        {/* Topics Covered Box - Clickable */}
+        {/* Total Sessions Box - Clickable */}
         <button
           onClick={handleNavigateToAnalytics}
           className={`p-2 rounded-xl shadow transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-lg ${
@@ -61,21 +73,21 @@ const AnalyticsWidget = ({ darkMode, themeColors, studyStats, analyticsStats }) 
           }`}
         >
           <div className="flex items-center justify-between">
-            {/* Topics Covered Text and Number */}
+            {/* Total Sessions Text and Number */}
             <div className="text-center">
               <h2
                 className={`pl-2 text-xs font-medium transition-colors duration-300 ${
                   darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                 }`}
               >
-                Topics Covered
+                Total Sessions
               </h2>
               <p
                 className={`text-4xl font-bold transition-colors duration-300 ${
                   darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                 }`}
               >
-                {topicsCovered}
+                {totalSessions}
               </p>
             </div>
             

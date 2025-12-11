@@ -164,12 +164,14 @@ export default function FlashCardMode() {
       const raw = sessionStorage.getItem('studyta_session');
       if (!raw) return;
       const s = JSON.parse(raw);
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      let userId = user?._id;
+      if (!userId) { try { const raw = localStorage.getItem('stuyta_user'); if(raw) userId = JSON.parse(raw)._id; } catch(e){} }
+
       const payload = {
         title: s.title || state?.title || title || 'Study Session',
         mode: s.mode || 'flashcards',
         questions: s.questions || [],
-        userId: userData?._id,
+        userId: userId,
         durationMinutes: Math.max(0.5, Math.round(((Date.now() - (startedAtRef.current || Date.now())) / 60000) * 10) / 10)
       };
       const res = await fetch(`${API_BASE}/api/studymode/saved-sets/save`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });

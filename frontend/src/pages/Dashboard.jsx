@@ -17,8 +17,8 @@ export default function Home() {
   const [displayName, setDisplayName] = useState("");
   const [profileAvatarUrl, setProfileAvatarUrl] = useState(null);
   const [analyticsStats, setAnalyticsStats] = useState({
-    hoursStudied: 0,
-    topicsCovered: 0,
+    totalDurationSeconds: 0,
+    totalSessions: 0,
     streak: 0
   }); // Stats from analytics API
   const [libraryStats, setLibraryStats] = useState({
@@ -42,13 +42,13 @@ export default function Home() {
       }
       if (!userId) return;
 
-      const res = await fetch(`${API_BASE}/api/analytics/stats?userId=${userId}&range=all`);
+      const res = await fetch(`${API_BASE}/api/analytics/summary?userId=${userId}`);
       if (res.ok) {
         const data = await res.json();
         setAnalyticsStats({
-          hoursStudied: data.totalHours || 0,
-          topicsCovered: data.topicsFinished || 0,
-          streak: data.streak || 0
+          totalDurationSeconds: data.totalDurationSeconds || 0,
+          totalSessions: data.totalSessions || 0,
+          streak: 0
         });
       }
     } catch (err) {
