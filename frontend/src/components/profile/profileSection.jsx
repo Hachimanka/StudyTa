@@ -7,6 +7,8 @@ import { useSettings } from '../../context/SettingsContext';
 /* ProfileSection Component */
 export const ProfileSection = ({ onOpenPasswordModal }) => {
   const { user } = useAuth();
+  const { darkMode } = useSettings();
+  const { showModal } = useModal();
 
   const initialData = {
     fullName: '',
