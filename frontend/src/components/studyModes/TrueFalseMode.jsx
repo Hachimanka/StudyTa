@@ -58,12 +58,14 @@ export default function TrueFalseMode() {
     setSaving(true);
     setSaveMessage('');
     try {
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      let userId = user?._id;
+      if (!userId) { try { const raw = localStorage.getItem('stuyta_user'); if(raw) userId = JSON.parse(raw)._id; } catch(e){} }
+
       const payload = {
         title: title || 'Study Session',
         mode: 'trueFalse',
         questions,
-        userId: userData?._id,
+        userId: userId,
         durationMinutes: startedAtRef.current ? Math.max(0.5, Math.round(((Date.now() - startedAtRef.current) / 60000) * 10) / 10) : 1,
       };
 
