@@ -19,8 +19,8 @@ export default function MultipleChoiceMode() {
   // Function to record study sessions
   const recordStudySession = async (topic, durationMinutes) => {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = user?._id;
+      let userId = user?._id;
+      if (!userId) { try { const raw = localStorage.getItem('stuyta_user'); if(raw) userId = JSON.parse(raw)._id; } catch(e){} }
       if (!userId) return;
       
       await fetch(`${API_BASE}/api/analytics/session`, {
@@ -49,8 +49,8 @@ export default function MultipleChoiceMode() {
         return; // Already triggered today
       }
       
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = user?._id;
+      let userId = user?._id;
+      if (!userId) { try { const raw = localStorage.getItem('stuyta_user'); if(raw) userId = JSON.parse(raw)._id; } catch(e){} }
       if (!userId) return;
       
       // Mark today as studied
@@ -74,8 +74,8 @@ export default function MultipleChoiceMode() {
   // Function to record topic completion
   const recordTopicCompletion = async (topic) => {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = user?._id;
+      let userId = user?._id;
+      if (!userId) { try { const raw = localStorage.getItem('stuyta_user'); if(raw) userId = JSON.parse(raw)._id; } catch(e){} }
       if (!userId) return;
       
       // Record a minimal study session to mark topic as completed
@@ -338,12 +338,15 @@ export default function MultipleChoiceMode() {
       const raw = sessionStorage.getItem('studyta_session');
       if (!raw) return;
       const s = JSON.parse(raw);
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      let userId = user?._id;
+      if (!userId) { try { const raw = localStorage.getItem('stuyta_user'); if(raw) userId = JSON.parse(raw)._id; } catch(e){} }
+
       const payload = {
         title: s.title || state?.title || title || 'Study Session',
         mode: s.mode || 'multipleChoice',
         questions: s.questions || [],
-        userId: user?._id,
+        userId: userId,
         durationMinutes: Math.max(0.5, Math.round(((Date.now() - (startedAtRef.current || Date.now())) / 60000) * 10) / 10)
       };
       const res = await fetch(`${API_BASE}/api/studymode/saved-sets/save`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload) });

@@ -104,8 +104,21 @@ router.post('/saved-sets/save', async (req, res) => {
 router.get('/saved-sets/:userId', async (req, res) => {
 	try {
 		const { userId } = req.params;
-		const id = mongoose.Types.ObjectId.isValid(userId) ? userId : TEMP_USER_ID;
-		const sets = await SavedStudySet.find({ userId: id }).sort({ createdAt: -1 }).limit(100);
+		
+		let query = {};
+		if (mongoose.Types.ObjectId.isValid(userId)) {
+			// Fetch sets for this user OR the temp user (legacy/fallback data)
+			query = { 
+				$or: [
+					{ userId: userId },
+					{ userId: TEMP_USER_ID }
+				]
+			};
+		} else {
+			query = { userId: TEMP_USER_ID };
+		}
+
+		const sets = await SavedStudySet.find(query).sort({ createdAt: -1 }).limit(100);
 		res.json({ sets });
 	} catch (err) {
 		console.error('Get saved study sets error:', err);

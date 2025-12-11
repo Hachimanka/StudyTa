@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { useSettings } from '../context/SettingsContext';
@@ -30,29 +30,51 @@ export default function StudyMode() {
     { id: 'flashcards', name: 'Flashcards' }
   ];
 
-  const [savedSets, setSavedSets] = useState(() => {
-    try {
-      const raw = localStorage.getItem('studyta_saved_sets');
-      if (raw) return JSON.parse(raw);
-
-      // Migration: if older key exists, migrate it to the new key
-      const legacy = localStorage.getItem('studyta_history');
-      if (legacy) {
+  const [savedSets, setSavedSets] = useState([]);
+  
+  // Fetch saved sets from backend when user is available
+  useEffect(() => {
+    const fetchSavedSets = async () => {
+      let userId = user?._id;
+      
+      // Fallback to localStorage if user context is not ready
+      if (!userId) {
         try {
-          const parsed = JSON.parse(legacy);
-          localStorage.setItem('studyta_saved_sets', JSON.stringify(parsed));
-          localStorage.removeItem('studyta_history');
-          return parsed;
+          const raw = localStorage.getItem('stuyta_user') || localStorage.getItem('studytA_user') || localStorage.getItem('user');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            userId = parsed._id || parsed.id;
+          }
         } catch (e) {
-          console.warn('Failed to migrate legacy history to saved sets', e);
+          console.warn('Error parsing user from storage', e);
         }
       }
-    } catch (e) {
-      console.warn('Failed to read saved sets from localStorage', e);
-    }
-    // default empty saved sets
-    return [];
-  });
+
+      if (!userId) {
+        setSavedSets([]);
+        return;
+      }
+
+      try {
+        const API_BASE = import.meta.env.VITE_API_BASE || '';
+        const res = await fetch(`${API_BASE}/api/studymode/saved-sets/${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.sets)) {
+             const formatted = data.sets.map(s => ({
+                ...s,
+                date: s.createdAt ? new Date(s.createdAt).toLocaleDateString() : 'Unknown date'
+            }));
+            setSavedSets(formatted);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch saved sets:', err);
+      }
+    };
+    fetchSavedSets();
+  }, [user]);
+
   const [savedFilter, setSavedFilter] = useState('all'); // 'all' | 'multipleChoice' | 'trueFalse' | 'flashcards'
   // Modal state for confirming opening a saved set
   const [confirmOpenSaved, setConfirmOpenSaved] = useState(false)
@@ -515,8 +537,6 @@ export default function StudyMode() {
       await Promise.all(ids.map(id => {
         return fetch(`${API_BASE}/api/studymode/saved-sets/${id}`, { method: 'DELETE' }).catch(() => {});
       }));
-      // Clear local storage and state
-      try { localStorage.removeItem('studyta_saved_sets'); } catch {}
       setSavedSets([]);
     } finally {
       setClearingAll(false);
@@ -552,13 +572,12 @@ export default function StudyMode() {
     navigateToStudyMode(entry.mode, { questions: entry.questions, sourceText: entry.sourceText, title: entry.title, fromSavedSet: true })
   }
 
-  // Delete a saved study set (local + backend)
+  // Delete a saved study set (backend)
   const deleteSavedSet = async (entry) => {
     try {
-      // Remove locally
+      // Optimistic update
       const next = (savedSets || []).filter(s => s !== entry);
       setSavedSets(next);
-      try { localStorage.setItem('studyta_saved_sets', JSON.stringify(next)); } catch {}
 
       // Attempt backend deletion if id exists
       const API_BASE = import.meta.env.VITE_API_BASE || '';
@@ -568,6 +587,7 @@ export default function StudyMode() {
       }
     } catch (e) {
       console.warn('Failed to delete saved set', e);
+      // Revert if needed, but for now just warn
     }
   }
 

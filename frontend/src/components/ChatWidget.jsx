@@ -37,6 +37,8 @@ export default function ChatWidget() {
     { phrases: ['open summarize', 'go to summarize', 'open the summarize page', 'summarize'], path: '/summarize', label: 'Summarize' },
     { phrases: ['open music', 'go to music', 'play music', 'music'], path: '/music', label: 'Music' },
     { phrases: ['open settings', 'go to settings', 'open the settings', 'settings'], path: '/settings', label: 'Settings' },
+    { phrases: ['open study mode', 'go to study mode', 'open study', 'study mode', 'study'], path: '/study', label: 'Study Mode' },
+    { phrases: ['open analytics', 'go to analytics', 'open the analytics', 'analytics'], path: '/analytics', label: 'Analytics' },
   ]
 
   const darkOnPhrases = ['apply the darkmode', 'apply darkmode', 'enable dark mode', 'enable darkmode', 'turn on dark mode', 'turn on darkmode', 'darkmode on', 'apply dark mode', 'dark mode on']
@@ -121,8 +123,13 @@ export default function ChatWidget() {
           navigate('/music')
           // resolve to full track object if possible
           const full = resolveTrack(found)
-          try { window.dispatchEvent(new CustomEvent('playMusic', { detail: full || (found || {}) })) } catch (e) {}
-          setMessages(m => [...m, { from: 'bot', text: found ? 'Playing...' : 'Playing Music...' }])
+          // If no specific track found, just navigate to music page without auto-playing random track
+          if (found || full) {
+             try { window.dispatchEvent(new CustomEvent('playMusic', { detail: full || (found || {}) })) } catch (e) {}
+             setMessages(m => [...m, { from: 'bot', text: found ? 'Playing...' : 'Playing Music...' }])
+          } else {
+             setMessages(m => [...m, { from: 'bot', text: 'Opening Music...' }])
+          }
           return
         }
       }
@@ -138,10 +145,7 @@ export default function ChatWidget() {
           }
           navigate(item.path)
           setMessages(m => [...m, { from: 'bot', text: `Opening ${item.label}...` }])
-          if (item.path === '/music') {
-            // dispatch a global event so the Music page can start playback
-            try { window.dispatchEvent(new CustomEvent('playMusic', { detail: { category: 'lofi' } })) } catch (e) { /* ignore */ }
-          }
+          // Removed auto-play for music page navigation
           return
         }
       }
@@ -240,8 +244,12 @@ export default function ChatWidget() {
           }
           navigate('/music')
           const full = resolveTrack(found)
-          try { window.dispatchEvent(new CustomEvent('playMusic', { detail: full || (found || {}) })) } catch (e) {}
-          setMessages(m => [...m, { from: 'bot', text: full ? `Playing ${full.name}...` : 'Playing Music...' }])
+          if (found || full) {
+            try { window.dispatchEvent(new CustomEvent('playMusic', { detail: full || (found || {}) })) } catch (e) {}
+            setMessages(m => [...m, { from: 'bot', text: full ? `Playing ${full.name}...` : 'Playing Music...' }])
+          } else {
+            setMessages(m => [...m, { from: 'bot', text: 'Opening Music...' }])
+          }
           handledPlay = true
           break
         }
@@ -252,9 +260,7 @@ export default function ChatWidget() {
         if (voiceNav) {
           navigate(voiceNav.path)
           setMessages(m => [...m, { from: 'bot', text: `Opening ${voiceNav.label}` }])
-          if (voiceNav.path === '/music') {
-            try { window.dispatchEvent(new CustomEvent('playMusic', { detail: { category: 'lofi' } })) } catch (e) { /* ignore */ }
-          }
+          // Removed auto-play for music page navigation
         }
       }
 
