@@ -104,21 +104,13 @@ router.post('/saved-sets/save', async (req, res) => {
 router.get('/saved-sets/:userId', async (req, res) => {
 	try {
 		const { userId } = req.params;
-		
-		let query = {};
-		if (mongoose.Types.ObjectId.isValid(userId)) {
-			// Fetch sets for this user OR the temp user (legacy/fallback data)
-			query = { 
-				$or: [
-					{ userId: userId },
-					{ userId: TEMP_USER_ID }
-				]
-			};
-		} else {
-			query = { userId: TEMP_USER_ID };
+		if (!mongoose.Types.ObjectId.isValid(userId)) {
+			// Invalid or missing userId: return empty list to avoid exposing other users' sets
+			return res.json({ sets: [] });
 		}
 
-		const sets = await SavedStudySet.find(query).sort({ createdAt: -1 }).limit(100);
+		// Only fetch sets belonging to the requested user
+		const sets = await SavedStudySet.find({ userId }).sort({ createdAt: -1 }).limit(100);
 		res.json({ sets });
 	} catch (err) {
 		console.error('Get saved study sets error:', err);
