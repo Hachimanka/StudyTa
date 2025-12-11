@@ -42,14 +42,25 @@ export default function Home() {
       }
       if (!userId) return;
 
+      // Try to get streak from profile endpoint (authoritative)
+      const profileRes = await fetch(`${API_BASE}/api/profile/${userId}`);
+      if (profileRes.ok) {
+        const payload = await profileRes.json();
+        const userPayload = payload.user || {};
+        setAnalyticsStats(prev => ({
+          ...prev,
+          streak: userPayload.studyStreak || userPayload.studyStreak === 0 ? userPayload.studyStreak : prev.streak
+        }));
+      }
+      // Still populate duration/sessions from analytics summary
       const res = await fetch(`${API_BASE}/api/analytics/summary?userId=${userId}`);
       if (res.ok) {
         const data = await res.json();
-        setAnalyticsStats({
+        setAnalyticsStats(prev => ({
+          ...prev,
           totalDurationSeconds: data.totalDurationSeconds || 0,
-          totalSessions: data.totalSessions || 0,
-          streak: 0
-        });
+          totalSessions: data.totalSessions || 0
+        }));
       }
     } catch (err) {
       console.error('Failed to fetch analytics stats:', err);

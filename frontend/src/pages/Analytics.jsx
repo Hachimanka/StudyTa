@@ -21,10 +21,22 @@ export default function Analytics() {
     const pad = (n) => String(n).padStart(2, '0')
     return `${h}:${pad(m)}:${pad(ss)}`
   }
+  const studyStreak = useMemo(() => {
+    try {
+      if (!weekly || weekly.length === 0) return 0
+      let count = 0
+      for (let i = weekly.length - 1; i >= 0; i--) {
+        if ((weekly[i].sessions || 0) > 0) count++
+        else break
+      }
+      return count
+    } catch (e) { return 0 }
+  }, [weekly])
+
   const stats = [
     { label: 'Time Studied', value: formatHMS(summary.totalDurationSeconds || 0) },
     { label: 'Total Sessions', value: summary.totalSessions || 0 },
-    { label: 'Active Modes', value: (summary.byMode || []).length },
+    { label: 'Study Streak', value: studyStreak },
   ]
 
   // Saved study sets for Time per Topic (from localStorage)
@@ -176,7 +188,7 @@ export default function Analytics() {
         const base = import.meta.env.VITE_API_BASE || import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
         const [sRes, wRes] = await Promise.all([
           axios.get(`${base}/api/analytics/summary`, { params: { userId: user._id } }),
-          axios.get(`${base}/api/analytics/daily`, { params: { userId: user._id, days: 7 } })
+          axios.get(`${base}/api/analytics/daily`, { params: { userId: user._id, days: 30 } })
         ])
         setSummary(sRes.data || { totalSessions: 0, totalDurationSeconds: 0, byMode: [] })
         setWeekly((wRes.data?.days || []).map(x => ({ label: x.label, duration: x.duration, sessions: x.sessions })))
@@ -300,10 +312,11 @@ export default function Analytics() {
                 <svg width="260" height="180" viewBox="0 0 260 180" className="flex-shrink-0">
                   <circle cx="130" cy="90" r="56" fill={darkMode ? '#1f1b16' : '#fff'} />
                   {(() => {
-                    const total = (summary.byMode || []).reduce((a,b)=> a + (b.duration||0), 0)
+                    const modes = (summary.byMode || []).filter(m => (m.mode || '').toLowerCase() !== 'custom')
+                    const total = modes.reduce((a,b)=> a + (b.duration||0), 0)
                     const colors = darkMode ? ['#E59C5C','#d4a88a','#a07860','#6F422B','#5a3520','#3d2f24'] : ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D']
                     let acc = 0
-                    return (summary.byMode || []).map((m, idx) => {
+                    return modes.map((m, idx) => {
                       const frac = total > 0 ? (m.duration || 0) / total : 0
                       const dash = Math.max(0, Math.round(frac * 2 * Math.PI * 56))
                       const gap = Math.round((2 * Math.PI * 56) - dash)
@@ -318,13 +331,13 @@ export default function Analytics() {
                 </svg>
 
                 <ul className={`text-sm space-y-3 ${darkMode ? 'text-[#d4c4b5]' : 'text-[#5C4333]'}`}>
-                  {(summary.byMode || []).map((m, idx) => (
+                  {((summary.byMode || []).filter(m => (m.mode || '').toLowerCase() !== 'custom')).map((m, idx) => (
                     <li key={m.mode} className="flex items-center">
                       <span className="inline-block w-3 h-3 mr-3 rounded-sm" style={{ backgroundColor: darkMode ? ['#E59C5C','#d4a88a','#a07860','#6F422B','#5a3520','#3d2f24'][idx%6] : ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D'][idx%6] }}></span>
                       {m.mode} — {Math.round((m.duration||0)/60)}m
                     </li>
                   ))}
-                  {(summary.byMode || []).length === 0 && <li className={darkMode ? 'text-[#d4c4b5]' : 'text-[#5C4333]'}>No study sessions yet.</li>}
+                  {((summary.byMode || []).filter(m => (m.mode || '').toLowerCase() !== 'custom')).length === 0 && <li className={darkMode ? 'text-[#d4c4b5]' : 'text-[#5C4333]'}>No study sessions yet.</li>}
                 </ul>
               </div>
             </section>
