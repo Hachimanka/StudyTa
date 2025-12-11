@@ -71,27 +71,44 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
         if (!user || !user._id) return;
         const API_BASE = import.meta.env.VITE_API_BASE || '';
         const res = await fetch(`${API_BASE}/api/profile/${user._id}`);
-        if (!res.ok) return;
+        if (!res.ok) {
+          // If API fails, still populate email from user context
+          setFormData(prev => ({
+            ...prev,
+            email: user?.email || ''
+          }));
+          setOriginalData(prev => ({
+            ...prev,
+            email: user?.email || ''
+          }));
+          return;
+        }
         const data = await res.json();
         const p = data.profile || {};
+        const userEmail = data.user?.email || user?.email || '';
         setFormData({
           fullName: p.fullName || data.user?.name || '',
           bio: p.bio || '',
-          username: p.username || '',
-          email: data.user?.email || '',
+          username: p.username || data.user?.username || '',
+          email: userEmail,
           avatar: p.profileImageUrl || ''
         });
         // Save the loaded profile snapshot for change-detection
         setOriginalData({
           fullName: p.fullName || data.user?.name || '',
           bio: p.bio || '',
-          username: p.username || '',
-          email: data.user?.email || '',
+          username: p.username || data.user?.username || '',
+          email: userEmail,
           avatar: p.profileImageUrl || ''
         });
         if (p.profileImageUrl) setAvatarPreview(p.profileImageUrl);
       } catch (err) {
         console.warn('Failed to load profile', err);
+        // On error, still populate email from user context
+        if (user?.email) {
+          setFormData(prev => ({ ...prev, email: user.email }));
+          setOriginalData(prev => ({ ...prev, email: user.email }));
+        }
       }
     };
     fetchProfile();
@@ -196,7 +213,7 @@ const saveProfile = async () => {
             {avatarPreview ? (
               <img src={avatarPreview} alt="avatar preview" className="w-full h-full object-cover" />
             ) : (
-              (formData.fullName || 'U').charAt(0)
+              (formData.email || user?.email || 'U').charAt(0).toUpperCase()
             )}
           </motion.div>
         </div>

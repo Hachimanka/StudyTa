@@ -37,6 +37,8 @@ export async function getProfile(req, res) {
         _id: user._id,
         email: user.email,
         name: user.name,
+        username: user.username || profile.username || '',
+        profileImageUrl: user.profileImageUrl || profile.profileImageUrl || '',
       },
       profile: {
         ...profile.toObject(),
@@ -52,6 +54,10 @@ export async function getProfile(req, res) {
 export async function updateProfile(req, res) {
   try {
     const { userId } = req.params;
+    console.log('[updateProfile] Starting update for userId:', userId);
+    console.log('[updateProfile] req.file:', req.file);
+    console.log('[updateProfile] req.body:', req.body);
+    
     if (!userId) return res.status(400).json({ message: 'Missing userId' });
 
     const user = await User.findById(userId);
@@ -66,6 +72,9 @@ export async function updateProfile(req, res) {
       // Convert to absolute URL
       const baseUrl = process.env.BACKEND_BASE || `${req.protocol}://${req.get('host')}`;
       profileImageUrl = baseUrl + uploadRel;
+      console.log('[updateProfile] New profileImageUrl:', profileImageUrl);
+    } else {
+      console.log('[updateProfile] No file uploaded');
     }
 
     let profile = await Profile.findOne({ userId });
@@ -103,12 +112,15 @@ export async function updateProfile(req, res) {
       }
 
       profile.profileImageUrl = profileImageUrl;
+      console.log('[updateProfile] Setting profile.profileImageUrl to:', profileImageUrl);
     }
     profile.updatedAt = new Date();
 
+    console.log('[updateProfile] About to save profile:', JSON.stringify(profile.toObject(), null, 2));
     await profile.save();
+    console.log('[updateProfile] Profile saved successfully');
 
-    // Update main User fields
+    // Update main User fields (sync username and profileImageUrl to User model as well)
     let userChanged = false;
     if (email && user.email !== email) {
       user.email = email;
@@ -116,6 +128,16 @@ export async function updateProfile(req, res) {
     }
     if (fullName && user.name !== fullName) {
       user.name = fullName;
+      userChanged = true;
+    }
+    if (typeof username === 'string' && user.username !== username) {
+      user.username = username;
+      userChanged = true;
+    }
+    // Also store profileImageUrl in User model for easy access
+    const finalProfileImageUrl = profileImageUrl || profile.profileImageUrl;
+    if (finalProfileImageUrl && user.profileImageUrl !== finalProfileImageUrl) {
+      user.profileImageUrl = finalProfileImageUrl;
       userChanged = true;
     }
     if (userChanged) await user.save();
@@ -133,6 +155,8 @@ export async function updateProfile(req, res) {
         _id: user._id, 
         email: user.email, 
         name: user.name,
+        username: user.username || profile.username || '',
+        profileImageUrl: user.profileImageUrl || profile.profileImageUrl || '',
         // Include profile fields for easy access
         profile: responseProfile
       } 
