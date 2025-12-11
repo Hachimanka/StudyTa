@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate, Link } from "react-router-dom";
 import Leftpic from "../assets/Leftpic.svg";
+import { useModal } from "../context/ModalContext";
 
 export default function Signup() {
+  const { showModal } = useModal();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,11 +41,11 @@ export default function Signup() {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!name || !email || !password) {
-      alert("All fields are required!");
+      showModal("All fields are required!", "Input Required", "warning");
       return;
     }
     if (!agreeTerms) {
-      alert("You must agree to the Terms & Conditions!");
+      showModal("You must agree to the Terms & Conditions!", "Terms Required", "warning");
       return;
     }
     setLoading(true);
@@ -56,13 +58,13 @@ export default function Signup() {
       const data = await res.json();
       if (res.ok) {
         if (data.debugVerifyUrl) setVerifyInfo({ url: data.debugVerifyUrl });
-        alert(data.message || 'Verification email sent. Please check your inbox.');
+        showModal(data.message || 'Verification email sent. Please check your inbox.', 'Success', 'success');
         navigate('/login');
       } else {
-        alert(data.message || 'Registration failed');
+        showModal(data.message || 'Registration failed', 'Error', 'error');
       }
     } catch (err) {
-      alert('Registration error');
+      showModal('Registration error', 'Error', 'error');
     } finally {
       setLoading(false);
     }

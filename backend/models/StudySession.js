@@ -2,7 +2,8 @@ import mongoose from 'mongoose'
 
 const StudySessionSchema = new mongoose.Schema({
 	userId: { type: mongoose.Schema.Types.ObjectId, ref: 'Users', required: true },
-	mode: { type: String, enum: ['focus','pomodoro','flashcards','quiz','reading','custom'], required: true },
+	mode: { type: String, enum: ['focus','pomodoro','flashcards','quiz','reading','custom', 'multipleChoice', 'trueFalse'], required: true },
+	topic: { type: String },
 	startedAt: { type: Date, required: true },
 	endedAt: { type: Date },
 	durationSeconds: { type: Number, default: 0 },

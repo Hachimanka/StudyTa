@@ -4,8 +4,10 @@ import { useSettings } from '../../context/SettingsContext';
 import Sidebar from '../Sidebar';
 import ConfirmSaveModal from '../ConfirmSaveModal';
 import { useAuth } from '../../context/AuthContext';
+import { useModal } from '../../context/ModalContext';
 
 export default function MultipleChoiceMode() {
+  const { showModal } = useModal();
   const { darkMode } = useSettings();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -27,6 +29,7 @@ export default function MultipleChoiceMode() {
         body: JSON.stringify({ 
           userId, 
           topic, 
+          mode: 'multipleChoice',
           durationMinutes: Math.max(0.5, Math.round(durationMinutes * 10) / 10)
         }),
       });
@@ -166,17 +169,18 @@ export default function MultipleChoiceMode() {
   useEffect(() => {
     return () => {
       if (totalStudyTime > 0) {
+        // Use the current title ref or state
         recordStudySession(title || 'Multiple Choice Quiz', totalStudyTime);
       }
     };
-  }, [totalStudyTime, title]);
+  }, []); // Run only on unmount
 
   // Also record when quiz finishes
   useEffect(() => {
     if (finished && totalStudyTime > 0) {
       recordStudySession(title || 'Multiple Choice Quiz', totalStudyTime);
     }
-  }, [finished, totalStudyTime, title]);
+  }, [finished]); // Run only when finished state changes
 
   // Derive title from navigation state (title or sourceText)
   useEffect(() => {
@@ -231,7 +235,7 @@ export default function MultipleChoiceMode() {
       const sourceText = (state?.sourceText) || (sess?.sourceText) || '';
       const titleFromSess = (state?.title) || (sess?.title) || title;
       if (!sourceText || !sourceText.trim()) {
-        alert('No source text found. Create materials first in Study Mode.');
+        showModal('No source text found. Create materials first in Study Mode.', 'Missing Content', 'warning');
         return;
       }
 
@@ -276,7 +280,7 @@ export default function MultipleChoiceMode() {
       }
     } catch (err) {
       console.error('generateAndNavigate error', err);
-      alert('Failed to generate materials for the selected method.');
+      showModal('Failed to generate materials for the selected method.', 'Generation Error', 'error');
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,8 @@
+import 'dotenv/config';
 import ocrRoutes from './routes/ocrRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 import { connectDB } from './config/db.js';
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import mongoose from "mongoose";
@@ -36,7 +37,7 @@ const upload = multer({
   }
 });
 
-dotenv.config();
+// dotenv.config();
 connectDB();
 
 // Set BACKEND_BASE environment variable if not set
@@ -62,6 +63,9 @@ app.use(express.json({ limit: '10mb' }));
 
 // Register OCR and Word extraction routes
 app.use('/api', ocrRoutes);
+
+// Register AI routes
+app.use('/api/ai', aiRoutes);
 
 app.use('/api', userRoutes);
 

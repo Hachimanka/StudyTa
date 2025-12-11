@@ -4,8 +4,10 @@ import { useAuth } from "../context/AuthContext";
 import { useSettings } from "../context/SettingsContext";
 import Sidebar from "../components/Sidebar";
 import ChatWidget from "../components/ChatWidget";
+import { useModal } from "../context/ModalContext";
 
 export default function Summarize() {
+  const { showModal } = useModal();
   const { darkMode, getThemeColors, playSound } = useSettings();
   const themeColors = getThemeColors();
   const API_BASE = import.meta.env.VITE_API_BASE || '';
@@ -123,7 +125,7 @@ export default function Summarize() {
 
     // Check file size (limit to 20MB)
     if (file.size > 20 * 1024 * 1024) {
-      alert("File size must be less than 20MB.");
+      showModal("File size must be less than 20MB.", "File Too Large", "warning");
       return;
     }
 
@@ -140,7 +142,7 @@ export default function Summarize() {
     ];
 
     if (!supportedTypes.includes(file.type) && !file.name.match(/\.(txt|md|csv|json|html|htm)$/i)) {
-      alert("Supported file types: PDF, TXT, DOC, DOCX, CSV, JSON, MD, HTML");
+      showModal("Supported file types: PDF, TXT, DOC, DOCX, CSV, JSON, MD, HTML", "Invalid File Type", "warning");
       return;
     }
 

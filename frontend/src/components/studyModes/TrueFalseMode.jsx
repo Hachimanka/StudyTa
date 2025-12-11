@@ -4,8 +4,10 @@ import { useSettings } from '../../context/SettingsContext';
 import Sidebar from '../Sidebar';
 import ConfirmSaveModal from '../ConfirmSaveModal';
 import { useAuth } from '../../context/AuthContext';
+import { useModal } from '../../context/ModalContext';
 
 export default function TrueFalseMode() {
+  const { showModal } = useModal();
   const { darkMode } = useSettings();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -204,9 +206,9 @@ export default function TrueFalseMode() {
         if (!user?._id) return;
         const startMs = startedAtRef.current || Date.now();
         const durationSeconds = Math.max(0, Math.floor((Date.now() - startMs)/1000));
-        await fetch(`/api/studymode/sessions/complete`, {
+        await fetch(`${API_BASE}/api/studymode/sessions/complete`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user._id, mode: 'trueFalse', startedAt: startMs, endedAt: Date.now(), durationSeconds })
+          body: JSON.stringify({ userId: user._id, mode: 'trueFalse', topic: title, startedAt: startMs, endedAt: Date.now(), durationSeconds })
         });
       } catch (e) {
         console.warn('Failed to record completed session', e);
@@ -234,7 +236,7 @@ export default function TrueFalseMode() {
       };
 
       if (!sourceText || !sourceText.trim()) {
-        alert('No source text available. Please create materials from Study Mode first.');
+        showModal('No source text available. Please create materials from Study Mode first.', 'Missing Content', 'warning');
         return;
       }
 
@@ -297,7 +299,7 @@ export default function TrueFalseMode() {
       }
     } catch (err) {
       console.error('generateAndNavigate error', err);
-      alert('Failed to generate materials for the selected study method.');
+      showModal('Failed to generate materials for the selected study method.', 'Generation Error', 'error');
     } finally {
       setLoading(false);
     }
