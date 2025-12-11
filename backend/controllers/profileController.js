@@ -1,11 +1,5 @@
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
 import Profile from '../models/profileModel.js';
 import User from '../models/Users.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 export async function getProfile(req, res) {
   try {
@@ -25,18 +19,16 @@ export async function getProfile(req, res) {
       await profile.save();
     }
 
-    // Convert relative path to absolute URL if needed
-    let profileImageUrl = profile.profileImageUrl;
-    if (profileImageUrl && !profileImageUrl.startsWith('http')) {
-      const baseUrl = process.env.BACKEND_BASE || `${req.protocol}://${req.get('host')}`;
-      profileImageUrl = baseUrl + profileImageUrl;
-    }
+    // Profile image is stored as Base64 data URL in MongoDB
+    const profileImageUrl = profile.profileImageUrl || '';
 
     return res.json({
       user: {
         _id: user._id,
         email: user.email,
         name: user.name,
+        username: user.username || profile.username || '',
+        profileImageUrl: user.profileImageUrl || profileImageUrl,
       },
       profile: {
         ...profile.toObject(),
@@ -52,6 +44,10 @@ export async function getProfile(req, res) {
 export async function updateProfile(req, res) {
   try {
     const { userId } = req.params;
+    console.log('[updateProfile] Starting update for userId:', userId);
+    console.log('[updateProfile] req.file:', req.file);
+    console.log('[updateProfile] req.body:', req.body);
+    
     if (!userId) return res.status(400).json({ message: 'Missing userId' });
 
     const user = await User.findById(userId);
@@ -59,13 +55,15 @@ export async function updateProfile(req, res) {
 
     const { fullName, username, bio, email } = req.body || {};
 
-    // Handle uploaded file
+    // Handle uploaded file - convert to Base64 data URL for MongoDB storage
     let profileImageUrl = null;
     if (req.file) {
-      const uploadRel = `/uploads/avatars/${req.file.filename}`;
-      // Convert to absolute URL
-      const baseUrl = process.env.BACKEND_BASE || `${req.protocol}://${req.get('host')}`;
-      profileImageUrl = baseUrl + uploadRel;
+      // Convert buffer to Base64 data URL
+      const base64 = req.file.buffer.toString('base64');
+      profileImageUrl = `data:${req.file.mimetype};base64,${base64}`;
+      console.log('[updateProfile] New profileImage converted to Base64, size:', req.file.size, 'bytes');
+    } else {
+      console.log('[updateProfile] No file uploaded');
     }
 
     let profile = await Profile.findOne({ userId });
@@ -76,39 +74,18 @@ export async function updateProfile(req, res) {
     if (typeof username === 'string') profile.username = username;
     if (typeof bio === 'string') profile.bio = bio;
 
-    // If a new file was uploaded, attempt to remove the previous avatar file from disk
+    // Update profile image if a new one was uploaded
     if (profileImageUrl) {
-      try {
-        const oldUrl = profile.profileImageUrl;
-        if (oldUrl && typeof oldUrl === 'string') {
-          const marker = '/uploads/avatars/';
-          const idx = oldUrl.indexOf(marker);
-          if (idx !== -1) {
-            const rel = oldUrl.slice(idx); // /uploads/avatars/filename
-            const relPath = rel.replace(/^\//, '');
-            const oldPath = path.join(__dirname, '..', relPath);
-            // Ensure file exists and then remove
-            if (fs.existsSync(oldPath)) {
-              try {
-                fs.unlinkSync(oldPath);
-                console.log('Deleted old avatar:', oldPath);
-              } catch (delErr) {
-                console.warn('Failed to delete old avatar:', oldPath, delErr.message);
-              }
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('Error while attempting to remove old avatar:', e.message);
-      }
-
       profile.profileImageUrl = profileImageUrl;
+      console.log('[updateProfile] Profile image updated in database');
     }
     profile.updatedAt = new Date();
 
+    console.log('[updateProfile] About to save profile:', JSON.stringify(profile.toObject(), null, 2));
     await profile.save();
+    console.log('[updateProfile] Profile saved successfully');
 
-    // Update main User fields
+    // Update main User fields (sync username and profileImageUrl to User model as well)
     let userChanged = false;
     if (email && user.email !== email) {
       user.email = email;
@@ -116,6 +93,16 @@ export async function updateProfile(req, res) {
     }
     if (fullName && user.name !== fullName) {
       user.name = fullName;
+      userChanged = true;
+    }
+    if (typeof username === 'string' && user.username !== username) {
+      user.username = username;
+      userChanged = true;
+    }
+    // Also store profileImageUrl in User model for easy access
+    const finalProfileImageUrl = profileImageUrl || profile.profileImageUrl;
+    if (finalProfileImageUrl && user.profileImageUrl !== finalProfileImageUrl) {
+      user.profileImageUrl = finalProfileImageUrl;
       userChanged = true;
     }
     if (userChanged) await user.save();
@@ -133,6 +120,8 @@ export async function updateProfile(req, res) {
         _id: user._id, 
         email: user.email, 
         name: user.name,
+        username: user.username || profile.username || '',
+        profileImageUrl: user.profileImageUrl || profile.profileImageUrl || '',
         // Include profile fields for easy access
         profile: responseProfile
       } 

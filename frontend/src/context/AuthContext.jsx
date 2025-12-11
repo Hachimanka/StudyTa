@@ -52,9 +52,17 @@ export function AuthProvider({ children }) {
         if (!res.ok) return;
         const payload = await res.json();
         const profile = payload.profile || null;
-        setUser((prev) => ({ ...prev, profile, username: profile?.username || prev?.username, bio: profile?.bio || prev?.bio }));
+        const userFromProfile = payload.user || {};
+        setUser((prev) => ({ 
+          ...prev, 
+          profile, 
+          username: profile?.username || userFromProfile?.username || prev?.username, 
+          bio: profile?.bio || prev?.bio,
+          email: userFromProfile?.email || prev?.email,
+          profileImageUrl: profile?.profileImageUrl || userFromProfile?.profileImageUrl || prev?.profileImageUrl
+        }));
         // persist the merged user
-        try { localStorage.setItem('stuyta_user', JSON.stringify({ ...(JSON.parse(localStorage.getItem('stuyta_user') || '{}')), profile })); } catch (_) {}
+        try { localStorage.setItem('stuyta_user', JSON.stringify({ ...(JSON.parse(localStorage.getItem('stuyta_user') || '{}')), profile, username: profile?.username, profileImageUrl: profile?.profileImageUrl })); } catch (_) {}
       } catch (err) {
         // ignore
       }
@@ -85,8 +93,16 @@ export function AuthProvider({ children }) {
           if (profileRes.ok) {
             const profilePayload = await profileRes.json();
             const profile = profilePayload.profile || null;
-            // Attach profile under `profile` and also copy username for convenience
-            setUser((prev) => ({ ...prev, profile, username: profile?.username || prev?.username, bio: profile?.bio || prev?.bio }));
+            const userFromProfile = profilePayload.user || {};
+            // Attach profile under `profile` and also copy username, email, profileImageUrl for convenience
+            setUser((prev) => ({ 
+              ...prev, 
+              profile, 
+              username: profile?.username || userFromProfile?.username || prev?.username, 
+              bio: profile?.bio || prev?.bio,
+              email: userFromProfile?.email || prev?.email,
+              profileImageUrl: profile?.profileImageUrl || userFromProfile?.profileImageUrl || prev?.profileImageUrl
+            }));
           }
         } catch (infoErr) {
           console.warn('Failed to fetch profile:', infoErr);
