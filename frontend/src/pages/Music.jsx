@@ -4,9 +4,11 @@ import Sidebar from '../components/Sidebar'
 import ChatWidget from '../components/ChatWidget'
 import { useAuth } from '../context/AuthContext'
 import { usePlayer } from '../context/PlayerContext'
+import { useSettings } from '../context/SettingsContext'
 
 export default function Music() {
   const { user } = useAuth()
+  const { darkMode } = useSettings()
   const {
     queue, setQueue,
     index: currentIndex, setIndex: setCurrentIndex,
@@ -160,27 +162,27 @@ export default function Music() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#e9d8d0] p-8 pl-0">
+    <div className={`flex min-h-screen pl-0 transition-colors duration-300 ${darkMode ? 'bg-[#1f1b16]' : 'bg-[#e9d8d0]'}`}>
       <Sidebar />
-      <main className="flex-1 ml-34">
+      <main className="flex-1 p-12 ml-20 md:ml-30 mr-7.5">
         <ChatWidget />
 
         <div className="max-w-6xl w-full px-4">
-          <h1 className="text-5xl font-bold text-[#5f341e] mb-4">Musics</h1>
-          <p className="text-sm text-[#6b4b3a] mb-6">Enhance focus with curated study playlists.</p>
+          <h1 className={`text-6xl font-bold transition-colors duration-300 ${darkMode ? 'text-[#F5E9DF]' : 'text-[#6F422B]'}`}>Music</h1>
+          <p className={`text-xl mb-8 transition-colors duration-300 ${darkMode ? 'text-[#8D5A3F]' : 'text-[#8D5A3F]'}`}>Enhance focus with curated study playlists.</p>
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Left card (wider) */}
-            <div className="bg-white rounded-xl p-4 lg:w-2/3 h-[480px]">
+            <div className={`rounded-xl p-4 lg:w-2/3 h-[480px] transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`}>
               <div className="flex items-center gap-3 mb-4">
                 <input
-                  className="flex-1 border rounded-full px-4 py-2 text-sm"
+                  className={`flex-1 border rounded-full px-4 py-2 text-sm transition-colors duration-300 ${darkMode ? 'border-gray-600 bg-[#3d2f24] text-[#f5e9df] placeholder-gray-400' : 'border-gray-300'}`}
                   placeholder="Search Music..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                 />
                 <label className="inline-block">
                   <input type="file" accept="audio/*" onChange={handleUpload} className="hidden" />
-                  <span className="bg-[#7a4a36] text-white px-4 py-2 rounded-xl">Upload Music</span>
+                  <span className={`px-4 py-2 rounded-xl cursor-pointer transition-colors duration-300 ${darkMode ? 'bg-[#5a4535] text-white hover:bg-[#4a3a2d]' : 'bg-[#7a4a36] text-white'}`}>Upload Music</span>
                 </label>
               </div>
 
@@ -189,15 +191,19 @@ export default function Music() {
                   <div
                     key={t._id}
                     onClick={() => handleSelect(tracks.indexOf(t))}
-                    className={`w-full text-left p-4 rounded-lg flex items-center gap-4 border cursor-pointer ${tracks.indexOf(t) === currentIndex ? 'shadow-md bg-[#fff5f2]' : 'bg-white'}`}>
-                    <div className="w-10 h-10 rounded-full bg-[#7a4a36] flex items-center justify-center text-white">
+                    className={`w-full text-left p-4 rounded-lg flex items-center gap-4 border cursor-pointer transition-colors duration-300 ${
+                      tracks.indexOf(t) === currentIndex 
+                        ? darkMode ? 'shadow-md bg-[#3d2f24] border-[#5a4535]' : 'shadow-md bg-[#fff5f2]' 
+                        : darkMode ? 'bg-[#2e2119] border-[#3d2f24]' : 'bg-white'
+                    }`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${darkMode ? 'bg-[#5a4535]' : 'bg-[#7a4a36]'}`}>
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M9 4v8.8c-.58-.19-1.23-.3-1.9-.3-2.1 0-3.8 1.17-3.8 2.6s1.7 2.6 3.8 2.6 3.8-1.17 3.8-2.6V8h7V4H9Z" fill="#fff"/>
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-[#5f341e]">{t.name}</div>
-                      <div className="text-xs text-gray-500">{t.duration}</div>
+                      <div className={`text-sm font-medium ${darkMode ? 'text-[#f5e9df]' : 'text-[#5f341e]'}`}>{t.name}</div>
+                      <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{t.duration}</div>
                     </div>
                     <button
                       onClick={(e) => handleDelete(e, t._id)}
@@ -214,36 +220,40 @@ export default function Music() {
             </div>
 
             {/* Right card (narrower) */}
-            <div className="bg-white rounded-xl p-6 lg:w-1/3 h-[480px] flex flex-col items-center justify-between">
-              <div className="w-40 h-40 bg-[#7a4a36] rounded-md mb-4 flex items-center justify-center">
+            <div className={`rounded-xl p-6 lg:w-1/3 h-[480px] flex flex-col items-center justify-between transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`}>
+              <div className={`w-40 h-40 rounded-md mb-4 flex items-center justify-center ${darkMode ? 'bg-[#5a4535]' : 'bg-[#7a4a36]'}`}>
                 {/* Simple music note icon */}
                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M9 4v10.35c-.6-.23-1.26-.35-1.95-.35-2.21 0-4 1.34-4 3s1.79 3 4 3 4-1.34 4-3V8h7V4H9Z" fill="#fff"/>
                 </svg>
               </div>
-              <div className="text-center text-sm text-[#5f341e] mb-6">Instrumental beats for concentration</div>
+              <div className={`text-center text-sm mb-6 ${darkMode ? 'text-[#d4c4b5]' : 'text-[#5f341e]'}`}>Instrumental beats for concentration</div>
 
               <div className="w-full">
-                <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                <div className={`flex items-center justify-between text-sm mb-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                   <div></div>
                   <div>{tracks[currentIndex] && typeof tracks[currentIndex].duration === 'string' ? tracks[currentIndex].duration : formatSeconds(duration)}</div>
                 </div>
-                <div className="w-full h-2 bg-[#efe6e3] rounded-full mb-6 cursor-pointer" onClick={handleSeek}>
-                  <div className="h-2 bg-[#7a4a36] rounded-full" style={{ width: duration ? `${Math.min(100, (currentTime / duration) * 100)}%` : '0%' }} />
+                <div className={`w-full h-2 rounded-full mb-6 cursor-pointer ${darkMode ? 'bg-[#3d2f24]' : 'bg-[#efe6e3]'}`} onClick={handleSeek}>
+                  <div className={`h-2 rounded-full ${darkMode ? 'bg-[#E59C5C]' : 'bg-[#7a4a36]'}`} style={{ width: duration ? `${Math.min(100, (currentTime / duration) * 100)}%` : '0%' }} />
                 </div>
 
                 <div className="flex items-center justify-center gap-6">
                   <button
                     onClick={toggleRepeat}
-                    className={`w-8 h-8 flex items-center justify-center rounded-md border ${isRepeat ? 'bg-[#7a4a36] text-white border-[#7a4a36]' : 'bg-white text-[#5f341e] border-[#e6e0dc]'}`}
+                    className={`w-8 h-8 flex items-center justify-center rounded-md border transition-colors duration-300 ${
+                      isRepeat 
+                        ? darkMode ? 'bg-[#E59C5C] text-white border-[#E59C5C]' : 'bg-[#7a4a36] text-white border-[#7a4a36]' 
+                        : darkMode ? 'bg-[#3d2f24] text-[#f5e9df] border-[#5a4535]' : 'bg-white text-[#5f341e] border-[#e6e0dc]'
+                    }`}
                     aria-label="Repeat"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M17 1v4l4-4-4-4v4h-8a4 4 0 00-4 4v2h2V5a2 2 0 012-2h8zM7 23v-4L3 23l4 4v-4h8a4 4 0 004-4v-2h-2v2a2 2 0 01-2 2H7z" fill="currentColor" /></svg>
                   </button>
 
-                  <button onClick={handlePrev} className="p-3 rounded bg-white border" aria-label="Previous"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none"><path d="M11 19V5l-7 7 7 7zM20 19V5h-2v14h2z" fill="#5f341e"/></svg></button>
+                  <button onClick={handlePrev} className={`p-3 rounded border transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] border-[#5a4535]' : 'bg-white'}`} aria-label="Previous"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none"><path d="M11 19V5l-7 7 7 7zM20 19V5h-2v14h2z" fill={darkMode ? '#f5e9df' : '#5f341e'}/></svg></button>
 
-                  <button onClick={handlePlayPause} className="w-16 h-16 rounded-full bg-[#7a4a36] flex items-center justify-center text-white text-xl shadow" aria-label="Play/Pause">
+                  <button onClick={handlePlayPause} className={`w-16 h-16 rounded-full flex items-center justify-center text-white text-xl shadow transition-colors duration-300 ${darkMode ? 'bg-[#E59C5C]' : 'bg-[#7a4a36]'}`} aria-label="Play/Pause">
                     {isPlaying ? (
                       <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="#fff"/></svg>
                     ) : (
@@ -251,11 +261,15 @@ export default function Music() {
                     )}
                   </button>
 
-                  <button onClick={handleNext} className="p-3 rounded bg-white border" aria-label="Next"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none"><path d="M13 5v14l7-7-7-7zM4 5v14h2V5H4z" fill="#5f341e"/></svg></button>
+                  <button onClick={handleNext} className={`p-3 rounded border transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] border-[#5a4535]' : 'bg-white'}`} aria-label="Next"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none"><path d="M13 5v14l7-7-7-7zM4 5v14h2V5H4z" fill={darkMode ? '#f5e9df' : '#5f341e'}/></svg></button>
 
                   <button
                     onClick={toggleShuffle}
-                    className={`w-8 h-8 flex items-center justify-center rounded-md border ${isShuffle ? 'bg-[#7a4a36] text-white border-[#7a4a36]' : 'bg-white text-[#5f341e] border-[#e6e0dc]'}`}
+                    className={`w-8 h-8 flex items-center justify-center rounded-md border transition-colors duration-300 ${
+                      isShuffle 
+                        ? darkMode ? 'bg-[#E59C5C] text-white border-[#E59C5C]' : 'bg-[#7a4a36] text-white border-[#7a4a36]' 
+                        : darkMode ? 'bg-[#3d2f24] text-[#f5e9df] border-[#5a4535]' : 'bg-white text-[#5f341e] border-[#e6e0dc]'
+                    }`}
                     aria-label="Shuffle"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none"><path d="M16 3h5v5l-2.5-2.5L16 8V3zM3 6h2.2l6.4 8.5 1.4-1.1L6.6 6H9l6 8v4H15v-2.2L9.6 11.3 8.2 12.4 14 19H3V6z" fill="currentColor" /></svg>

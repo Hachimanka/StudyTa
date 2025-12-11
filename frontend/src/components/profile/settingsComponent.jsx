@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSettings } from '../../context/SettingsContext';
 
-export const ToggleSwitch = ({ label, subLabel, checked, onChange }) => {
+export const ToggleSwitch = ({ label, subLabel, checked, onChange, darkMode: propDarkMode }) => {
+  const settings = useSettings();
+  const darkMode = propDarkMode !== undefined ? propDarkMode : settings?.darkMode;
+  
   return (
     <div className="flex items-center justify-between mb-4">
       <div className="text-left">
-        <p className="font-bold text-[#6F422B]">{label}</p>
-        <p className="text-xs text-[#6F422B]">{subLabel}</p>
+        <p className={`font-bold transition-colors duration-300 ${darkMode ? 'text-[#f5e9df]' : 'text-[#6F422B]'}`}>{label}</p>
+        <p className={`text-xs transition-colors duration-300 ${darkMode ? 'text-[#d4c4b5]' : 'text-[#6F422B]'}`}>{subLabel}</p>
       </div>
       <div 
         onClick={() => onChange(!checked)}
-        className={`w-12 h-6 rounded-full flex items-center p-1 cursor-pointer transition-colors duration-300 ${checked ? 'bg-[#8B5E3C]' : 'bg-gray-300'}`}
+        className={`w-12 h-6 rounded-full flex items-center p-1 cursor-pointer transition-colors duration-300 ${checked ? 'bg-[#8B5E3C]' : darkMode ? 'bg-gray-600' : 'bg-gray-300'}`}
       >
         <motion.div 
           layout
           transition={{ type: "spring", stiffness: 700, damping: 30 }}
           className="bg-white w-4 h-4 rounded-full shadow-md"
-          style={{ marginLeft: checked ? 'auto' : '0' }} // Simple logic paired with layout prop
+          style={{ marginLeft: checked ? 'auto' : '0' }}
         />
       </div>
     </div>
@@ -25,6 +29,7 @@ export const ToggleSwitch = ({ label, subLabel, checked, onChange }) => {
 
 /* Change Password Modal Component */
 export const ChangePasswordModal = ({ isOpen, onClose, userEmail }) => {
+  const { darkMode } = useSettings();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -147,7 +152,11 @@ export const ChangePasswordModal = ({ isOpen, onClose, userEmail }) => {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="bg-[#BC8F73] w-full max-w-md rounded-2xl p-8 shadow-2xl border-4 border-[#D7B69C] relative"
+            className={`w-full max-w-md rounded-2xl p-8 shadow-2xl border-4 relative transition-colors duration-300 ${
+              darkMode 
+                ? 'bg-[#3d2f24] border-[#5a4535]' 
+                : 'bg-[#BC8F73] border-[#D7B69C]'
+            }`}
           >
             
             {/* Header */}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 // Import the components
 import EventModal from '../components/calendar/EventModal';
 import ViewEventsModal from '../components/calendar/ViewEventsModal';
@@ -8,6 +9,7 @@ import CalendarGrid from '../components/calendar/calendarGrid';
 
 const Calendar = () => {
   const { user } = useAuth();
+  const { darkMode } = useSettings();
   // Set current date to real-time
   const [currentDate, setCurrentDate] = useState(new Date());
   const [events, setEvents] = useState([]);
@@ -218,12 +220,12 @@ const Calendar = () => {
   };
 
   return (
-    <div className="flex min-h-screen"><Sidebar />
-    <div className="flex h-screen w-full bg-[#EFE5DA] overflow-hidden font-sans text-[#5D4037] justify-center items-center">
+    <div className={`flex min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#1f1b16]' : ''}`}><Sidebar />
+    <div className={`flex h-screen w-full overflow-hidden font-sans justify-center items-center transition-colors duration-300 ${darkMode ? 'bg-[#1f1b16] text-[#f5e9df]' : 'bg-[#EFE5DA] text-[#5D4037]'}`}>
       <div className="flex flex-col w-full max-w-6xl h-[95vh] p-4 relative">
 
         {/* Calendar Top Controls */}
-        <div className="bg-[#8B5E3C] p-4 rounded-t-xl flex items-center justify-center relative text-white shadow-md z-10">
+        <div className={`p-4 rounded-t-xl flex items-center justify-center relative text-white shadow-md z-10 transition-colors duration-300 ${darkMode ? 'bg-[#5a4535]' : 'bg-[#8B5E3C]'}`}>
           <button 
             onClick={goToPreviousMonth}
             className="absolute left-100 p-2 hover:bg-white/10 rounded-full transition-colors text-3xl"
@@ -256,12 +258,13 @@ const Calendar = () => {
           selectedDate={selectedDate}
           onDateClick={handleDateClick}
           onEventClick={handleEventClick}
+          darkMode={darkMode}
         />
 
         {/* Floating Add */}
         <button 
           onClick={handlePlusClick}
-          className="absolute bottom-8 right-8 bg-[#5D4037] text-white rounded-full h-15 w-15 shadow-xl hover:scale-110 hover:bg-[#4E342E] transition-all z-20 text-3xl"
+          className={`absolute bottom-8 right-8 text-white rounded-full h-15 w-15 shadow-xl hover:scale-110 transition-all z-20 text-3xl ${darkMode ? 'bg-[#5a4535] hover:bg-[#4a3a2d]' : 'bg-[#5D4037] hover:bg-[#4E342E]'}`}
         >
           ＋
         </button>
@@ -277,7 +280,8 @@ const Calendar = () => {
         onAdd={handleAddEvent}
         onSave={handleUpdateEvent}
         onDelete={handleDeleteEvent}
-        isDateEditable={isDateEditable} // Pass date editability
+        isDateEditable={isDateEditable}
+        darkMode={darkMode}
       />
 
       {/* View Events Modal */}
@@ -289,6 +293,7 @@ const Calendar = () => {
         onEventClick={handleEventSelect}
         onDeleteSelected={handleDeleteSelectedEvents}
         onAddEvent={handleAddEventFromViewModal}
+        darkMode={darkMode}
       />
     </div>
     </div>

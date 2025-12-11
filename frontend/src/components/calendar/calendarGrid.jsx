@@ -1,6 +1,6 @@
 import React from 'react';
 
-const CalendarGrid = ({ currentDate, events, selectedDate, onDateClick, onEventClick }) => {
+const CalendarGrid = ({ currentDate, events, selectedDate, onDateClick, onEventClick, darkMode = false }) => {
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -45,19 +45,19 @@ const CalendarGrid = ({ currentDate, events, selectedDate, onDateClick, onEventC
   const today = new Date();
 
   return (
-    <div className="w-full h-full flex flex-col bg-white rounded-b-xl shadow-sm overflow-hidden">
+    <div className={`w-full h-full flex flex-col ${darkMode ? 'bg-[#2e2119]' : 'bg-white'} rounded-b-xl shadow-sm overflow-hidden`}>
 
       {/* Week Header */}
-      <div className="grid grid-cols-7 py-4 bg-white">
+      <div className={`grid grid-cols-7 py-4 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`}>
         {['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map(day => (
-          <div key={day} className="text-center text-[#5D4037] font-bold text-sm">
+          <div key={day} className={`text-center ${darkMode ? 'text-[#f5e9df]' : 'text-[#5D4037]'} font-bold text-sm`}>
             {day}
           </div>
         ))}
       </div>
 
       {/* Days Grid */}
-      <div className="flex-1 grid grid-cols-7 grid-rows-5 gap-3 p-4 bg-white">
+      <div className={`flex-1 grid grid-cols-7 grid-rows-5 gap-3 p-4 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`}>
         {days.map((dayObj, idx) => {
           const dateKey = dayObj.date.toISOString().split('T')[0];
           const dayEvents = events.filter(e => e.date === dateKey);
@@ -80,16 +80,18 @@ const CalendarGrid = ({ currentDate, events, selectedDate, onDateClick, onEventC
               onClick={() => isClickable && onDateClick(dayObj.date)}
               className={`
                 relative rounded-xl border flex flex-row items-start gap-1 p-2 transition-all
-                ${!dayObj.isCurrent ? 'opacity-40 border-gray-100 bg-gray-50' : 'border-gray-200'}
-                ${isClickable ? 'cursor-pointer hover:border-[#8B5E3C]' : 'cursor-default'}
-                ${isToday ? 'border-[#8B5E3C] ring-2 ring-[#8B5E3C] ring-opacity-50 bg-[#FAF6F3]' : ''}
-                ${isSelected && !isToday ? 'border-[#A1887F] ring-1 ring-[#A1887F]' : ''}
+                ${!dayObj.isCurrent 
+                  ? darkMode ? 'opacity-40 border-[#3d2f24] bg-[#1f1b16]' : 'opacity-40 border-gray-100 bg-gray-50' 
+                  : darkMode ? 'border-[#3d2f24]' : 'border-gray-200'}
+                ${isClickable ? darkMode ? 'cursor-pointer hover:border-[#E59C5C]' : 'cursor-pointer hover:border-[#8B5E3C]' : 'cursor-default'}
+                ${isToday ? darkMode ? 'border-[#E59C5C] ring-2 ring-[#E59C5C] ring-opacity-50 bg-[#3d2f24]' : 'border-[#8B5E3C] ring-2 ring-[#8B5E3C] ring-opacity-50 bg-[#FAF6F3]' : ''}
+                ${isSelected && !isToday ? darkMode ? 'border-[#c4a68a] ring-1 ring-[#c4a68a]' : 'border-[#A1887F] ring-1 ring-[#A1887F]' : ''}
               `}
             >
               <span className={`
                 text-2xl font-semibold 
-                ${isToday ? 'text-[#8B5E3C]' : ''}
-                ${isSelected && !isToday ? 'text-[#A1887F]' : 'text-[#5D4037]'}
+                ${isToday ? darkMode ? 'text-[#E59C5C]' : 'text-[#8B5E3C]' : ''}
+                ${isSelected && !isToday ? darkMode ? 'text-[#c4a68a]' : 'text-[#A1887F]' : darkMode ? 'text-[#f5e9df]' : 'text-[#5D4037]'}
               `}>
                 {dayObj.day}
               </span>

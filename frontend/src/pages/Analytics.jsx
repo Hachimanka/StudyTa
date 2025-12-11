@@ -2,10 +2,12 @@ import React, { useState, useRef, useEffect, useMemo } from 'react'
 import Sidebar from '../components/Sidebar'
 import ChatWidget from '../components/ChatWidget'
 import { useAuth } from '../context/AuthContext'
+import { useSettings } from '../context/SettingsContext'
 import axios from 'axios'
 
 export default function Analytics() {
   const { user } = useAuth()
+  const { darkMode } = useSettings()
   const [summary, setSummary] = useState({ totalSessions: 0, totalDurationSeconds: 0, byMode: [] })
   const [weekly, setWeekly] = useState([])
   const [loading, setLoading] = useState(false)
@@ -189,17 +191,17 @@ export default function Analytics() {
   }, [user?._id])
 
   return (
-    <div className="flex min-h-screen">
+    <div className={`flex min-h-screen transition-colors duration-300 ${darkMode ? 'bg-[#1f1b16]' : 'bg-[#F2D9C7]'}`}>
       <Sidebar />
 
-      <main className="flex-1 p-8 ml-20 md:ml-30 mr-7.5">
+      <main className="flex-1 p-12 ml-20 md:ml-30 mr-7.5">
    
         <ChatWidget />
 
         <div className="max-w-full mx-auto">
           <header className="mb-8">
-            <h1 className="text-5xl font-bold transition-colors duration-300 text-[#6F422B]">Analytics</h1>
-            <p className="mt-1 text-xl transition-colors duration-300 text-[#5C4333]">Understand your learning journey with smart insights.</p>
+            <h1 className={`text-6xl font-bold transition-colors duration-300 ${darkMode ? 'text-[#F5E9DF]' : 'text-[#6F422B]'}`}>Analytics</h1>
+            <p className={`mt-1 text-xl transition-colors duration-300 ${darkMode ? 'text-[#8D5A3F]' : 'text-[#8D5A3F]'}`}>Understand your learning journey with smart insights.</p>
           </header>
 
           {error && (
@@ -211,22 +213,22 @@ export default function Analytics() {
 
           <div className="flex flex-wrap gap-4 mb-8">
             {stats.map((s, i) => (
-              <div key={i} className="flex items-center justify-between bg-white rounded-2xl p-4 shadow-sm w-72">
+              <div key={i} className={`flex items-center justify-between rounded-2xl p-4 shadow-sm w-72 transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`}>
                 <div>
-                  <p className="text-lg text-[#5C4333]">{s.label}</p>
-                  <div className="mt-2 text-3xl font-bold text-[#6F422B]">{s.value}</div>
+                  <p className={`text-lg ${darkMode ? 'text-[#d4c4b5]' : 'text-[#5C4333]'}`}>{s.label}</p>
+                  <div className={`mt-2 text-3xl font-bold ${darkMode ? 'text-[#f5e9df]' : 'text-[#6F422B]'}`}>{s.value}</div>
                 </div>
                 <div className="w-12 h-12 flex items-center justify-center">
                   {s.label === 'Time Studied' ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-[#6F422B]">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-10 h-10 ${darkMode ? 'text-[#E59C5C]' : 'text-[#6F422B]'}`}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                   ) : s.label === 'Total Sessions' ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-[#6F422B]">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-10 h-10 ${darkMode ? 'text-[#E59C5C]' : 'text-[#6F422B]'}`}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 3.75V16.5L12 14.25 7.5 16.5V3.75m9 0H18A2.25 2.25 0 0 1 20.25 6v12A2.25 2.25 0 0 1 18 20.25H6A2.25 2.25 0 0 1 3.75 18V6A2.25 2.25 0 0 1 6 3.75h1.5m9 0h-9" />
                     </svg>
                   ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-[#6F422B]">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-10 h-10 ${darkMode ? 'text-[#E59C5C]' : 'text-[#6F422B]'}`}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
                     </svg>
                   )}
@@ -236,22 +238,22 @@ export default function Analytics() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <section className="bg-white rounded-2xl p-6 shadow-md">
+            <section className={`rounded-2xl p-6 shadow-md transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-[#6F422B]">Study Progress</h3>
-                <span className="text-sm text-[#5C4333] border border-[#E9D8D0] px-3 py-1 rounded">
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-[#f5e9df]' : 'text-[#6F422B]'}`}>Study Progress</h3>
+                <span className={`text-sm border px-3 py-1 rounded ${darkMode ? 'text-[#d4c4b5] border-[#3d2f24]' : 'text-[#5C4333] border-[#E9D8D0]'}`}>
                   This Week
                 </span>
               </div>
 
-              <div className="h-64 bg-white rounded-lg p-4">
+              <div className={`h-64 rounded-lg p-4 ${darkMode ? 'bg-[#1f1b16]' : 'bg-white'}`}>
                 {loading ? (
                   <div className="flex items-center justify-center h-full">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#6F422B]"></div>
+                    <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${darkMode ? 'border-[#E59C5C]' : 'border-[#6F422B]'}`}></div>
                   </div>
                 ) : (
                   <svg className="w-full h-full" viewBox="0 0 600 260" preserveAspectRatio="none">
-                    <rect width="100%" height="100%" fill="#fff" rx="12" />
+                    <rect width="100%" height="100%" fill={darkMode ? '#1f1b16' : '#fff'} rx="12" />
                     <g transform="translate(40,20)">
                       {(() => {
                         // Show hour labels on Y-axis
@@ -263,8 +265,8 @@ export default function Analytics() {
                           const yPos = Math.round(padTop + (1 - ratio) * h);
                           return (
                             <g key={idx}>
-                              <line x1={0} x2={520} y1={yPos} y2={yPos} stroke="#f3e6df" strokeWidth="1" />
-                              <text x={-8} y={yPos + 4} fontSize="11" fill="#5C4333" textAnchor="end">{`${hrs}h`}</text>
+                              <line x1={0} x2={520} y1={yPos} y2={yPos} stroke={darkMode ? '#3d2f24' : '#f3e6df'} strokeWidth="1" />
+                              <text x={-8} y={yPos + 4} fontSize="11" fill={darkMode ? '#d4c4b5' : '#5C4333'} textAnchor="end">{`${hrs}h`}</text>
                             </g>
                           );
                         });
@@ -272,7 +274,7 @@ export default function Analytics() {
                       <path d={linePath} fill="none" stroke="#E59C5C" strokeWidth="3" strokeLinecap="round" />
                       {linePoints.map((p, i) => (
                         <g key={i}>
-                          <circle cx={p.x} cy={p.y} r="5" fill="#6F422B" stroke="#fff" strokeWidth="2" />
+                          <circle cx={p.x} cy={p.y} r="5" fill={darkMode ? '#E59C5C' : '#6F422B'} stroke={darkMode ? '#1f1b16' : '#fff'} strokeWidth="2" />
                           {/* Show value tooltip on hover area */}
                           <title>{`${p.v}h`}</title>
                         </g>
@@ -280,26 +282,26 @@ export default function Analytics() {
                     </g>
                   </svg>
                 )}
-                <div className="mt-3 text-xs text-[#5C4333] flex justify-between">
+                <div className={`mt-3 text-xs flex justify-between ${darkMode ? 'text-[#d4c4b5]' : 'text-[#5C4333]'}`}>
                   {xAxisLabels.map((d, i) => (<span key={i}>{d}</span>))}
                 </div>
               </div>
             </section>
 
-            <section className="bg-white rounded-2xl p-6 shadow-md">
+            <section className={`rounded-2xl p-6 shadow-md transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-white'}`}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-[#6F422B]">Time per Mode</h3>
-                <span className="text-sm text-[#5C4333] border border-[#E9D8D0] px-3 py-1 rounded">
+                <h3 className={`text-lg font-semibold ${darkMode ? 'text-[#f5e9df]' : 'text-[#6F422B]'}`}>Time per Mode</h3>
+                <span className={`text-sm border px-3 py-1 rounded ${darkMode ? 'text-[#d4c4b5] border-[#3d2f24]' : 'text-[#5C4333] border-[#E9D8D0]'}`}>
                   All Sessions
                 </span>
               </div>
 
               <div className="flex items-center gap-8">
                 <svg width="260" height="180" viewBox="0 0 260 180" className="flex-shrink-0">
-                  <circle cx="130" cy="90" r="56" fill="#fff" />
+                  <circle cx="130" cy="90" r="56" fill={darkMode ? '#1f1b16' : '#fff'} />
                   {(() => {
                     const total = (summary.byMode || []).reduce((a,b)=> a + (b.duration||0), 0)
-                    const colors = ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D']
+                    const colors = darkMode ? ['#E59C5C','#d4a88a','#a07860','#6F422B','#5a3520','#3d2f24'] : ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D']
                     let acc = 0
                     return (summary.byMode || []).map((m, idx) => {
                       const frac = total > 0 ? (m.duration || 0) / total : 0
@@ -312,17 +314,17 @@ export default function Analytics() {
                       )
                     })
                   })()}
-                  <circle cx="130" cy="90" r="30" fill="#fff" />
+                  <circle cx="130" cy="90" r="30" fill={darkMode ? '#1f1b16' : '#fff'} />
                 </svg>
 
-                <ul className="text-sm text-[#5C4333] space-y-3">
+                <ul className={`text-sm space-y-3 ${darkMode ? 'text-[#d4c4b5]' : 'text-[#5C4333]'}`}>
                   {(summary.byMode || []).map((m, idx) => (
                     <li key={m.mode} className="flex items-center">
-                      <span className="inline-block w-3 h-3 mr-3 rounded-sm" style={{ backgroundColor: ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D'][idx%6] }}></span>
+                      <span className="inline-block w-3 h-3 mr-3 rounded-sm" style={{ backgroundColor: darkMode ? ['#E59C5C','#d4a88a','#a07860','#6F422B','#5a3520','#3d2f24'][idx%6] : ['#6F422B','#E59C5C','#CFA88F','#F6E6DA','#E9D8D0','#B37A5D'][idx%6] }}></span>
                       {m.mode} — {Math.round((m.duration||0)/60)}m
                     </li>
                   ))}
-                  {(summary.byMode || []).length === 0 && <li className="text-[#5C4333]">No study sessions yet.</li>}
+                  {(summary.byMode || []).length === 0 && <li className={darkMode ? 'text-[#d4c4b5]' : 'text-[#5C4333]'}>No study sessions yet.</li>}
                 </ul>
               </div>
             </section>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useSettings } from "../context/SettingsContext";
 
 const STUDY_QUOTES = [
   "The expert in anything was once a beginner.",
@@ -17,6 +18,7 @@ const STUDY_QUOTES = [
 
 export default function TopNav() {
   const { isAuthenticated, user, logout } = useAuth();
+  const { darkMode } = useSettings();
   const [forceUpdate, setForceUpdate] = useState(0);
   const navigate = useNavigate();
   const [quote, setQuote] = useState("");
@@ -258,7 +260,7 @@ export default function TopNav() {
   // Authenticated Topbar UI (after login)
   if (isAuthenticated) {
     return (
-      <nav className="sticky top-0 w-full h-15 bg-[#845845] shadow-sm z-50">
+      <nav className={`sticky top-0 w-full h-15 shadow-sm z-50 transition-colors duration-300 ${darkMode ? 'bg-[#2e2119]' : 'bg-[#845845]'}`}>
         <div className="mx-auto flex items-center justify-between px-6 py-3">
           {/* Left: Logo + Brand */}
           <button
@@ -276,23 +278,23 @@ export default function TopNav() {
                 loading="eager"
               />
             </div>
-            <span className="text-[#E9D8D0] font-semibold text-xl tracking-wide group-hover:opacity-90 transition-opacity">StudyTa</span>
+            <span className={`font-semibold text-xl tracking-wide group-hover:opacity-90 transition-opacity ${darkMode ? 'text-[#F5E9DF]' : 'text-[#E9D8D0]'}`}>StudyTa</span>
           </button>
 
           {/* Center: Random Quote */}
-          <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 text-[#E9D8D0] text-sm italic opacity-90 text-center max-w-md truncate px-4 pointer-events-none">
+          <div className={`hidden md:block absolute left-1/2 transform -translate-x-1/2 text-sm italic opacity-90 text-center max-w-md truncate px-4 pointer-events-none ${darkMode ? 'text-[#F5E9DF]' : 'text-[#E9D8D0]'}`}>
             "{quote}"
           </div>
 
           {/* Right: User name + avatar initial */}
           <div className="relative flex items-center gap-3 select-none">
-            <span className="text-[#FFFFFF] text-base hidden sm:inline" aria-hidden={!open}>{displayName}</span>
+            <span className={`text-base hidden sm:inline ${darkMode ? 'text-[#F5E9DF]' : 'text-[#FFFFFF]'}`} aria-hidden={!open}>{displayName}</span>
             <button
               ref={avatarButtonRef}
               onClick={() => setOpen(o => !o)}
               aria-haspopup="true"
               aria-expanded={open}
-              className="w-10 h-10 rounded-full bg-[#FFFFFF] border-2 border-[#6F422B] text-[#845C47] flex items-center justify-center font-semibold focus:outline-none focus:ring-2 focus:ring-[#FDF3EA]/60 focus:ring-offset-2 focus:ring-offset-[#845845] transition-shadow overflow-hidden"
+              className={`w-10 h-10 rounded-full border-2 flex items-center justify-center font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 transition-shadow overflow-hidden ${darkMode ? 'bg-[#3d2f24] border-[#E59C5C] text-[#F5E9DF] focus:ring-[#E59C5C]/60 focus:ring-offset-[#2e2119]' : 'bg-[#FFFFFF] border-[#6F422B] text-[#845C47] focus:ring-[#FDF3EA]/60 focus:ring-offset-[#845845]'}`}
             >
               {avatarUrl ? (
                 <img
@@ -312,12 +314,12 @@ export default function TopNav() {
                 ref={dropdownRef}
                 role="dialog"
                 aria-label="Profile menu"
-                className="absolute top-10 right-0 mt-5 w-70 h-85 rounded-3xl bg-[#BE8E78] text-[#6F422B] shadow-lg p-6 origin-top-right animate-[fadeIn_160ms_ease-out]"
+                className={`absolute top-10 right-0 mt-5 w-70 h-85 rounded-3xl shadow-lg p-6 origin-top-right animate-[fadeIn_160ms_ease-out] transition-colors duration-300 ${darkMode ? 'bg-[#3d2f24] text-[#F5E9DF]' : 'bg-[#BE8E78] text-[#6F422B]'}`}
                 style={{ boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}
               >
                 {/* Avatar Large */}
                 <div className="flex flex-col items-center">
-                  <div className="w-28 h-28 rounded-full bg-[#FFFFFF] border-3 border-[#6F422B] flex items-center justify-center text-5xl font-semibold mb-4 overflow-hidden">
+                  <div className={`w-28 h-28 rounded-full border-3 flex items-center justify-center text-5xl font-semibold mb-4 overflow-hidden ${darkMode ? 'bg-[#2e2119] border-[#E59C5C]' : 'bg-[#FFFFFF] border-[#6F422B]'}`}>
                     {avatarUrl ? (
                       <img
                         key={avatarUrl}
@@ -330,39 +332,41 @@ export default function TopNav() {
                       initial
                     )}
                   </div>
-                  <h2 className="text-center font-semibold text-lg leading-tight text-[#FFFFFF]">
+                  <h2 className={`text-center font-semibold text-lg leading-tight ${darkMode ? 'text-[#F5E9DF]' : 'text-[#FFFFFF]'}`}>
                     {displayName}
                   </h2>
-                  <p className="italic text-sm text-[#FFFFFF] mt-2 mb-4 line-clamp-2 max-w-[13rem] text-center">
+                  <p className={`italic text-sm mt-2 mb-4 line-clamp-2 max-w-[13rem] text-center ${darkMode ? 'text-[#F5E9DF]/80' : 'text-[#FFFFFF]'}`}>
                     {bioText || 'No bio provided'}
                   </p>
                 </div>
                 <div className="space-y-3 mt-2">
                   <button
                     onClick={() => { navigate('/profile'); setOpen(false); }}
-                    className="flex items-center justify-center w-full gap-3 px-3 py-2 rounded-xl hover:bg-[#B58875] focus:outline-none focus:bg-[#B58875] transition-colors group"
+                    className={`flex items-center justify-center w-full gap-3 px-3 py-2 rounded-xl focus:outline-none transition-colors group ${darkMode ? 'hover:bg-[#4a3a2d] focus:bg-[#4a3a2d]' : 'hover:bg-[#B58875] focus:bg-[#B58875]'}`}
                   >
-                    <span className="w-7 h-7 flex items-center justify-center rounded-md text-[#5D3A2A] group-hover:scale-105 transition-transform">
+                    <span className="w-7 h-7 flex items-center justify-center rounded-md group-hover:scale-105 transition-transform">
                       <img 
                         src="/ProfileIcons/Settings.png" 
                         alt="Settings" 
                         className="w-5 h-5 object-contain block"
+                        style={darkMode ? { filter: 'brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(365%) hue-rotate(338deg) brightness(103%) contrast(91%)' } : {}}
                       />
                     </span>
-                    <span className="text-[#FFFFFF] font-regular">Settings</span>
+                    <span className={`font-regular ${darkMode ? 'text-[#F5E9DF]' : 'text-[#FFFFFF]'}`}>Settings</span>
                   </button>
                   <button
                     onClick={() => { logout(() => navigate('/')); setOpen(false); }}
-                    className="flex items-center justify-center w-full gap-3 px-3 py-2 rounded-xl hover:bg-[#B58875] focus:outline-none focus:bg-[#B58875] transition-colors group"
+                    className={`flex items-center justify-center w-full gap-3 px-3 py-2 rounded-xl focus:outline-none transition-colors group ${darkMode ? 'hover:bg-[#4a3a2d] focus:bg-[#4a3a2d]' : 'hover:bg-[#B58875] focus:bg-[#B58875]'}`}
                   >
-                    <span className="w-7 h-7 flex items-center justify-center rounded-md text-[#5D3A2A] group-hover:scale-105 transition-transform">
+                    <span className="w-7 h-7 flex items-center justify-center rounded-md group-hover:scale-105 transition-transform">
                       <img 
                         src="/ProfileIcons/LogOut.png" 
                         alt="Log Out" 
                         className="w-5 h-5 object-contain block"
+                        style={darkMode ? { filter: 'brightness(0) saturate(100%) invert(93%) sepia(8%) saturate(365%) hue-rotate(338deg) brightness(103%) contrast(91%)' } : {}}
                       />
                     </span>
-                    <span className="text-[#FFFFFF] font-regular">Sign Out</span>
+                    <span className={`font-regular ${darkMode ? 'text-[#F5E9DF]' : 'text-[#FFFFFF]'}`}>Sign Out</span>
                   </button>
                 </div>
               </div>

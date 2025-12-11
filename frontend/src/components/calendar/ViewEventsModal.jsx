@@ -7,7 +7,8 @@ const ViewEventsModal = ({
   events, 
   onEventClick, 
   onDeleteSelected,
-  onAddEvent
+  onAddEvent,
+  darkMode = false
 }) => {
   if (!isOpen) return null;
 
@@ -71,10 +72,10 @@ const ViewEventsModal = ({
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 animate-in fade-in duration-200">
-      <div className="bg-[#EBCFB2] rounded-lg shadow-2xl w-[400px] overflow-hidden font-sans max-h-[85vh] flex flex-col">
+      <div className={`${darkMode ? 'bg-[#2e2119]' : 'bg-[#EBCFB2]'} rounded-lg shadow-2xl w-[400px] overflow-hidden font-sans max-h-[85vh] flex flex-col`}>
 
         {/* Header */}
-        <div className="bg-[#8B5E3C] p-4 flex justify-between items-center text-white flex-shrink-0">
+        <div className={`${darkMode ? 'bg-[#E59C5C]' : 'bg-[#8B5E3C]'} p-4 flex justify-between items-center text-white flex-shrink-0`}>
           <h2 className="text-lg font-normal tracking-wide">
             Events on {dateString}
           </h2>
@@ -91,7 +92,7 @@ const ViewEventsModal = ({
           <div className="mb-4">
             
             {events.length === 0 ? (
-              <p className="text-[#8D6E63] italic text-center py-8">
+              <p className={`${darkMode ? 'text-[#c4a68a]' : 'text-[#8D6E63]'} italic text-center py-8`}>
                 No events scheduled for this date
               </p>
             ) : (
@@ -101,8 +102,8 @@ const ViewEventsModal = ({
                     key={event.id}
                     className={`flex items-start gap-3 p-3 rounded cursor-pointer transition-all ${
                       isSelectMode && selectedEvents.find(e => e.id === event.id)
-                        ? 'bg-[#8B5E3C]/20 border border-[#8B5E3C]/30'
-                        : 'bg-white hover:bg-[#8B5E3C]/10'
+                        ? darkMode ? 'bg-[#E59C5C]/20 border border-[#E59C5C]/30' : 'bg-[#8B5E3C]/20 border border-[#8B5E3C]/30'
+                        : darkMode ? 'bg-[#1f1b16] hover:bg-[#E59C5C]/10' : 'bg-white hover:bg-[#8B5E3C]/10'
                     }`}
                     onClick={() => handleEventClick(event)}
                   >
@@ -116,8 +117,8 @@ const ViewEventsModal = ({
                       >
                         <div className={`w-5 h-5 rounded border flex items-center justify-center ${
                           selectedEvents.find(e => e.id === event.id)
-                            ? 'bg-[#8B5E3C] border-[#8B5E3C]'
-                            : 'bg-white border-[#8D6E63]'
+                            ? darkMode ? 'bg-[#E59C5C] border-[#E59C5C]' : 'bg-[#8B5E3C] border-[#8B5E3C]'
+                            : darkMode ? 'bg-[#1f1b16] border-[#c4a68a]' : 'bg-white border-[#8D6E63]'
                         }`}>
                           {selectedEvents.find(e => e.id === event.id) && (
                             <span className="text-white text-sm">✓</span>
@@ -128,15 +129,15 @@ const ViewEventsModal = ({
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[#8B5E3C] text-sm font-medium bg-[#8B5E3C]/10 px-2 py-0.5 rounded flex-shrink-0">
+                        <span className={`${darkMode ? 'text-[#E59C5C] bg-[#E59C5C]/10' : 'text-[#8B5E3C] bg-[#8B5E3C]/10'} text-sm font-medium px-2 py-0.5 rounded flex-shrink-0`}>
                           {event.time}
                         </span>
-                        <h4 className="text-[#5D4037] font-semibold truncate">
+                        <h4 className={`${darkMode ? 'text-[#f5e9df]' : 'text-[#5D4037]'} font-semibold truncate`}>
                           {event.title}
                         </h4>
                       </div>
                       {event.description && (
-                        <p className="text-[#8D6E63] text-sm line-clamp-2">
+                        <p className={`${darkMode ? 'text-[#c4a68a]' : 'text-[#8D6E63]'} text-sm line-clamp-2`}>
                           {event.description}
                         </p>
                       )}
@@ -148,12 +149,12 @@ const ViewEventsModal = ({
           </div>
 
           {/* Action Buttons - Fixed at bottom */}
-          <div className="flex flex-col gap-3 mt-6 pt-4 border-t border-[#D7C4B0] flex-shrink-0">
+          <div className={`flex flex-col gap-3 mt-6 pt-4 border-t ${darkMode ? 'border-[#3d2f24]' : 'border-[#D7C4B0]'} flex-shrink-0`}>
             {/* Top row with Add Event and Select Event buttons */}
             <div className="flex gap-3">
               <button 
                 onClick={handleAddEvent}
-                className="flex-1 py-3 bg-white text-[#5D4037] border border-[#d4c4b5] rounded font-semibold hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                className={`flex-1 py-3 ${darkMode ? 'bg-[#1f1b16] text-[#f5e9df] border-[#3d2f24] hover:bg-[#2e2119]' : 'bg-white text-[#5D4037] border-[#d4c4b5] hover:bg-gray-50'} border rounded font-semibold transition-all flex items-center justify-center gap-2`}
               >
                 Add Event
               </button>
@@ -162,8 +163,8 @@ const ViewEventsModal = ({
                 onClick={handleSelectModeToggle}
                 className={`flex-1 py-3 rounded font-semibold transition-all flex items-center justify-center ${
                   isSelectMode
-                    ? 'bg-[#5D4037] text-white hover:bg-[#4A3224]'
-                    : 'bg-white text-[#5D4037] border border-[#d4c4b5] hover:bg-gray-50'
+                    ? darkMode ? 'bg-[#E59C5C] text-white hover:bg-[#d08a4a]' : 'bg-[#5D4037] text-white hover:bg-[#4A3224]'
+                    : darkMode ? 'bg-[#1f1b16] text-[#f5e9df] border border-[#3d2f24] hover:bg-[#2e2119]' : 'bg-white text-[#5D4037] border border-[#d4c4b5] hover:bg-gray-50'
                 } ${events.length === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                 disabled={events.length === 0}
               >
