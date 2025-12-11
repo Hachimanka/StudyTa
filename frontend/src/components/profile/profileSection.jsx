@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion'; 
 import { useAuth } from '../../context/AuthContext';
+import { useModal } from '../../context/ModalContext';
 import { useSettings } from '../../context/SettingsContext';
 
 /* ProfileSection Component */
 export const ProfileSection = ({ onOpenPasswordModal }) => {
   const { user } = useAuth();
-  const { darkMode } = useSettings();
 
   const initialData = {
     fullName: '',
@@ -118,7 +118,7 @@ export const ProfileSection = ({ onOpenPasswordModal }) => {
 
 const saveProfile = async () => {
   try {
-    if (!user || !user._id) return alert('Not authenticated');
+    if (!user || !user._id) return showModal('Not authenticated', 'Error', 'error');
     const API_BASE = import.meta.env.VITE_API_BASE || '';
     const form = new FormData();
     form.append('fullName', formData.fullName || '');
@@ -132,7 +132,7 @@ const saveProfile = async () => {
       body: form
     });
     const data = await res.json();
-    if (!res.ok) return alert(data.message || 'Failed to save');
+    if (!res.ok) return showModal(data.message || 'Failed to save', 'Error', 'error');
 
     // Update localStorage user snapshot to keep UI in sync
     try {
@@ -183,11 +183,11 @@ const saveProfile = async () => {
     setOriginalData(newSnapshot);
     setFormData(prev => ({ ...prev, ...newSnapshot }));
 
-    alert('Profile updated');
+    showModal('Profile updated', 'Success', 'success');
     setAvatarFile(null);
   } catch (err) {
     console.error('saveProfile error', err);
-    alert('Save failed');
+    showModal('Save failed', 'Error', 'error');
   }
 };
 

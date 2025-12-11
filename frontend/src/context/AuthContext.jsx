@@ -1,9 +1,11 @@
 import React, { createContext, useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
+import { useModal } from './ModalContext'
 
 export const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
+  const { showModal } = useModal();
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       // Clear any stale authentication state on app load
@@ -111,10 +113,10 @@ export function AuthProvider({ children }) {
         window.dispatchEvent(new Event('authChanged'));
         if (cb) cb();
       } else {
-        alert(data.message || 'Login failed');
+        showModal(data.message || 'Login failed', 'Login Error', 'error');
       }
     } catch (err) {
-      alert('Login error');
+      showModal('Login error', 'Error', 'error');
     }
   };
 
@@ -132,10 +134,10 @@ export function AuthProvider({ children }) {
         setIsAuthenticated(true);
         if (cb) cb();
       } else {
-        alert(data.message || 'Registration failed');
+        showModal(data.message || 'Registration failed', 'Registration Error', 'error');
       }
     } catch (err) {
-      alert('Registration error');
+      showModal('Registration error', 'Error', 'error');
     }
   };
 
@@ -150,12 +152,12 @@ export function AuthProvider({ children }) {
       });
       const data = await res.json();
       if (res.ok) {
-        alert('Reset link sent to your email');
+        showModal('Reset link sent to your email', 'Success', 'success');
       } else {
-        alert(data.message || 'Failed to send reset link');
+        showModal(data.message || 'Failed to send reset link', 'Error', 'error');
       }
     } catch (err) {
-      alert('Error sending reset link');
+      showModal('Error sending reset link', 'Error', 'error');
     }
   };
 

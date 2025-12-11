@@ -4,8 +4,10 @@ import { useSettings } from '../../context/SettingsContext';
 import Sidebar from '../Sidebar';
 import ConfirmSaveModal from '../ConfirmSaveModal';
 import { useAuth } from '../../context/AuthContext';
+import { useModal } from '../../context/ModalContext';
 
 export default function MultipleChoiceMode() {
+  const { showModal } = useModal();
   const { darkMode } = useSettings();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -233,7 +235,7 @@ export default function MultipleChoiceMode() {
       const sourceText = (state?.sourceText) || (sess?.sourceText) || '';
       const titleFromSess = (state?.title) || (sess?.title) || title;
       if (!sourceText || !sourceText.trim()) {
-        alert('No source text found. Create materials first in Study Mode.');
+        showModal('No source text found. Create materials first in Study Mode.', 'Missing Content', 'warning');
         return;
       }
 
@@ -278,7 +280,7 @@ export default function MultipleChoiceMode() {
       }
     } catch (err) {
       console.error('generateAndNavigate error', err);
-      alert('Failed to generate materials for the selected method.');
+      showModal('Failed to generate materials for the selected method.', 'Generation Error', 'error');
     } finally {
       setLoading(false);
     }

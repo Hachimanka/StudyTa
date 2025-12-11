@@ -5,8 +5,10 @@ import ChatWidget from '../components/ChatWidget'
 import { useAuth } from '../context/AuthContext'
 import { usePlayer } from '../context/PlayerContext'
 import { useSettings } from '../context/SettingsContext'
+import { useModal } from '../context/ModalContext'
 
 export default function Music() {
+  const { showModal } = useModal()
   const { user } = useAuth()
   const { darkMode } = useSettings()
   const {
@@ -107,7 +109,7 @@ export default function Music() {
       })
       .catch((err) => {
         console.error('Delete failed', err)
-        alert('Failed to delete track')
+        showModal('Failed to delete track', 'Error', 'error')
       })
   }
 
@@ -150,7 +152,7 @@ export default function Music() {
     })
     .catch((err) => {
       console.error('Upload failed', err)
-      alert('Upload failed')
+      showModal('Upload failed', 'Error', 'error')
     })
   }
 

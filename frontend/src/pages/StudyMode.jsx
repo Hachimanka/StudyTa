@@ -5,8 +5,10 @@ import { useSettings } from '../context/SettingsContext';
 import ChatWidget from '../components/ChatWidget';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import { useModal } from '../context/ModalContext';
 
 export default function StudyMode() {
+  const { showModal } = useModal();
   const { darkMode } = useSettings();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -62,12 +64,12 @@ export default function StudyMode() {
 
   const handleCreate = async () => {
     if (!studyMode) {
-      alert('Please select a study mode first.');
+      showModal('Please select a study mode first.', 'Selection Required', 'warning');
       return;
     }
     
     if (!fileContent.trim() && !selectedFile) {
-      alert('Please enter some text or upload a file to create study materials.');
+      showModal('Please enter some text or upload a file to create study materials.', 'Content Required', 'warning');
       return;
     }
 
@@ -215,7 +217,7 @@ export default function StudyMode() {
       navigateToStudyMode(studyMode, { questions, sourceText: textToUse, title: title });
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Failed to create study materials.');
+      showModal(err.message || 'Failed to create study materials.', 'Generation Error', 'error');
     } finally {
       setLoading(false);
     }
@@ -383,7 +385,7 @@ export default function StudyMode() {
 
     // Check file size (limit to 20MB)
     if (file.size > 20 * 1024 * 1024) {
-      alert("File size must be less than 20MB.");
+      showModal("File size must be less than 20MB.", "File Too Large", "warning");
       return;
     }
 
@@ -400,7 +402,7 @@ export default function StudyMode() {
     ];
 
     if (!supportedTypes.includes(file.type) && !file.name.match(/\.(txt|md|csv|json|html|htm)$/i)) {
-      alert("Supported file types: PDF, TXT, DOC, DOCX, CSV, JSON, MD, HTML");
+      showModal("Supported file types: PDF, TXT, DOC, DOCX, CSV, JSON, MD, HTML", "Invalid File Type", "warning");
       return;
     }
 

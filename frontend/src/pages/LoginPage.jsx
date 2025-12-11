@@ -2,8 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import Leftpic from "../assets/Leftpic.svg";
+import { useModal } from "../context/ModalContext";
 
 export default function Login() {
+  const { showModal } = useModal();
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,7 +47,7 @@ export default function Login() {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!email || !password) {
-      alert("All fields are required!");
+      showModal("All fields are required!", "Input Required", "warning");
       return;
     }
     setLoading(true);

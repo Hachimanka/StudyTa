@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useModal } from '../context/ModalContext'
 
 export default function ChangePassword(){
+  const { showModal } = useModal();
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
   const [isDark, setIsDark] = useState(() => {
@@ -33,9 +35,9 @@ export default function ChangePassword(){
 
   const onSubmit = (e) => {
     e.preventDefault()
-    if(password.length < 6){ alert('Password must be at least 6 characters'); return }
-    if(password !== confirm){ alert('Passwords do not match'); return }
-    alert('Password changed (mock)')
+    if(password.length < 6){ showModal('Password must be at least 6 characters', 'Invalid Password', 'warning'); return }
+    if(password !== confirm){ showModal('Passwords do not match', 'Mismatch', 'warning'); return }
+    showModal('Password changed (mock)', 'Success', 'success')
     navigate('/dashboard')
   }
 
