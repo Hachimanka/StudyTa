@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion } from 'framer-motion';
 import { ToggleSwitch, ChangePasswordModal } from '../components/profile/settingsComponent';
 import { ProfileSection } from '../components/profile/profileSection';
+import { useAuth } from '../context/AuthContext';
 
 /* Animation Variants */
 const containerVariants = {
@@ -18,6 +19,8 @@ const itemVariants = {
 };
 
 export default function Profile() {
+    const { user } = useAuth();
+    
     const defaultSettings = {
         darkMode: false,
         emailNotif: false
@@ -138,7 +141,8 @@ export default function Profile() {
             {/* Modal Overlay */}
             <ChangePasswordModal 
                 isOpen={isPasswordModalOpen} 
-                onClose={() => setPasswordModalOpen(false)} 
+                onClose={() => setPasswordModalOpen(false)}
+                userEmail={user?.email || ''}
             />
 
         </div>
