@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Leftpic from "../assets/Leftpic.svg";
+import { useModal } from '../context/ModalContext';
 
 export default function ForgotPassword(){
+  const { showModal } = useModal();
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [cooldownUntil, setCooldownUntil] = useState(() => {
@@ -44,7 +46,7 @@ export default function ForgotPassword(){
   const onSubmit = async (e) => { 
     e.preventDefault();
     if (!email) {
-      alert('Please enter your email');
+      showModal('Please enter your email', 'Input Required', 'warning');
       return;
     }
     if (cooldownUntil && Date.now() < cooldownUntil) {
@@ -60,17 +62,17 @@ export default function ForgotPassword(){
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message || 'Reset link sent to your email');
+        showModal(data.message || 'Reset link sent to your email', 'Success', 'success');
         // set 5 minutes cooldown
         const until = Date.now() + 5 * 60 * 1000;
         setCooldownUntil(until)
         try { localStorage.setItem('studyta_fp_cooldown_until', String(until)) } catch {}
       } else {
-        alert(data.message || 'Failed to send reset link');
+        showModal(data.message || 'Failed to send reset link', 'Error', 'error');
       }
     } catch (err) {
       console.error(err);
-      alert('Error sending reset link');
+      showModal('Error sending reset link', 'Error', 'error');
     } finally {
       setSubmitting(false)
     }

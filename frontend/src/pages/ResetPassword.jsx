@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import TopNav from "../components/TopNav";
+import { useModal } from "../context/ModalContext";
 
 export default function ResetPassword() {
+  const { showModal } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
@@ -14,11 +16,11 @@ export default function ResetPassword() {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!token) {
-      alert("No token provided");
+      showModal("No token provided", "Error", "error");
       return;
     }
     if (!newPassword) {
-      alert("Please enter a new password");
+      showModal("Please enter a new password", "Input Required", "warning");
       return;
     }
     setLoading(true);
@@ -31,14 +33,14 @@ export default function ResetPassword() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(data.message || "Password reset successful");
+        showModal(data.message || "Password reset successful", "Success", "success");
         navigate("/login");
       } else {
-        alert(data.message || "Failed to reset password");
+        showModal(data.message || "Failed to reset password", "Error", "error");
       }
     } catch (err) {
       console.error(err);
-      alert("Error resetting password");
+      showModal("Error resetting password", "Error", "error");
     } finally {
       setLoading(false);
     }
