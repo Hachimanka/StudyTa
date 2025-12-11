@@ -418,8 +418,12 @@ router.get('/files', async (req, res) => {
 // Get all folders for authenticated user (frontend expects this)
 router.get('/folders', async (req, res) => {
   try {
-    // TEMPORARY: Use dummy user ID for testing
-    const folders = await Folder.find({ userId: TEMP_USER_ID });
+    // Use userId from query param or authenticated user
+    const userId = req.query.userId || req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(400).json({ error: 'userId query param is required' });
+    }
+    const folders = await Folder.find({ userId });
     res.json(folders);
   } catch (error) {
     console.error('Error fetching folders:', error);

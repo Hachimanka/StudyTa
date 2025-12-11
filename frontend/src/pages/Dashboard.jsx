@@ -60,12 +60,21 @@ export default function Home() {
   const fetchLibraryStats = async () => {
     try {
       const API_BASE = import.meta.env.VITE_API_BASE || ''
-      const userId = user?._id
+      // Get userId from auth context or localStorage fallback
+      let userId = user?._id;
+      if (!userId) {
+        const userData = JSON.parse(localStorage.getItem('stuyta_user') || '{}');
+        userId = userData?._id;
+      }
+      if (!userId) {
+        console.log('No user ID available for fetching library stats');
+        return;
+      }
       const [filesRes, foldersRes] = await Promise.all([
-        fetch(`${API_BASE}/api/library/files${userId ? `?userId=${encodeURIComponent(userId)}` : ''}`, {
+        fetch(`${API_BASE}/api/library/files?userId=${encodeURIComponent(userId)}`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         }),
-        fetch(`${API_BASE}/api/library/folders`, {
+        fetch(`${API_BASE}/api/library/folders?userId=${encodeURIComponent(userId)}`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
       ]);

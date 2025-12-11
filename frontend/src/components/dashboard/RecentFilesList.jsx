@@ -2,13 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const RecentFilesList = ({ darkMode, themeColors, recentFiles }) => {
-  // Mock files to match the image when no real files exist
-  const mockFiles = [
-    { name: "Calculus Notes.pdf", uploadDate: "Sep 20, 2025", type: "pdf" },
-    { name: "Essay Draft.docx", uploadDate: "Sep 20, 2025", type: "docx" }
-  ];
-
-  const displayFiles = recentFiles.length > 0 ? recentFiles.slice(0, 2) : mockFiles;
+  const displayFiles = recentFiles?.slice(0, 2) || [];
 
   const formatDateTime = (value) => {
     if (!value) return '';
@@ -31,6 +25,16 @@ const RecentFilesList = ({ darkMode, themeColors, recentFiles }) => {
       // style={{ height: '292px' }} // Fixed height to match other cards
     >
       
+      {displayFiles.length === 0 ? (
+        <div className={`text-center py-8 ${darkMode ? "text-white/70" : "text-[#5C4333]"}`}>
+          <div className="flex justify-center mb-4">
+            <svg width="70" height="70" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path fill={darkMode ? "#E59C5C" : "#71412A"} fillRule="evenodd" d="M12 2H6a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-8h-6a3 3 0 0 1-3-3V2zm9 7v-.172a3 3 0 0 0-.879-2.12l-3.828-3.83A3 3 0 0 0 14.172 2H14v6a1 1 0 0 0 1 1h6z" clipRule="evenodd"/>
+            </svg>
+          </div>
+          <p className="text-sm">No recent files</p>
+        </div>
+      ) : (
       <div className="space-y-4">
         {displayFiles.map((file, index) => (
           <Link to="/library" key={index} className="block"
@@ -49,23 +53,12 @@ const RecentFilesList = ({ darkMode, themeColors, recentFiles }) => {
                   style={{
                     backgroundColor: darkMode
                       ? `${themeColors.primary}20`
-                      : `${themeColors.primary}15`,
-                    color: darkMode ? '#FFFFFF' : themeColors.primary
+                      : `${themeColors.primary}15`
                   }}
                 >
-                  {file.type?.includes('pdf') || file.name?.includes('.pdf') ? (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <path d="M14 2v6h6" />
-                      <path d="M10 14h4M10 17h4" />
-                    </svg>
-                  ) : (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <path d="M14 2v6h6" />
-                      <path d="M8 12h8M8 16h8" />
-                    </svg>
-                  )}
+                  <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path fill={darkMode ? "#E59C5C" : "#71412A"} fillRule="evenodd" d="M12 2H6a3 3 0 0 0-3 3v14a3 3 0 0 0 3 3h12a3 3 0 0 0 3-3v-8h-6a3 3 0 0 1-3-3V2zm9 7v-.172a3 3 0 0 0-.879-2.12l-3.828-3.83A3 3 0 0 0 14.172 2H14v6a1 1 0 0 0 1 1h6z" clipRule="evenodd"/>
+                  </svg>
                 </div>
                 <div>
                   <h4 className={`font-semibold ${darkMode ? "text-white" : "text-[#4A2C1E]"}`}>
@@ -83,6 +76,7 @@ const RecentFilesList = ({ darkMode, themeColors, recentFiles }) => {
           </Link>
         ))}
       </div>
+      )}
     </div>
   );
 };
