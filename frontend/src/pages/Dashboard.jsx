@@ -14,7 +14,8 @@ import AnalyticsWidget from "../components/dashboard/AnalyticsWidget";
 export default function Home() {
   const { user } = useAuth();
   const { darkMode, studyStats, profileName, getThemeColors } = useSettings();
-  const [fullName, setFullName] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState(null);
   const [analyticsStats, setAnalyticsStats] = useState({
     hoursStudied: 0,
     topicsCovered: 0,
@@ -168,16 +169,22 @@ export default function Home() {
           if (res.ok) {
             const payload = await res.json();
             const p = payload.profile || {};
-            // Show username primarily; fall back to fullName or profileName
-            setFullName(p.username || p.fullName || profileName);
+            const u = payload.user || {};
+            // Prioritize: profile username > user username > settings profileName
+            setDisplayName(p.username || u.username || profileName || u.name || '');
+            // Set profile avatar URL if available
+            if (p.profileImageUrl) {
+              setProfileAvatarUrl(p.profileImageUrl);
+            }
           } else {
-            setFullName(profileName);
+            // Fallback to user object from auth context
+            setDisplayName(user?.profile?.username || user?.username || profileName || '');
           }
         } catch {
-          setFullName(profileName);
+          setDisplayName(user?.username || profileName || '');
         }
       } else {
-        setFullName(profileName);
+        setDisplayName(profileName || '');
       }
     }
 
@@ -196,6 +203,32 @@ export default function Home() {
     loadDashboardData();
   }, [user, profileName]);
 
+  // Listen for profile updates to refresh avatar
+  useEffect(() => {
+    const handleProfileUpdate = async () => {
+      if (user?._id) {
+        try {
+          const API_BASE = import.meta.env.VITE_API_BASE || '';
+          const res = await fetch(`${API_BASE}/api/profile/${user._id}`);
+          if (res.ok) {
+            const payload = await res.json();
+            const p = payload.profile || {};
+            const u = payload.user || {};
+            setDisplayName(p.username || u.username || profileName || u.name || '');
+            if (p.profileImageUrl) {
+              setProfileAvatarUrl(p.profileImageUrl);
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to refresh profile on update:', e);
+        }
+      }
+    };
+
+    window.addEventListener('profileUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('profileUpdated', handleProfileUpdate);
+  }, [user, profileName]);
+
   // Update activities when library stats change
   useEffect(() => {
     if (!loading) {
@@ -205,10 +238,13 @@ export default function Home() {
 
   const themeColors = getThemeColors();
 
-  // Derive avatar URL: prefer profile.profileImageUrl, then user.avatarUrl, then localStorage
+  // Derive avatar URL: prefer profileAvatarUrl (from API), then profile.profileImageUrl, then user.avatarUrl, then localStorage
 const avatarUrl = (() => {
   try {
-    // First check user object from auth context
+    // First check profileAvatarUrl from API fetch
+    if (profileAvatarUrl) return profileAvatarUrl;
+    
+    // Then check user object from auth context
     const fromUser = user?.profile?.profileImageUrl || user?.avatarUrl || null;
     if (fromUser) return fromUser;
     
@@ -254,8 +290,22 @@ const avatarUrl = (() => {
   };
 
   const getInitial = () => {
-    if (!fullName) return "?";
-    return fullName.trim().charAt(0).toUpperCase();
+    // For avatar placeholder, use the first letter of email
+    let email = user?.email;
+    if (!email) {
+      try {
+        const stored = localStorage.getItem('stuyta_user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          email = parsed?.email;
+        }
+      } catch (e) {
+        // ignore parse errors
+      }
+    }
+    if (email) return email.charAt(0).toUpperCase();
+    if (!displayName) return "?";
+    return displayName.trim().charAt(0).toUpperCase();
   };
 
   return (
@@ -300,7 +350,7 @@ const avatarUrl = (() => {
                     darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                   }`}
                 >
-                  {fullName ? `Welcome back, ${fullName}!` : "Welcome back!"}
+                  {displayName ? `Welcome back, ${displayName}!` : "Welcome back!"}
                 </h1>
                 <p className="mt-1 text-xl transition-colors duration-300 dashboard-subtitle">
                   Ready to continue your learning journey?

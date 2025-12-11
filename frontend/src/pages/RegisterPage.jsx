@@ -10,6 +10,7 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
 
   const [isDark, setIsDark] = useState(() => {
     try {
@@ -106,8 +107,7 @@ export default function Signup() {
             style={{
               fontSize: "30px",
               fontWeight: 500,
-              fontStyle: "italic",
-              marginBottom: "12px",
+              marginBottom: "16px",
             }}
           >
             Create an account
@@ -139,11 +139,11 @@ export default function Signup() {
                 Dev verify link: <a href={verifyInfo.url} target="_blank" rel="noreferrer" style={{ textDecoration: 'underline', color: 'white' }}>{verifyInfo.url}</a>
               </div>
             )}
-            {/* Name and Last Name - Side by Side */}
+            {/* First Name and Last Name - Side by Side */}
             <div style={{ display: "flex", gap: "14px" }}>
               <input
                 type="text"
-                placeholder="Full name"
+                placeholder="First name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="rounded-md border"
@@ -153,7 +153,6 @@ export default function Signup() {
                   paddingLeft: "10px",
                   fontSize: "14px",
                   fontWeight: 200,
-                  fontStyle: "italic",
                   color: "#796060",
                   backgroundColor: isDark ? "#3a2a20" : "white",
                   borderColor: "#d3b49b",
@@ -173,7 +172,6 @@ export default function Signup() {
                   paddingLeft: "10px",
                   fontSize: "14px",
                   fontWeight: 200,
-                  fontStyle: "italic",
                   color: "#796060",
                   backgroundColor: isDark ? "#3a2a20" : "white",
                   borderColor: "#d3b49b",
@@ -197,7 +195,6 @@ export default function Signup() {
                 paddingLeft: "10px",
                 fontSize: "14px",
                 fontWeight: 200,
-                fontStyle: "italic",
                 color: "#796060",
                 backgroundColor: isDark ? "#3a2a20" : "white",
                 borderColor: "#d3b49b",
@@ -221,7 +218,6 @@ export default function Signup() {
                   paddingLeft: "10px",
                   fontSize: "14px",
                   fontWeight: 200,
-                  fontStyle: "italic",
                   color: "#796060",
                   backgroundColor: isDark ? "#3a2a20" : "white",
                   borderColor: "#d3b49b",
@@ -310,15 +306,19 @@ export default function Signup() {
                     }}
                   >
                     I agree on{" "}
-                    <Link
-                      to="/terms"
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowTermsModal(true);
+                      }}
                       style={{
                         color: "#3F2BC6",
                         textDecoration: "underline",
+                        cursor: "pointer",
                       }}
                     >
                       Terms & Conditions
-                    </Link>
+                    </span>
                   </span>
                 </div>
               </div>
@@ -342,56 +342,215 @@ export default function Signup() {
               {loading ? "Creating Account..." : "Create account"}
             </button>
           </form>
-
-          {/* Divider */}
-          <div className="flex items-center gap-3 mt-6">
-            <div className="flex-1 h-[1px] bg-[#6F422B]"></div>
-
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: 300,
-                color: "white",
-              }}
-            >
-              or register with
-            </span>
-
-            <div className="flex-1 h-[1px] bg-[#6F422B]"></div>
-          </div>
-
-          {/* Social Buttons */}
-          <div className="flex gap-4 mt-6">
-            <button
-              style={{
-                width: "140px",
-                height: "42px",
-                backgroundColor: "#6F422B",
-                color: "#F7F7F7",
-                fontSize: "13px",
-                fontWeight: 200,
-                borderRadius: "13px",
-              }}
-            >
-              Google
-            </button>
-
-            <button
-              style={{
-                width: "140px",
-                height: "42px",
-                backgroundColor: "#6F422B",
-                color: "#F7F7F7",
-                fontSize: "13px",
-                fontWeight: 200,
-                borderRadius: "13px",
-              }}
-            >
-              Facebook
-            </button>
-          </div>
         </div>
       </div>
+
+      {/* Terms & Conditions Modal */}
+      {showTermsModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+          }}
+          onClick={() => setShowTermsModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: isDark ? "#2e2119" : "#F5E9DF",
+              borderRadius: "16px",
+              width: "90%",
+              maxWidth: "600px",
+              maxHeight: "80vh",
+              overflow: "hidden",
+              boxShadow: "0 10px 40px rgba(0, 0, 0, 0.3)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                backgroundColor: isDark ? "#3a2a20" : "#BE8E78",
+                padding: "20px 24px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <h2
+                style={{
+                  color: isDark ? "#f5e9df" : "white",
+                  fontSize: "22px",
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                Terms & Conditions
+              </h2>
+              <button
+                onClick={() => setShowTermsModal(false)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: isDark ? "#f5e9df" : "white",
+                  fontSize: "24px",
+                  cursor: "pointer",
+                  padding: "0",
+                  lineHeight: "1",
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div
+              style={{
+                padding: "24px",
+                overflowY: "auto",
+                maxHeight: "calc(80vh - 140px)",
+                color: isDark ? "#f5e9df" : "#4a3728",
+                fontSize: "14px",
+                lineHeight: "1.7",
+              }}
+            >
+              <p style={{ marginBottom: "16px" }}>
+                <strong>Last Updated:</strong> December 11, 2025
+              </p>
+
+              <p style={{ marginBottom: "16px" }}>
+                Welcome to StudyTa! By creating an account and using our platform, you agree to the following Terms & Conditions. Please read them carefully before proceeding.
+              </p>
+
+              <h3 style={{ fontSize: "16px", fontWeight: 600, marginTop: "20px", marginBottom: "10px", color: isDark ? "#d4a574" : "#6F422B" }}>
+                1. Acceptance of Terms
+              </h3>
+              <p style={{ marginBottom: "16px" }}>
+                By accessing or using StudyTa, you acknowledge that you have read, understood, and agree to be bound by these Terms & Conditions. If you do not agree with any part of these terms, you may not use our services.
+              </p>
+
+              <h3 style={{ fontSize: "16px", fontWeight: 600, marginTop: "20px", marginBottom: "10px", color: isDark ? "#d4a574" : "#6F422B" }}>
+                2. Account Registration
+              </h3>
+              <p style={{ marginBottom: "16px" }}>
+                To use certain features of StudyTa, you must create an account. You agree to provide accurate, current, and complete information during registration and to update such information to keep it accurate. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.
+              </p>
+
+              <h3 style={{ fontSize: "16px", fontWeight: 600, marginTop: "20px", marginBottom: "10px", color: isDark ? "#d4a574" : "#6F422B" }}>
+                3. User Conduct
+              </h3>
+              <p style={{ marginBottom: "16px" }}>
+                You agree not to use StudyTa for any unlawful purpose or in any way that could damage, disable, or impair the platform. You shall not upload, share, or distribute any content that is offensive, harmful, or violates the rights of others. Academic integrity is paramount — do not use our platform to facilitate cheating or plagiarism.
+              </p>
+
+              <h3 style={{ fontSize: "16px", fontWeight: 600, marginTop: "20px", marginBottom: "10px", color: isDark ? "#d4a574" : "#6F422B" }}>
+                4. Intellectual Property
+              </h3>
+              <p style={{ marginBottom: "16px" }}>
+                All content, features, and functionality of StudyTa, including but not limited to text, graphics, logos, and software, are the exclusive property of StudyTa and are protected by copyright, trademark, and other intellectual property laws. You retain ownership of any content you upload but grant StudyTa a license to use it for providing our services.
+              </p>
+
+              <h3 style={{ fontSize: "16px", fontWeight: 600, marginTop: "20px", marginBottom: "10px", color: isDark ? "#d4a574" : "#6F422B" }}>
+                5. Privacy Policy
+              </h3>
+              <p style={{ marginBottom: "16px" }}>
+                Your privacy is important to us. Our collection and use of personal information is governed by our Privacy Policy. By using StudyTa, you consent to the collection and use of your information as described therein. We do not sell your personal data to third parties.
+              </p>
+
+              <h3 style={{ fontSize: "16px", fontWeight: 600, marginTop: "20px", marginBottom: "10px", color: isDark ? "#d4a574" : "#6F422B" }}>
+                6. Service Availability
+              </h3>
+              <p style={{ marginBottom: "16px" }}>
+                StudyTa strives to provide uninterrupted access to our services. However, we do not guarantee that the platform will be available at all times. We reserve the right to modify, suspend, or discontinue any part of the service without prior notice.
+              </p>
+
+              <h3 style={{ fontSize: "16px", fontWeight: 600, marginTop: "20px", marginBottom: "10px", color: isDark ? "#d4a574" : "#6F422B" }}>
+                7. Limitation of Liability
+              </h3>
+              <p style={{ marginBottom: "16px" }}>
+                StudyTa and its affiliates shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform. Our total liability shall not exceed the amount you paid for using our services, if any.
+              </p>
+
+              <h3 style={{ fontSize: "16px", fontWeight: 600, marginTop: "20px", marginBottom: "10px", color: isDark ? "#d4a574" : "#6F422B" }}>
+                8. Termination
+              </h3>
+              <p style={{ marginBottom: "16px" }}>
+                We reserve the right to terminate or suspend your account at any time, without prior notice, for conduct that we believe violates these Terms & Conditions or is harmful to other users, us, or third parties. Upon termination, your right to use the platform will immediately cease.
+              </p>
+
+              <h3 style={{ fontSize: "16px", fontWeight: 600, marginTop: "20px", marginBottom: "10px", color: isDark ? "#d4a574" : "#6F422B" }}>
+                9. Changes to Terms
+              </h3>
+              <p style={{ marginBottom: "16px" }}>
+                StudyTa reserves the right to modify these Terms & Conditions at any time. We will notify users of significant changes via email or through the platform. Continued use of StudyTa after such modifications constitutes your acceptance of the updated terms.
+              </p>
+
+              <h3 style={{ fontSize: "16px", fontWeight: 600, marginTop: "20px", marginBottom: "10px", color: isDark ? "#d4a574" : "#6F422B" }}>
+                10. Contact Us
+              </h3>
+              <p style={{ marginBottom: "16px" }}>
+                If you have any questions about these Terms & Conditions, please contact us at support@studyta.com.
+              </p>
+
+              <p style={{ marginTop: "24px", fontStyle: "italic", opacity: 0.8 }}>
+                By clicking "I agree" and creating an account, you confirm that you have read, understood, and agree to these Terms & Conditions.
+              </p>
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: "16px 24px",
+                borderTop: `1px solid ${isDark ? "#3a2a20" : "#d3b49b"}`,
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "12px",
+              }}
+            >
+              <button
+                onClick={() => setShowTermsModal(false)}
+                style={{
+                  padding: "10px 24px",
+                  backgroundColor: isDark ? "#3a2a20" : "#d3b49b",
+                  color: isDark ? "#f5e9df" : "#4a3728",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                }}
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setAgreeTerms(true);
+                  setShowTermsModal(false);
+                }}
+                style={{
+                  padding: "10px 24px",
+                  backgroundColor: "#6F422B",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                }}
+              >
+                I Agree
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

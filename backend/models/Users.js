@@ -6,6 +6,10 @@ const userSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        username: {
+            type: String,
+            default: '',
+        },
         email: {
             type: String,
             required: true,
@@ -14,6 +18,10 @@ const userSchema = new mongoose.Schema(
         password: {
             type: String,
             required: true,
+        },
+        profileImageUrl: {
+            type: String,
+            default: '',
         },
     },
     { timestamps: true }
