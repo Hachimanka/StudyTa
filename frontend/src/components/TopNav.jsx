@@ -99,12 +99,12 @@ export default function TopNav() {
             const parsed = JSON.parse(raw);
             const localAvatar = parsed?.profile?.profileImageUrl || parsed?.avatarUrl || parsed?.profileImageUrl;
             if (localAvatar) {
+              console.log('[TopNav] Updated avatar from localStorage:', localAvatar.substring(0, 50) + '...');
               setFetchedAvatarUrl(localAvatar);
-              return;
             }
           }
           
-          // Fallback to API fetch
+          // Always also fetch from API to ensure we have the latest data
           const userId = user?._id;
           if (userId) {
             const API_BASE = import.meta.env.VITE_API_BASE || '';
@@ -113,6 +113,7 @@ export default function TopNav() {
               const data = await res.json();
               const avatarFromApi = data?.profile?.profileImageUrl || data?.user?.profileImageUrl;
               if (avatarFromApi) {
+                console.log('[TopNav] Updated avatar from API:', avatarFromApi.substring(0, 50) + '...');
                 setFetchedAvatarUrl(avatarFromApi);
               }
             }
@@ -120,7 +121,7 @@ export default function TopNav() {
         } catch (e) {
           console.warn('Failed to refresh avatar:', e);
         }
-      }, 100);
+      }, 200);
     };
     
     window.addEventListener('profileUpdated', handleProfileUpdate);
@@ -178,10 +179,10 @@ export default function TopNav() {
       }
     }
     
-    // If avatar is a relative path (doesn't start with http or /), resolve it against API base
+    // If avatar is a relative path (doesn't start with http, data:, or /), resolve it against API base
     try {
       const API_BASE = import.meta.env.VITE_API_BASE || '';
-      if (avatar && !avatar.startsWith('http') && !avatar.startsWith('/')) {
+      if (avatar && !avatar.startsWith('http') && !avatar.startsWith('data:') && !avatar.startsWith('/')) {
         const cleaned = avatar.replace(/^\.\//, '').replace(/^\//, '');
         avatar = API_BASE ? `${API_BASE.replace(/\/$/, '')}/${cleaned}` : `/${cleaned}`;
       }

@@ -10,15 +10,27 @@ export async function oauthLogin(provider, profile) {
 	let user = await Users.findOne({ email: profile.email });
 	if (!user) {
 		// Create a lightweight user record for OAuth signup
-		user = new Users({ name: profile.name || profile.email.split('@')[0], email: profile.email, password: "" });
+		const userName = profile.name || profile.email.split('@')[0];
+		user = new Users({ name: userName, email: profile.email, password: "" });
 		await user.save();
-		// Optionally create a UserInfo document
+		// Create a UserInfo document
 		try {
 			const UserInfo = (await import("../../models/UserInfo.js")).default;
-			await UserInfo.create({ userId: user._id, fullName: profile.name || "" });
+			await UserInfo.create({ userId: user._id, fullName: userName });
 		} catch (e) {
 			// Non-fatal
 			console.warn("Failed to create UserInfo for oauth user:", e.message);
+		}
+		// Create Profile document with fullName from OAuth profile
+		try {
+			const Profile = (await import("../../models/profileModel.js")).default;
+			await Profile.create({
+				userId: user._id,
+				fullName: userName,
+				username: userName ? userName.replace(/\s+/g, '').toLowerCase() : '',
+			});
+		} catch (e) {
+			console.warn("Failed to create Profile for oauth user:", e.message);
 		}
 	}
 

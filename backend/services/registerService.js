@@ -55,12 +55,24 @@ export async function verifyToken(token) {
   const newUser = new Users({ name: record.name, email: record.email, password: record.passwordHash });
   await newUser.save();
 
-  // Optionally create UserInfo document
+  // Create UserInfo document
   try {
     const UserInfo = (await import("../models/UserInfo.js")).default;
     await UserInfo.create({ userId: newUser._id, fullName: record.name });
   } catch (e) {
     console.warn("Failed to create UserInfo during verification:", e.message);
+  }
+
+  // Create Profile document with fullName from registration
+  try {
+    const Profile = (await import("../models/profileModel.js")).default;
+    await Profile.create({
+      userId: newUser._id,
+      fullName: record.name,
+      username: record.name ? record.name.replace(/\s+/g, '').toLowerCase() : '',
+    });
+  } catch (e) {
+    console.warn("Failed to create Profile during verification:", e.message);
   }
 
   // Clean up token
