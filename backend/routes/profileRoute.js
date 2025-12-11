@@ -1,6 +1,6 @@
 import express from 'express';
 import multer from 'multer';
-import { getProfile, updateProfile } from '../controllers/profileController.js';
+import { getProfile, updateProfile, verifyCurrentPassword, changePassword } from '../controllers/profileController.js';
 
 // Use memory storage - images will be stored as Base64 in MongoDB, not on disk
 const storage = multer.memoryStorage();
@@ -25,5 +25,11 @@ router.get('/:userId', getProfile);
 
 // PUT /api/profile/:userId (multipart for image)
 router.put('/:userId', upload.single('profileImage'), updateProfile);
+
+// POST /api/profile/verify-password - Verify email and current password
+router.post('/verify-password', verifyCurrentPassword);
+
+// POST /api/profile/change-password - Change password after verification
+router.post('/change-password', changePassword);
 
 export default router;
