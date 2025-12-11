@@ -7,6 +7,7 @@ const CalendarEventSchema = new mongoose.Schema({
 	start: { type: Date, required: true },
 	end: { type: Date },
 	allDay: { type: Boolean, default: false },
+	priority: { type: String, enum: ['low', 'medium', 'high'], default: 'low' },
 }, { timestamps: true });
 
 export default mongoose.model('CalendarEvent', CalendarEventSchema);
