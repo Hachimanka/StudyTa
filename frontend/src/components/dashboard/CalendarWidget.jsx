@@ -5,15 +5,27 @@ import { Link } from 'react-router-dom';
 const CalendarWidget = ({ darkMode, themeColors }) => {
   const { user } = useAuth();
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(3); // Start with April (index 3)
+  const currentDate = new Date();
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(currentDate.getMonth()); // Start with current month
+  const [currentYear, setCurrentYear] = useState(currentDate.getFullYear());
   const [upcoming, setUpcoming] = useState([]);
 
   const handlePreviousMonth = () => {
-    setCurrentMonthIndex(prev => (prev > 0 ? prev - 1 : months.length - 1));
+    if (currentMonthIndex > 0) {
+      setCurrentMonthIndex(currentMonthIndex - 1);
+    } else {
+      setCurrentMonthIndex(months.length - 1);
+      setCurrentYear(currentYear - 1);
+    }
   };
 
   const handleNextMonth = () => {
-    setCurrentMonthIndex(prev => (prev < months.length - 1 ? prev + 1 : 0));
+    if (currentMonthIndex < months.length - 1) {
+      setCurrentMonthIndex(currentMonthIndex + 1);
+    } else {
+      setCurrentMonthIndex(0);
+      setCurrentYear(currentYear + 1);
+    }
   };
 
   // Get the 5 months to display (current month in the middle)
@@ -39,10 +51,12 @@ const CalendarWidget = ({ darkMode, themeColors }) => {
         const res = await fetch(`${API_BASE}/api/calendar?userId=${encodeURIComponent(user._id)}`);
         if (res.ok) {
           const data = await res.json();
-          // Filter to events from today forward, sort ascending, take 5
-          const now = new Date();
+          // Filter to events for the selected month and year, sort ascending, take 5
           const list = (Array.isArray(data) ? data : [])
-            .filter(ev => new Date(ev.start) >= new Date(now.setHours(0,0,0,0)))
+            .filter(ev => {
+              const evDate = new Date(ev.start);
+              return evDate.getMonth() === currentMonthIndex && evDate.getFullYear() === currentYear;
+            })
             .sort((a,b) => new Date(a.start) - new Date(b.start))
             .slice(0,5)
             .map(ev => ({
@@ -56,7 +70,7 @@ const CalendarWidget = ({ darkMode, themeColors }) => {
       } catch {}
     };
     loadUpcoming();
-  }, [user?._id]);
+  }, [user?._id, currentMonthIndex, currentYear]);
 
   const formatEvent = (ev) => {
     const date = ev.start.toLocaleDateString();
@@ -66,10 +80,17 @@ const CalendarWidget = ({ darkMode, themeColors }) => {
 
   return (
     <div
-      className={`p-9 rounded-2xl shadow transition-colors duration-300 ${
+      className={`p-5 rounded-2xl shadow transition-colors duration-300 ${
         darkMode ? "bg-[#2e2119]" : "bg-white"
       }`}
     >
+      {/* Year Display */}
+      <div className="text-center">
+        <span className={`text-xs ${darkMode ? "text-white/50" : "text-[#5C4333]/70"}`}>
+          {currentYear}
+        </span>
+      </div>
+
       {/* Month Navigation */}
       <div className="flex items-center justify-between mb-2">
         <button 
@@ -128,8 +149,10 @@ const CalendarWidget = ({ darkMode, themeColors }) => {
           {upcoming.map(ev => (
             <Link to="/calendar" key={ev.id} className={`block p-3 rounded-xl ${darkMode ? 'bg-[#3a2a20] hover:bg-[#4a3528]' : 'bg-white hover:bg-gray-100'} shadow-sm transition-colors`}>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ backgroundColor: darkMode ? `${themeColors.primary}20` : `${themeColors.primary}15`, color: darkMode ? '#FFFFFF' : themeColors.primary }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ backgroundColor: darkMode ? `${themeColors.primary}20` : `${themeColors.primary}15` }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path fill={darkMode ? "#E59C5C" : "#71412A"} d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/>
+                  </svg>
                 </div>
                 <div>
                   <div className={`font-semibold ${darkMode ? 'text-white' : 'text-[#4A2C1E]'}`}>{ev.title}</div>

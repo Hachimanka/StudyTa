@@ -13,9 +13,9 @@ export const listEvents = async (req, res) => {
 
 export const createEvent = async (req, res) => {
 	try {
-		const { userId, title, description, start, end, allDay } = req.body;
+		const { userId, title, description, start, end, allDay, priority } = req.body;
 		if (!userId || !title || !start) return res.status(400).json({ error: 'userId, title, start required' });
-		const ev = await CalendarEvent.create({ userId, title, description, start, end, allDay });
+		const ev = await CalendarEvent.create({ userId, title, description, start, end, allDay, priority: priority || 'low' });
 		res.status(201).json(ev);
 	} catch (e) {
 		res.status(500).json({ error: 'Failed to create event' });
@@ -25,8 +25,8 @@ export const createEvent = async (req, res) => {
 export const updateEvent = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { title, description, start, end, allDay } = req.body;
-		const ev = await CalendarEvent.findByIdAndUpdate(id, { title, description, start, end, allDay }, { new: true });
+		const { title, description, start, end, allDay, priority } = req.body;
+		const ev = await CalendarEvent.findByIdAndUpdate(id, { title, description, start, end, allDay, priority: priority || 'low' }, { new: true });
 		if (!ev) return res.status(404).json({ error: 'Not found' });
 		res.json(ev);
 	} catch (e) {

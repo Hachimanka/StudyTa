@@ -23,6 +23,13 @@ const userSchema = new mongoose.Schema(
             type: String,
             default: '',
         },
+            studyStreak: {
+                type: Number,
+                default: 0,
+            },
+            lastStudyDate: {
+                type: Date,
+            },
     },
     { timestamps: true }
 );

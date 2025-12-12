@@ -1,5 +1,31 @@
 import StudySession from '../models/StudySession.js'
+import Users from '../models/Users.js'
 import mongoose from 'mongoose'
+
+export async function updateStudyStreak(userId, date) {
+	try {
+		if (!userId) return
+		const d = date ? new Date(date) : new Date()
+		d.setHours(0,0,0,0)
+		const user = await Users.findById(userId)
+		if (!user) return
+		if (user.lastStudyDate) {
+			const last = new Date(user.lastStudyDate)
+			last.setHours(0,0,0,0)
+			const diffDays = Math.round((d - last) / (24 * 60 * 60 * 1000))
+			if (diffDays === 0) return
+			if (diffDays === 1) user.studyStreak = (user.studyStreak || 0) + 1
+			else user.studyStreak = 1
+		} else {
+			user.studyStreak = 1
+		}
+		user.lastStudyDate = d
+		await user.save()
+	} catch (err) {
+		// don't fail session flows for streak update issues
+		console.warn('Failed to update study streak', err.message)
+	}
+}
 
 export async function startSession(req, res) {
 	try {
@@ -29,6 +55,8 @@ export async function startSession(req, res) {
 			startedAt: startedAt ? new Date(startedAt) : now,
 			durationSeconds: 0
 		})
+		// update streak for the day (idempotent for multiple sessions same day)
+		try { await updateStudyStreak(userId, doc.startedAt) } catch (e) {}
 		res.json({ sessionId: doc._id, reused: false })
 	} catch (err) {
 		res.status(500).json({ error: 'Failed to start session', details: err.message })
@@ -47,6 +75,12 @@ export async function endSession(req, res) {
 		if (typeof durationSeconds === 'number') update.durationSeconds = Math.max(0, Math.floor(durationSeconds))
 		const doc = await StudySession.findByIdAndUpdate(sessionId, update, { new: true })
 		if (!doc) return res.status(404).json({ error: 'Session not found' })
+		// if this update included a duration or endedAt, ensure streak is recorded
+		try {
+			if ((doc.durationSeconds || 0) > 0 || doc.endedAt) {
+				await updateStudyStreak(doc.userId, doc.startedAt)
+			}
+		} catch (e) {}
 		res.json({ ok: true })
 	} catch (err) {
 		res.status(500).json({ error: 'Failed to end session', details: err.message })
@@ -79,6 +113,7 @@ export async function completeSession(req, res) {
 			endedAt: end,
 			durationSeconds: typeof durationSeconds === 'number' ? Math.max(0, Math.floor(durationSeconds)) : Math.max(0, Math.floor((end - start)/1000))
 		})
+		try { await updateStudyStreak(userId, doc.startedAt) } catch (e) {}
 		res.json({ sessionId: doc._id })
 	} catch (err) {
 		res.status(500).json({ error: 'Failed to complete session', details: err.message })
