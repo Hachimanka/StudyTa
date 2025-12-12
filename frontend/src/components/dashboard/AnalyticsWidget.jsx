@@ -27,7 +27,7 @@ const AnalyticsWidget = ({ darkMode, themeColors, studyStats, analyticsStats }) 
   return (
     <div>
       <div className="grid grid-cols-2 gap-4 h-20">
-        {/* Hours Studied Box - Clickable */}
+        {/* Time Studied Box - Clickable */}
         <button
           onClick={handleNavigateToAnalytics}
           className={`p-2 rounded-xl shadow transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-lg ${
@@ -45,8 +45,8 @@ const AnalyticsWidget = ({ darkMode, themeColors, studyStats, analyticsStats }) 
                 Time Studied
               </h2>
               <p
-                className={`text-4xl font-bold transition-colors duration-300 ${
-                  darkMode ? "text-white" : "text-[#4A2C1E]"
+                className={`text-2xl font-bold transition-colors duration-300 ${
+                  darkMode ? "text-[#f5e9df]" : "text-[#4A2C1E]"
                 }`}
               >
                 {timeStudied}

@@ -54,6 +54,7 @@ const Calendar = () => {
             start: ev.start,
             end: ev.end,
             allDay: !!ev.allDay,
+            priority: ev.priority || 'low',
             date: new Date(ev.start).toISOString().split('T')[0],
           }));
           setEvents(normalized);
@@ -126,6 +127,7 @@ const Calendar = () => {
           start: newEvent.start || new Date(selectedDate).toISOString(),
           end: newEvent.end || null,
           allDay: !!newEvent.allDay,
+          priority: newEvent.priority || 'low',
         };
         const res = await fetch(`${API_BASE}/api/calendar`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
@@ -139,6 +141,7 @@ const Calendar = () => {
             start: saved.start,
             end: saved.end,
             allDay: !!saved.allDay,
+            priority: saved.priority || 'low',
             date: new Date(saved.start).toISOString().split('T')[0],
           };
           setEvents(prev => [...prev, added]);
@@ -158,6 +161,7 @@ const Calendar = () => {
             start: updatedEvent.start,
             end: updatedEvent.end,
             allDay: !!updatedEvent.allDay,
+            priority: updatedEvent.priority || 'low',
           })
         });
         if (res.ok) {
@@ -169,6 +173,7 @@ const Calendar = () => {
             start: saved.start,
             end: saved.end,
             allDay: !!saved.allDay,
+            priority: saved.priority || 'low',
             date: new Date(saved.start).toISOString().split('T')[0],
           };
           setEvents(prev => prev.map(ev => ev.id === normalized.id ? normalized : ev));

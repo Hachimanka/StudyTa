@@ -8,6 +8,7 @@ import { useModal } from "../context/ModalContext";
 
 export default function Summarize() {
   const { showModal } = useModal();
+  const { user } = useAuth();
   const { darkMode, getThemeColors, playSound } = useSettings();
   const themeColors = getThemeColors();
   const API_BASE = import.meta.env.VITE_API_BASE || '';
@@ -52,13 +53,13 @@ export default function Summarize() {
       });
       setSummary(res.data.summary);
 
-      // Save summary record to backend (optional userId)
+      // Save summary record to backend with userId
       try {
         await axios.post(`${API_BASE}/api/summarize`, {
           sourceText: textToSummarize,
           summaryText: res.data.summary,
           fileName: selectedFile?.name || '',
-          // userId: user?.id || null  // add userId if available from auth
+          userId: user?._id || null
         });
         // reload history
         fetchHistory();
@@ -75,7 +76,10 @@ export default function Summarize() {
 
   const fetchHistory = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/api/summarize/history`);
+      const userId = user?._id;
+      const res = await axios.get(`${API_BASE}/api/summarize/history`, {
+        params: userId ? { userId } : {}
+      });
       setHistory(res.data.items || []);
     } catch (err) {
       console.warn('Failed to load summary history', err?.message || err);
@@ -85,7 +89,7 @@ export default function Summarize() {
   useEffect(() => {
     fetchHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [user?._id]);
 
   const handleDeleteHistory = async (id) => {
     try {

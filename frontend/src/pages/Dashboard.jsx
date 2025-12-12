@@ -42,14 +42,25 @@ export default function Home() {
       }
       if (!userId) return;
 
+      // Try to get streak from profile endpoint (authoritative)
+      const profileRes = await fetch(`${API_BASE}/api/profile/${userId}`);
+      if (profileRes.ok) {
+        const payload = await profileRes.json();
+        const userPayload = payload.user || {};
+        setAnalyticsStats(prev => ({
+          ...prev,
+          streak: userPayload.studyStreak || userPayload.studyStreak === 0 ? userPayload.studyStreak : prev.streak
+        }));
+      }
+      // Still populate duration/sessions from analytics summary
       const res = await fetch(`${API_BASE}/api/analytics/summary?userId=${userId}`);
       if (res.ok) {
         const data = await res.json();
-        setAnalyticsStats({
+        setAnalyticsStats(prev => ({
+          ...prev,
           totalDurationSeconds: data.totalDurationSeconds || 0,
-          totalSessions: data.totalSessions || 0,
-          streak: 0
-        });
+          totalSessions: data.totalSessions || 0
+        }));
       }
     } catch (err) {
       console.error('Failed to fetch analytics stats:', err);
@@ -60,12 +71,21 @@ export default function Home() {
   const fetchLibraryStats = async () => {
     try {
       const API_BASE = import.meta.env.VITE_API_BASE || ''
-      const userId = user?._id
+      // Get userId from auth context or localStorage fallback
+      let userId = user?._id;
+      if (!userId) {
+        const userData = JSON.parse(localStorage.getItem('stuyta_user') || '{}');
+        userId = userData?._id;
+      }
+      if (!userId) {
+        console.log('No user ID available for fetching library stats');
+        return;
+      }
       const [filesRes, foldersRes] = await Promise.all([
-        fetch(`${API_BASE}/api/library/files${userId ? `?userId=${encodeURIComponent(userId)}` : ''}`, {
+        fetch(`${API_BASE}/api/library/files?userId=${encodeURIComponent(userId)}`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         }),
-        fetch(`${API_BASE}/api/library/folders`, {
+        fetch(`${API_BASE}/api/library/folders?userId=${encodeURIComponent(userId)}`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         })
       ]);

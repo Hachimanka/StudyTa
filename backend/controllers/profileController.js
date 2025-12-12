@@ -30,6 +30,8 @@ export async function getProfile(req, res) {
         name: user.name,
         username: user.username || profile.username || '',
         profileImageUrl: user.profileImageUrl || profileImageUrl,
+        studyStreak: user.studyStreak || 0,
+        lastStudyDate: user.lastStudyDate || null,
       },
       profile: {
         ...profile.toObject(),

@@ -127,6 +127,27 @@ const ViewEventsModal = ({
                       </div>
                     )}
                     
+                    {/* Priority indicator */}
+                    <div className="flex items-center mt-1">
+                      {event.priority === 'low' ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-4 h-4 flex-shrink-0" aria-hidden="true">
+                          <path fill="#00D26A" d="M30 16c0 7.732-6.268 14-14 14S2 23.732 2 16S8.268 2 16 2s14 6.268 14 14Z"/>
+                        </svg>
+                      ) : event.priority === 'medium' ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-4 h-4 flex-shrink-0" aria-hidden="true">
+                          <path fill="#A1887F" d="M30 16c0 7.732-6.268 14-14 14S2 23.732 2 16S8.268 2 16 2s14 6.268 14 14Z"/>
+                        </svg>
+                      ) : event.priority === 'high' ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-4 h-4 flex-shrink-0" aria-hidden="true">
+                          <path fill="#F8312F" d="M30 16c0 7.732-6.268 14-14 14S2 23.732 2 16S8.268 2 16 2s14 6.268 14 14Z"/>
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-4 h-4 flex-shrink-0" aria-hidden="true">
+                          <path fill="#00D26A" d="M30 16c0 7.732-6.268 14-14 14S2 23.732 2 16S8.268 2 16 2s14 6.268 14 14Z"/>
+                        </svg>
+                      )}
+                    </div>
+                    
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <span className={`${darkMode ? 'text-[#E59C5C] bg-[#E59C5C]/10' : 'text-[#8B5E3C] bg-[#8B5E3C]/10'} text-sm font-medium px-2 py-0.5 rounded flex-shrink-0`}>
@@ -135,6 +156,16 @@ const ViewEventsModal = ({
                         <h4 className={`${darkMode ? 'text-[#f5e9df]' : 'text-[#5D4037]'} font-semibold truncate`}>
                           {event.title}
                         </h4>
+                        {/* Priority badge */}
+                        <span className={`text-xs px-2 py-0.5 rounded flex-shrink-0 ${
+                          event.priority === 'high' 
+                            ? 'bg-red-100 text-red-700' 
+                            : event.priority === 'medium' 
+                              ? 'bg-amber-100 text-amber-700' 
+                              : 'bg-green-100 text-green-700'
+                        }`}>
+                          {event.priority ? event.priority.charAt(0).toUpperCase() + event.priority.slice(1) : 'Low'}
+                        </span>
                       </div>
                       {event.description && (
                         <p className={`${darkMode ? 'text-[#c4a68a]' : 'text-[#8D6E63]'} text-sm line-clamp-2`}>
