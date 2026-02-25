@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Landing() {
   const [isDark, setIsDark] = useState(() => {
@@ -10,6 +10,71 @@ export default function Landing() {
       return false;
     }
   });
+
+  const [activeModal, setActiveModal] = useState(null);
+
+  const modalContent = {
+    help: {
+      title: "Help Center",
+      content: (
+        <div className="space-y-4 text-left">
+          <div>
+            <h4 className="font-bold text-lg mb-1">How do I get started?</h4>
+            <p>Create an account, then upload your study materials in the Library to generate flashcards and quizzes.</p>
+          </div>
+          <div>
+            <h4 className="font-bold text-lg mb-1">Is StudyTa free?</h4>
+            <p>Yes, our core features are free for all students to help them study smarter.</p>
+          </div>
+          <div>
+            <h4 className="font-bold text-lg mb-1">How do I contact support?</h4>
+            <p>You can reach us at support@studyta.com for any issues or feedback.</p>
+          </div>
+        </div>
+      )
+    },
+    privacy: {
+      title: "Privacy Policy",
+      content: (
+        <div className="space-y-4 text-left">
+          <p className="text-sm opacity-70">Last updated: December 2025</p>
+          <p>At StudyTa, we take your privacy seriously. This policy describes how we collect and use your data.</p>
+          <div>
+            <h4 className="font-bold mb-1">Information We Collect</h4>
+            <p>We collect information you provide directly to us, such as when you create an account, upload documents, or contact us.</p>
+          </div>
+          <div>
+            <h4 className="font-bold mb-1">How We Use Your Information</h4>
+            <p>We use your documents solely to generate study materials (flashcards, summaries, quizzes) for your personal use.</p>
+          </div>
+          <div>
+            <h4 className="font-bold mb-1">Data Security</h4>
+            <p>We implement appropriate security measures to protect your personal information and uploaded content.</p>
+          </div>
+        </div>
+      )
+    },
+    terms: {
+      title: "Terms of Service",
+      content: (
+        <div className="space-y-4 text-left">
+          <p>Welcome to StudyTa. By using our website, you agree to these terms.</p>
+          <div>
+            <h4 className="font-bold mb-1">User Conduct</h4>
+            <p>You agree not to misuse our services or help anyone else do so. You are responsible for the content you upload.</p>
+          </div>
+          <div>
+            <h4 className="font-bold mb-1">Content Ownership</h4>
+            <p>You retain all rights to the documents you upload. By uploading, you grant us permission to process them to provide our services.</p>
+          </div>
+          <div>
+            <h4 className="font-bold mb-1">Disclaimer</h4>
+            <p>StudyTa is provided "as is" without warranties of any kind. We are not responsible for any errors in generated study materials.</p>
+          </div>
+        </div>
+      )
+    }
+  };
 
   useEffect(() => {
     const onThemeChanged = () => {
@@ -327,17 +392,15 @@ export default function Landing() {
           <div>
             <h4 className="font-semibold mb-3">Support</h4>
             <ul className="space-y-1 text-sm">
-              <li><a href="/help" className="hover:underline">Help Center</a></li>
-              <li><a href="/privacy" className="hover:underline">Privacy Policy</a></li>
-              <li><a href="/terms" className="hover:underline">Terms of Services</a></li>
+              <li><button onClick={() => setActiveModal('help')} className="hover:underline text-left">Help Center</button></li>
+              <li><button onClick={() => setActiveModal('privacy')} className="hover:underline text-left">Privacy Policy</button></li>
+              <li><button onClick={() => setActiveModal('terms')} className="hover:underline text-left">Terms of Services</button></li>
             </ul>
           </div>
           <div>
             <h4 className="font-semibold mb-3">Follow Us</h4>
             <ul className="space-y-1 text-sm">
-              <li>Facebook</li>
-              <li>Youtube</li>
-              <li>Instagram</li>
+              <li><a href="https://web.facebook.com/profile.php?id=61584961109707" target="_blank" rel="noopener noreferrer" className="hover:underline">Facebook</a></li>
             </ul>
           </div>
         </div>
@@ -346,6 +409,57 @@ export default function Landing() {
           © {new Date().getFullYear()} StudyTa. All rights reserved.
         </div>
       </footer>
+
+      <AnimatePresence>
+        {activeModal && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveModal(null)}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              className={`relative w-full max-w-lg rounded-xl shadow-2xl p-6 overflow-hidden ${
+                isDark ? "bg-[#2e2119] text-[#f5e9df] border border-[#4a3525]" : "bg-white text-[#6F422B]"
+              }`}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-bold">{modalContent[activeModal].title}</h3>
+                <button 
+                  onClick={() => setActiveModal(null)}
+                  className="p-1 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                {modalContent[activeModal].content}
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setActiveModal(null)}
+                  className={`px-6 py-2 rounded-lg font-medium transition ${
+                    isDark 
+                      ? "bg-[#6F422B] text-white hover:bg-[#7b513a]" 
+                      : "bg-[#6F422B] text-white hover:bg-[#7b513a]"
+                  }`}
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
